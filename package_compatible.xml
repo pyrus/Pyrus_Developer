@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package version="2.1" xmlns="http://pear.php.net/dtd/package-2.1" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0     http://pear.php.net/dtd/tasks-1.0.xsd     http://pear.php.net/dtd/package-2.1     http://pear.php.net/dtd/package-2.1.xsd">
+ <name>PEAR2_Pyrus_Developer</name>
+ <channel>pear2.php.net</channel>
+ <summary>Developer tools for the Pyrus installer
+</summary>
+ <description>
+This package contains several custom commands for Pyrus,
+including command to automatically generate a package.xml,
+and commands to create a package from an existing package.xml</description>
+ <lead>
+  <name>Gregory Beaver</name>
+  <user>cellog</user>
+  <email>cellog@php.net</email>
+  <active>yes</active>
+ </lead>
+ <date>2009-07-06</date>
+ <time>12:29:24</time>
+ <version>
+  <release>0.1.0</release>
+  <api>0.1.0</api>
+ </version>
+ <stability>
+  <release>alpha</release>
+  <api>alpha</api>
+ </stability>
+ <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
+ <notes>Initial development release</notes>
+ <contents>
+  <dir name="/">
+   <file role="php" name="php/pear2/Pyrus/Developer/Runphpt/Runner.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/Runphpt/Exception.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/PackageFile/v2.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/PackageFile/PECL/Filter.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/PackageFile/PECL.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/PackageFile/PEAR2SVN/Filter.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/PackageFile/PEAR2SVN.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/PackageFile/Commands.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/Creator/Zip.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/Creator/Xml.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/Creator/Tar.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/Creator/Phar/PHPArchive.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/Creator/Phar.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/Creator/Exception.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Web/View.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Web/Exception.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Web/Controller.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Web/Aggregator.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/test.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/test-modified.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Sqlite.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/SourceFile/PerTest.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/SourceFile.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/pear2coverage.phar.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/make-coverage-phar.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Exception.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/DefaultSourceDecorator.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Aggregator.php"/>
+   <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/AbstractSourceDecorator.php"/>
+   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/phartemplate.php"/>
+   <file role="data" name="customcommand/PEAR2_Pyrus_Developer/pear2.php.net/commands.xml"/>
+  </dir>
+ </contents>
+ <dependencies>
+  <required>
+   <php>
+    <min>5.2.0</min>
+   </php>
+   <pearinstaller>
+    <min>1.4.8</min>
+   </pearinstaller>
+  </required>
+ </dependencies>
+ <phprelease>
+  <filelist>
+   <install name="customcommand/PEAR2_Pyrus_Developer/pear2.php.net/commands.xml" as="pear2.php.net/commands.xml"/>
+   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/phartemplate.php" as="pear2.php.net/phartemplate.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/AbstractSourceDecorator.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/AbstractSourceDecorator.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Aggregator.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/Aggregator.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/DefaultSourceDecorator.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/DefaultSourceDecorator.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Exception.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/Exception.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/make-coverage-phar.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/make-coverage-phar.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/pear2coverage.phar.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/pear2coverage.phar.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/SourceFile.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/SourceFile.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/SourceFile/PerTest.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/SourceFile/PerTest.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Sqlite.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/Sqlite.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/test-modified.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/test-modified.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/test.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/test.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Web/Aggregator.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/Web/Aggregator.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Web/Controller.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/Web/Controller.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Web/Exception.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/Web/Exception.php"/>
+   <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Web/View.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/Web/View.php"/>
+   <install name="php/pear2/Pyrus/Developer/Creator/Exception.php" as="pear2/Pyrus/Developer/Creator/Exception.php"/>
+   <install name="php/pear2/Pyrus/Developer/Creator/Phar.php" as="pear2/Pyrus/Developer/Creator/Phar.php"/>
+   <install name="php/pear2/Pyrus/Developer/Creator/Phar/PHPArchive.php" as="pear2/Pyrus/Developer/Creator/Phar/PHPArchive.php"/>
+   <install name="php/pear2/Pyrus/Developer/Creator/Tar.php" as="pear2/Pyrus/Developer/Creator/Tar.php"/>
+   <install name="php/pear2/Pyrus/Developer/Creator/Xml.php" as="pear2/Pyrus/Developer/Creator/Xml.php"/>
+   <install name="php/pear2/Pyrus/Developer/Creator/Zip.php" as="pear2/Pyrus/Developer/Creator/Zip.php"/>
+   <install name="php/pear2/Pyrus/Developer/PackageFile/Commands.php" as="pear2/Pyrus/Developer/PackageFile/Commands.php"/>
+   <install name="php/pear2/Pyrus/Developer/PackageFile/PEAR2SVN.php" as="pear2/Pyrus/Developer/PackageFile/PEAR2SVN.php"/>
+   <install name="php/pear2/Pyrus/Developer/PackageFile/PEAR2SVN/Filter.php" as="pear2/Pyrus/Developer/PackageFile/PEAR2SVN/Filter.php"/>
+   <install name="php/pear2/Pyrus/Developer/PackageFile/PECL.php" as="pear2/Pyrus/Developer/PackageFile/PECL.php"/>
+   <install name="php/pear2/Pyrus/Developer/PackageFile/PECL/Filter.php" as="pear2/Pyrus/Developer/PackageFile/PECL/Filter.php"/>
+   <install name="php/pear2/Pyrus/Developer/PackageFile/v2.php" as="pear2/Pyrus/Developer/PackageFile/v2.php"/>
+   <install name="php/pear2/Pyrus/Developer/Runphpt/Exception.php" as="pear2/Pyrus/Developer/Runphpt/Exception.php"/>
+   <install name="php/pear2/Pyrus/Developer/Runphpt/Runner.php" as="pear2/Pyrus/Developer/Runphpt/Runner.php"/>
+  </filelist>
+ </phprelease>
+</package>
