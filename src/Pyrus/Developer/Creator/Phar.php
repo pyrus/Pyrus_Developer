@@ -206,10 +206,10 @@ class Phar implements \pear2\Pyrus\Package\ICreator
                 } else {
                     $newphar = $newphar->convertToExecutable($fileformat, $compression, $extension);
                 }
-                if (isset($pkey) && $fileformat != \Phar::ZIP) {
+                if (isset($pkey)) {
                     $newphar->setSignatureAlgorithm(\Phar::OPENSSL, $this->privatekey);
                     file_put_contents($pubkeypath . '.' . $pathinfo[0] . '.pubkey', $this->publickey);
-                } elseif ($fileformat != \Phar::ZIP) {
+                } else {
                     $newphar->setSignatureAlgorithm(\Phar::SHA1);
                 }
             }
