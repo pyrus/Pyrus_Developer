@@ -390,4 +390,196 @@ dorender:
         $coverage = $a->retrieveProjectCoverage();
         echo "Project coverage: ", (($coverage[0] / $coverage[1]) * 100), "%\n";
     }
+
+    function pear2Skeleton($frontend, $args, $options)
+    {
+        if (!isset($args['channel'])) {
+            $args['channel'] = 'pear2.php.net';
+        }
+        $info = $this->parsePackageName($args['package'], $args['channel']);
+
+        if (file_exists($info['path'])) {
+            throw new \pear2\Pyrus\Developer\Creator\Exception('Path ' . $info['path'] .
+                                                               ' already exists');
+        }
+        mkdir($info['path']);
+
+        chdir($info['path']);
+        mkdir('trunk');
+        mkdir('tags');
+        mkdir('branches');
+
+        chdir('trunk');
+        mkdir('src');
+        mkdir('src/' . $info['mainPath'], 0777, true);
+        file_put_contents('src/' . $info['mainPath'] . '/Main.php', '<?php
+/**
+ * ' . $info['mainClass'] . '
+ *
+ * PHP version 5
+ *
+ * @category  Yourcategory
+ * @package   ' . $info['package'] . '
+ * @author    Your Name <handle@php.net>
+ * @copyright ' . date('Y') . ' Your Name
+ * @license   http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * @version   SVN: $Id$
+ * @link      ' . $info['svn'] . '
+ */
+
+/**
+ * Main class for ' . $info['package'] . '
+ *
+ * @category  Yourcategory
+ * @package   ' . $info['package'] . '
+ * @author    Your Name <handle@php.net>
+ * @copyright ' . date('Y') . ' Your Name
+ * @license   http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * @link      ' . $info['svn'] . '
+ */
+namespace ' . $info['mainNamespace'] . ';
+class Main
+{
+}
+');
+        mkdir('data');
+        mkdir('customcommand');
+        mkdir('customrole');
+        mkdir('customtask');
+        mkdir('tests');
+        mkdir('docs');
+        mkdir('examples');
+        mkdir('www');
+        file_put_contents('README', 'Package ' . $info['package'] . " summary.\n" .
+                          "\n" .
+                          "Package detailed description here (found in README)");
+        file_put_contents('CREDITS', ";; put your info here\n" .
+                          'Your Name [handle] <handle@php.net> (lead)');
+        file_put_contents('RELEASE-0.1.0', 'Package ' . $info['package'] . " release notes for version 0.1.0.");
+        file_put_contents('API-0.1.0', 'Package ' . $info['package'] . " API release notes for version 0.1.0.");
+        file_put_contents('extrasetup.php', "<?php
+/**
+ * This file is used to provide extra files/packages outside package.xml
+ */
+/**
+ * for example:
+if (basename(__DIR__) == 'trunk') {
+    \$extrafiles = array(
+        new \pear2\Pyrus\Package(__DIR__ . '/../../HTTP_Request/trunk/package.xml'),
+        new \pear2\Pyrus\Package(__DIR__ . '/../../sandbox/Console_CommandLine/trunk/package.xml'),
+        new \pear2\Pyrus\Package(__DIR__ . '/../../MultiErrors/trunk/package.xml'),
+        new \pear2\Pyrus\Package(__DIR__ . '/../../Exception/trunk/package.xml'),
+    );
+} else {
+    \$extrafiles = array(
+        new \pear2\Pyrus\Package(__DIR__ . '/../HTTP_Request/package.xml'),
+        new \pear2\Pyrus\Package(__DIR__ . '/../sandbox/Console_CommandLine/package.xml'),
+        new \pear2\Pyrus\Package(__DIR__ . '/../MultiErrors/package.xml'),
+        new \pear2\Pyrus\Package(__DIR__ . '/../Exception/package.xml'),
+    );
+}
+*/
+");
+        file_put_contents('packagexmlsetup.php', "<?php
+/**
+ * Extra package.xml settings such as dependencies.
+ */
+/**
+ * for example:
+\$package->dependencies['required']->package['pear2.php.net/PEAR2_Autoload']->save();
+\$package->dependencies['required']->package['pear2.php.net/PEAR2_Exception']->save();
+\$package->dependencies['required']->package['pear2.php.net/PEAR2_MultiErrors']->save();
+\$package->dependencies['required']->package['pear2.php.net/PEAR2_HTTP_Request']->save();
+
+\$compatible->dependencies['required']->package['pear2.php.net/PEAR2_Autoload']->save();
+\$compatible->dependencies['required']->package['pear2.php.net/PEAR2_Exception']->save();
+\$compatible->dependencies['required']->package['pear2.php.net/PEAR2_MultiErrors']->save();
+\$compatible->dependencies['required']->package['pear2.php.net/PEAR2_HTTP_Request']->save();
+*/
+?>
+");
+        file_put_contents('stub.php', "#!/usr/bin/env php
+<?php
+/**
+ * If your package does special stuff in phar format, use this file.  Remove if
+ * no phar format is ever generated
+ */
+if (version_compare(phpversion(), '5.3.1', '<')) {
+    if (substr(phpversion(), 0, 5) != '5.3.1') {
+        // this small hack is because of running RCs of 5.3.1
+        echo \"" . $info['package'] . " requires PHP 5.3.1 or newer.\n\";
+        exit -1;
+    }
+}
+foreach (array('phar', 'spl', 'pcre', 'simplexml') as \$ext) {
+    if (!extension_loaded(\$ext)) {
+        echo 'Extension ', \$ext, \" is required\n\";
+        exit -1;
+    }
+}
+try {
+    Phar::mapPhar();
+} catch (Exception \$e) {
+    echo \"Cannot process " . $info['package'] . " phar:\n\";
+    echo \$e->getMessage(), \"\n\";
+    exit -1;
+}
+function " . $info['package'] . "_autoload(\$class)
+{
+    \$class = str_replace('_', '\\', \$class);
+    if (file_exists('phar://' . __FILE__ . '/" . $info['package'] . "-@PACKAGE_VERSION@/php/' . implode('/', explode('\\', \$class)) . '.php')) {
+        include 'phar://' . __FILE__ . '/" . $info['package'] . "-@PACKAGE_VERSION@/php/' . implode('/', explode('\\', \$class)) . '.php';
+    }
+}
+spl_autoload_register(\"" . $info['package'] . "_autoload\");
+\$phar = new Phar(__FILE__);
+\$sig = \$phar->getSignature();
+define('" . $info['package'] . "_SIG', \$sig['hash']);
+define('" . $info['package'] . "_SIGTYPE', \$sig['hash_type']);
+
+// your package-specific stuff here, for instance, here is what Pyrus does:
+
+/**
+ * \$frontend = new \pear2\Pyrus\ScriptFrontend\Commands;
+ * @array_shift(\$_SERVER['argv']);
+ * \$frontend->run(\$_SERVER['argv']);
+ */
+__HALT_COMPILER();
+");
+
+        $this->makePackageXml($fronted, array('packagename' => $info['package'], 'channel' => $args['channel']),
+                              $options);
+    }
+
+    protected function parsePackageName($package, $channel)
+    {
+        $ret = array();
+        $package = explode('_', $package);
+        if ($channel == 'pear2.php.net') {
+            if ($package[0] != 'PEAR2') {
+                if ($package[0] == 'pear2' || $package[0] == 'Pear2') {
+                    $package[0] = 'PEAR2';
+                } else {
+                    array_unshift($package, 'PEAR2');
+                }
+                $ret['package'] = implode('_', $package);
+            }
+            $package[0] = 'pear2';
+            $path = $package;
+            array_shift($path);
+            $ret['path'] = implode('_', $path);
+            $ret['mainNamespace'] = implode('\\', $package);
+            $ret['mainClass'] = implode('\\', $package) . '\\Main';
+            $ret['mainPath'] = implode('/', $path);
+            $ret['svn'] = 'http://svn.php.net/repository/pear2/' . $ret['package'];
+        } else {
+            $ret['path'] = implode('_', $package);
+            $ret['package'] = implode('_', $package);
+            $ret['mainNamespace'] = implode('\\', $package);
+            $ret['mainClass'] = implode('\\', $package) . '\\Main';
+            $ret['mainPath'] = implode('/', $package);
+            $ret['svn'] = 'http://svn.' . $channel . '/???';
+        }
+        return $ret;
+    }
 }
