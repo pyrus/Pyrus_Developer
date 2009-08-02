@@ -547,6 +547,11 @@ define('" . $info['package'] . "_SIGTYPE', \$sig['hash_type']);
 __HALT_COMPILER();
 ");
 
+        $options['stub']            = 'stub.php';
+        $options['extrasetup']      = 'extrasetup.php';
+        $options['packagexmlsetup'] = 'packagexmlsetup.php';
+        $options['package']         = false;
+        $options['nocompatible']    = false;
         $this->makePackageXml($frontend, array('packagename' => $info['package'], 'channel' => $args['channel']),
                               $options);
     }
