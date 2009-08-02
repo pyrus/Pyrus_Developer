@@ -547,7 +547,7 @@ define('" . $info['package'] . "_SIGTYPE', \$sig['hash_type']);
 __HALT_COMPILER();
 ");
 
-        $this->makePackageXml($fronted, array('packagename' => $info['package'], 'channel' => $args['channel']),
+        $this->makePackageXml($frontend, array('packagename' => $info['package'], 'channel' => $args['channel']),
                               $options);
     }
 

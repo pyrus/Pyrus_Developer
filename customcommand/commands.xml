@@ -303,7 +303,26 @@ Coverage can be viewed in a web browser by opening pear2coverage.phar.php
   <autoloadpath></autoloadpath>
   <summary>Generate the subversion source layout for a new PEAR2 package</summary>
   <shortcut>gp</shortcut>
-  <options/>
+  <options>
+   <option>
+    <name>nocompatible</name>
+    <shortopt>n</shortopt>
+    <type><bool/></type>
+    <doc>Generate compatible package xml</doc>
+   </option>
+   <option>
+    <name>packagexmlsetup</name>
+    <shortopt>p</shortopt>
+    <type><bool/></type>
+    <doc>Generate package xml</doc>
+   </option>
+   <option>
+    <name>package</name>
+    <shortopt>m</shortopt>
+    <type><bool/></type>
+    <doc>Make the package releases</doc>
+   </option>
+  </options>
   <arguments>
    <argument>
     <name>package</name>
