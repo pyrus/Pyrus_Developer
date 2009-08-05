@@ -712,9 +712,9 @@ eof;
         $funcinfo = $classinfo = array();
 
         foreach ($protos as $proto) {
-            list($funcinfo, $classinfo) = $this->getFunctionFromProto($options, $proto, $funcinfo, $classinfo);
+            list($funcinfo, $classinfo) = $this->getFunctionFromProto($ext, $options, $proto, $funcinfo, $classinfo);
         }
-        list($header, $globals, $classdef, $methoddefs) = $this->getClassDefinition($classinfo, $ext);
+        list($header, $globals, $classdef, $methoddefs, $methoddecls) = $this->getClassDefinition($classinfo, $ext);
         foreach ($funcinfo as $function) {
             $funcdecl .= $function['headerdeclare'];
             $functions .= $function['definition'];
@@ -730,15 +730,15 @@ eof;
         }
 
         return array("\t/* __function_entries_here__ */\n" => $funcdefs,
-                     "/* {{{ extname_module_entry\n"       => $methoddefs . $arginfo .
+                     "/* {{{ extname_module_entry\n"       => $methods . $methoddefs .
                                                               "/* {{{ extname_module_entry\n",
-                    "/* __function_stubs_here__ */\n"      => $functions . $methods,
+                    "/* __function_stubs_here__ */\n"      => $functions,
                     "PHP_MINIT_FUNCTION(extname)\n{\n"     => "PHP_MINIT_FUNCTION(extname)\n{\n" .
                                                               $classdef,
                     "/* True global resources - no need for thread safety here */\n"
                                                            => "/* True global resources - no " .
                                                               "need for thread safety here */\n" .
-                                                              $globals,
+                                                              $arginfo . $globals,
                     "/* __function_declarations_here__ */" => $header . $funcdecl,
                     '/* __header_here__ */'                => $this->header,
                     '/* __footer_here__ */'                => $this->footer,
@@ -769,8 +769,8 @@ eof;
 
     function getClassDefinition($classinfo, $extension)
     {
-        $decl = "\tzend_class_entry *ce;\n";
-        $methoddecls = $globals = $header = '';
+        $decl = "\tzend_class_entry ce;\n";
+        $methoddecls = $methoddefs = $globals = $header = '';
         foreach ($classinfo as $class => $methods) {
             $lowerclass = strtolower($class);
             $header .= 'typedef struct _' . $extension . '_' . $lowerclass . " {\n} " .
@@ -780,17 +780,18 @@ eof;
             $decl .= "\tINIT_CLASS_ENTRY(ce, \"" . $class . "\", " . $lowerclass . "_methods);\n\t" .
                 $extension . "_ce_" . $class . " = zend_register_internal_class_ex(&ce, " .
                 "\n\t\t\tNULL, /* change this to the zend_class_entry * for the parent class, if any */\n\t\t\tNULL  TSRMLS_CC);\n";
-            $methoddecls .= "\nzend_function_entry " . $lowerclass . "_methods[] = {\n";
+            $methoddefs .= "\nzend_function_entry " . $lowerclass . "_methods[] = {\n";
             foreach ($methods as $method) {
-                $methoddecls .= $method['declaration'];
+                $methoddecls .= $method['forwarddecl'];
+                $methoddefs .= $method['declaration'];
             }
-            $methoddecls .= "\t{NULL, NULL, NULL}\n}\n";
+            $methoddefs .= "\t{NULL, NULL, NULL}\n};\n";
         }
         $header = "\n" . $header . "\n";
-        return array($header, $globals, $decl, $methoddecls);
+        return array($header, $globals, $decl, $methoddefs, $methoddecls);
     }
 
-    function getFunctionFromProto($options, $proto, $funcinfo = array(), $classinfo = array())
+    function getFunctionFromProto($ext, $options, $proto, $funcinfo = array(), $classinfo = array())
     {
         $types = $resources = '';
         $argshort = '';
@@ -864,14 +865,15 @@ eof;
         }
 
         if ($proto['class']) {
-            $types .= "\t" . $proto['class'] . "_object *" . $proto['class'] .
-                   "_obj = (" . $proto['class'] . "_object*)zend_object_store_get_object(getThis() TSRMLS_CC);\n";
+            $types .= "\t" . $ext . '_' . strtolower($proto['class']) . " *" . $proto['class'] .
+                   "_obj = (" . $ext . '_' . strtolower($proto['class']) .
+                   "*)zend_object_store_get_object(getThis() TSRMLS_CC);\n";
         }
 
         $ret = array();
 
         $required = (string) $required;
-        $ret['arginfo'] = $arginfo . $required . ")\n" . $argopts . "ZEND_END_ARGINFO()\n";
+        $ret['arginfo'] = $arginfo . $required . ")\n" . $argopts . "ZEND_END_ARG_INFO()\n";
 
         if ($proto['class']) {
             $vmap = array('public' => 'ZEND_ACC_PUBLIC',
@@ -886,6 +888,8 @@ eof;
             $ret['declaration'] = "\tPHP_ME(" . $proto['class'] . ', ' . $proto['function'] .
                                   ",\targinfo_" . $proto['class'] . '_' . $proto['function'] .
                                   ",\t" . $visibility . ")\n";
+            $ret['forwarddecl'] = 'PHP_METHOD(' . $proto['class'] . ', ' . $proto['function'] . ");\n";
+
         } else {
             $ret['definition'] = '/* {{{ proto ' . $proto['proto'] . "*/\n" .
                                  'PHP_FUNCTION(' . $proto['function'] . ")\n{\n";
@@ -897,8 +901,8 @@ eof;
             $ret['definition'] .= "\tif (zend_parse_parameters_none() == FAILURE) {\n\t\treturn;\n\t}\n";
         } else {
             $ret['definition'] .= $types;
-            $ret['definition'] .= "\tif (zend_parse_parameters(ZEND_NUM_ARGS TSRMLS_CC, \"" .
-                                  $argshort . '"' . $arglong . ") == FAILURE) {\n\t\tRETURN_NULL;\n\t}\n" . $resources;
+            $ret['definition'] .= "\tif (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, \"" .
+                                  $argshort . '"' . $arglong . ") == FAILURE) {\n\t\tRETURN_NULL();\n\t}\n" . $resources;
         }
         if (!$options['nohelp']) {
             if ($proto['class']) {
