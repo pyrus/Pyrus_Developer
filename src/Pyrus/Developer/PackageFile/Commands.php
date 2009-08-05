@@ -4,6 +4,10 @@ namespace pear2\Pyrus\Developer\PackageFile;
 use pear2\Pyrus\Developer\CoverageAnalyzer as Coverage;
 class Commands
 {
+    protected $header;
+    protected $footer;
+    protected $skeleton;
+
     function makePackageXml($frontend, $args, $options)
     {
         if (isset($args['dir'])) {
@@ -584,6 +588,398 @@ __HALT_COMPILER();
             $ret['mainClass'] = implode('\\', $package) . '\\Main';
             $ret['mainPath'] = implode('/', $package);
             $ret['svn'] = 'http://svn.' . $channel . '/???';
+        }
+        return $ret;
+    }
+
+    function extSkeleton($frontend, $args, $options)
+    {
+        if (file_exists($args['extension'])) {
+            throw new \pear2\Pyrus\Developer\Creator\Exception('Extension ' . $args['extension'] .
+                                                               ' directory already exists');
+        }
+        if ($options['proto']) {
+            $protos = $this->parseProtos($options['proto']);
+        } else {
+            $protos = array();
+        }
+
+        $ext = $args['extension'];
+        mkdir($ext);
+        mkdir($ext . '/tests');
+
+        $this->skeleton = realpath(__DIR__ . '/../../../../../data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton');
+        $this->footer = "\n" .
+        "/*\n" .
+        " * Local variables:\n" .
+        " * tab-width: 4\n" .
+        " * c-basic-offset: 4\n" .
+        " * End:\n" .
+        " * vim600: noet sw=4 ts=4 fdm=marker\n" .
+        " * vim<600: noet sw=4 ts=4\n" .
+        " */";
+
+        $this->header = str_replace("\r\n", "\n", "/*
+  +----------------------------------------------------------------------+
+  | PHP Version 6                                                        |
+  +----------------------------------------------------------------------+
+  | Copyright (c) 1997-" . date('Y') . " The PHP Group                                |
+  +----------------------------------------------------------------------+
+  | This source file is subject to version 3.01 of the PHP license,      |
+  | that is bundled with this package in the file LICENSE, and is        |
+  | available through the world-wide-web at the following url:           |
+  | http://www.php.net/license/3_01.txt                                  |
+  | If you did not receive a copy of the PHP license and are unable to   |
+  | obtain it through the world-wide-web, please send a note to          |
+  | license@php.net so we can mail you a copy immediately.               |
+  +----------------------------------------------------------------------+
+  | Author:                                                              |
+  +----------------------------------------------------------------------+
+*/
+
+/* \$Id: header 263616 2008-07-26 22:21:12Z jani $ */
+");
+        $this->saveConfigM4($ext);
+        $this->saveConfigW32($ext);
+        
+        $replace = $this->postProcessProtos($options, $ext, $protos);
+        foreach (array('skeleton.c', 'skeleton.php', 'php_skeleton.h', 'CREDITS',
+                       'EXPERIMENTAL', 'tests/001.phpt') as $file) {
+            $dest = str_replace('skeleton', $ext, $file);
+            $this->processFile($ext, $file, $dest, $replace);
+        }
+        file_put_contents($ext . '/README', 'Extension package ' . $ext . " summary\n\n" .
+                          'Detailed description (edit README to change this)');
+        file_put_contents($ext . '/CREDITS', ";; put your info here\n" .
+                          'Your Name [handle] <handle@php.net> (lead)');
+        file_put_contents($ext . '/RELEASE-0.1.0', 'Package ' . $ext . " release notes for version 0.1.0.");
+        file_put_contents($ext . '/API-0.1.0', 'Package ' . $ext . " API release notes for version 0.1.0.");
+        $this->makePECLPackage($frontend, array('packagename' => $ext,
+                                                'channel' => 'pecl.php.net',
+                                                'dir' => realpath($ext)), array('donotpackage' => true));
+        echo <<<eof
+
+To use your new PECL extension, you will have to execute the following steps:
+
+1.  $ cd $ext
+2.  $ edit README, CREDITS, RELEASE-0.1.0
+3.  $ edit config.m4 and config.w32
+4.  $ phpize
+5.  $ ./configure
+6.  $ make
+7.  $ php -n -dextension_dir=`pwd`/modules -dextension=$ext.so $ext.php
+8.  $ edit $ext.c to correct errors
+9.  $ make
+
+Repeat steps 4-8 until you are satisfied with ext/$ext/config.m4 and
+step 7 confirms that your module is compiled into PHP. Then, start writing
+code and repeat the last two steps as often as necessary.
+
+Once you are satisfied, run phpize --clean to remove temporary files.
+
+If this extension is part of PHP rather than a PECL extension, run these steps
+instead:
+
+1.  $ cd ..
+2.  $ edit ext/$ext/config.m4 and ext/$ext/config.w32
+3.  $ ./buildconf
+4.  $ ./configure --[with|enable]-$ext
+5.  $ make
+6.  $ ./php -n -f ext/$ext/$ext.php
+7.  $ edit ext/$ext/$ext.c
+8.  $ make
+
+Repeat steps 3-6 until you are satisfied with ext/$ext/config.m4 and
+step 6 confirms that your module is compiled into PHP. Then, start writing
+code and repeat the last two steps as often as necessary.
+eof;
+
+    }
+
+    function postProcessProtos($options, $ext, $protos)
+    {
+        if (!count($protos)) {
+            return array(
+                    '/* __header_here__ */'                => $this->header,
+                    '/* __footer_here__ */'                => $this->footer,
+                    'extname'                              => $ext,
+                    'EXTNAME'                              => strtoupper($ext),
+                   );
+        }
+        $funcdefs = $methoddefs = $arginfo = $functions = $methods = $classdef =
+        $globals = $funcdecl = '';
+        $funcinfo = $classinfo = array();
+
+        foreach ($protos as $proto) {
+            list($funcinfo, $classinfo) = $this->getFunctionFromProto($options, $proto, $funcinfo, $classinfo);
+        }
+        list($globals, $classdef, $methoddefs) = $this->getClassDefinition($classinfo, $ext);
+        foreach ($funcinfo as $function) {
+            $funcdecl .= $function['headerdeclare'];
+            $functions .= $function['definition'];
+            $funcdefs .= $function['declaration'];
+            $arginfo .= $function['arginfo'] . "\n";
+        }
+        foreach ($classinfo as $class => $info) {
+            $methods .= "/* class $class methods */\n";
+            foreach ($info as $function) {
+                $methods .= $function['definition'];
+                $arginfo .= $function['arginfo'] . "\n";
+            }
+        }
+
+        return array("\t/* __function_entries_here__ */\n" => $funcdefs,
+                     "/* {{{ extname_module_entry\n"       => $methoddefs . $arginfo .
+                                                              "/* {{{ extname_module_entry\n",
+                    "/* __function_stubs_here__ */\n"      => $functions . $methods,
+                    "PHP_MINIT_FUNCTION(extname)\n{\n"     => "PHP_MINIT_FUNCTION(extname)\n{\n" .
+                                                              $classdef,
+                    "/* True global resources - no need for thread safety here */\n"
+                                                           => "/* True global resources - no " .
+                                                              "need for thread safety here */\n" .
+                                                              $globals,
+                    "/* __function_declarations_here__ */" => $funcdecl,
+                    '/* __header_here__ */'                => $this->header,
+                    '/* __footer_here__ */'                => $this->footer,
+                    'extname'                              => $ext,
+                    'EXTNAME'                              => strtoupper($ext),
+               );
+    }
+
+    function processFile($ext, $source, $dest, $replace)
+    {
+        $s = file_get_contents($this->skeleton . '/' . $source);
+        file_put_contents($ext . '/' . $dest, str_replace(array_keys($replace), array_values($replace), $s));
+    }
+
+    function saveConfigM4($ext)
+    {
+        $m4 = file_get_contents(dirname($this->skeleton) . '/config.m4');
+        file_put_contents($ext . '/config.m4', str_replace(array('@EXTNAME@', '@extname@'),
+                                                           array(strtoupper($ext), $ext), $m4));
+    }
+
+    function saveConfigW32($ext)
+    {
+        $w32 = file_get_contents(dirname($this->skeleton) . '/config.w32');
+        file_put_contents($ext . '/config.w32', str_replace(array('@EXTNAME@', '@extname@'),
+                                                            array(strtoupper($ext), $ext), $w32));
+    }
+
+    function getClassDefinition($classinfo, $extension)
+    {
+        $decl = "\tzend_class_entry *ce;\n";
+        $methoddecls = $globals = '';
+        foreach ($classinfo as $class => $methods) {
+            $lowerclass = strtolower($class);
+            $globals .= "PHP_" . strtoupper($extension) . "_API zend_class_entry *" .
+                        $extension . "_ce_" . $class . ";\n";
+            $decl .= "\tINIT_CLASS_ENTRY(ce, \"" . $class . "\", " . $lowerclass . "_methods);\n\t" .
+                $extension . "_ce_" . $class . " = zend_register_internal_class_ex(&ce, " .
+                "\n\t\t\tNULL, /* change this to the zend_class_entry * for the parent class, if any */\n\t\t\tNULL  TSRMLS_CC);\n";
+            $methoddecls .= "\nzend_function_entry " . $lowerclass . "_methods[] = {\n";
+            foreach ($methods as $method) {
+                $methoddecls .= $method['declaration'];
+            }
+            $methoddecls .= "\t{NULL, NULL, NULL}\n}\n";
+        }
+        return array($globals, $decl, $methoddecls);
+    }
+
+    function getFunctionFromProto($options, $proto, $funcinfo = array(), $classinfo = array())
+    {
+        $types = $resources = '';
+        $argshort = '';
+        $arglong = '';
+        $hadoptional = false;
+
+        if ($proto['class']) {
+            $arginfo = 'ZEND_BEGIN_ARG_INFO_EX(arginfo_' . $proto['class'] . '_' .
+                       $proto['function'] . ', 0, 0, ';
+        } else {
+            $arginfo = 'ZEND_BEGIN_ARG_INFO_EX(arginfo_' . $proto['function']. ', 0, 0, ';
+        }
+        $required = 0;
+        $argopts = '';
+        foreach ($proto['args'] as $arg) {
+            if ($arg['optional'] && !$hadoptional) {
+                $argshort .= '|';
+                $hadoptional = true;
+            } elseif (!$hadoptional) {
+                $required++;
+            }
+            $argshort .= $arg['code'];
+
+            $arglong .= ', &' . $arg['name'];
+            if ($arg['type'] == "...") {
+                $argopts .= "\tZEND_ARG_INFO(0, " . $arg['name'] . "...)\n";
+            } else {
+                $argopts .= "\tZEND_ARG_INFO(0, " . $arg['name'] . ")\n";
+            }
+
+            if ($arg['type'] == "int" || $arg['type'] == "long") {
+                $types .= "\tlong " . $arg['name'] . ";\n";
+            } else if ($arg['type'] == "bool" || $arg['type'] == "boolean") {
+                $types .= "\tzend_bool " . $arg['name'] . ";\n";
+            } else if ($arg['type'] == "double" || $arg['type'] == "float") {
+                $types .= "\tdouble " . $arg['name'] . ";\n";
+            } else if ($arg['type'] == "callback") {
+                $types .= "\tzend_fcall_info " . $arg['name'] . ";\n";
+                $types .= "\tzend_fcall_info_cache " . $arg['name'] . "_cache;\n";
+                $arglong .= ', &' . $arg['name'] . '_cache';
+            } else if ($arg['type'] == "class") {
+                $types .= "\tzend_class_entry *" . $arg['name'] . ";\n";
+            } else if ($arg['type'] == "string") {
+                $types .= "\tchar *" . $arg['name'] . " = NULL;\n";
+                $types .= "\tint " . $arg['name'] . "_len;\n";
+                $arglong .= ', &' . $arg['name'] . '_len';
+            } else if ($arg['type'] == "unicode") {
+                $types .= "\tUChar *" . $arg['name'] . " = NULL;\n";
+                $types .= "\tint " . $arg['name'] . "_len;\n";
+                $arglong .= ', &' . $arg['name'] . '_len';
+            } else if ($arg['type'] == "text") {
+                $types .= "\tzstr " . $arg['name'] . " = NULL;\n";
+                $types .= "\tint " . $arg['name'] . "_len;\n";
+                $types .= "\tzend_uchar " . $arg['name'] . "_type;\n";
+                $arglong .= ', &' . $arg['name'] . '_len';
+                $arglong .= ', &' . $arg['name'] . '_type';
+            } else if ($arg['type'] == "array" || $arg['type'] == "object" || $arg['type'] == "mixed" ||
+                       $arg['type'] == "array|object") {
+                $types .= "\tzval *" . $arg['name'] . " = NULL;\n";
+            } else if ($arg['type'] == "...") {
+                $types .= "\tzval ***" . $arg['name'] . " = NULL;\n";
+                $types .= "\tint " . $arg['name'] . "_num;\n";
+                $arglong .= ', &' . $arg['name'] . '_num';
+            } else if ($arg['type'] == "resource" || $arg['type'] == "handle") {
+                $types .= "\tzval *" . $arg['name'] . " = NULL;\n";
+                $resources .= "\tif (" . $arg['name'] . ") {\n" .
+                    "\t\tZEND_FETCH_RESOURCE(???, ???, " .
+                    $arg['name'] . ", " . $arg['name'] . "_id, \"???\", ???_rsrc_id);\n\t}\n";
+                $types .= "\tint " . $arg['name'] . "_id = -1;\n";
+            }
+        }
+
+        if ($proto['class']) {
+            $types .= "\t" . $proto['class'] . "_object *" . $proto['class'] .
+                   "_obj = (" . $proto['class'] . "_object*)zend_object_store_get_object(getThis() TSRMLS_CC);\n";
+        }
+
+        $ret = array();
+
+        $required = (string) $required;
+        $ret['arginfo'] = $arginfo . $required . ")\n" . $argopts . "ZEND_END_ARGINFO()\n";
+
+        if ($proto['class']) {
+            $ret['definition'] = '/* {{{ proto ' . $proto['proto'] . "*/\n" .
+                                 'PHP_METHOD(' . $proto['class'] . ', ' . $proto['function'] . ")\n{\n";
+            $ret['declaration'] = "\tPHP_ME(" . $proto['class'] . ', ' . $proto['function'] .
+                                  ",\targinfo_" . $proto['class'] . '_' . $proto['function'] . ")\n";
+        } else {
+            $ret['definition'] = '/* {{{ proto ' . $proto['proto'] . "*/\n" .
+                                 'PHP_FUNCTION(' . $proto['function'] . ")\n{\n";
+            $ret['declaration'] = "\tPHP_FE(" . $proto['function'] . ",\targinfo_" . $proto['function'] . ")\n";
+            $ret['headerdeclare'] = 'PHP_FUNCTION(' . $proto['function'] . ");\n";
+        }
+
+        if (!count($proto['args'])) {
+            $ret['definition'] .= "\tif (zend_parse_parameters_none() == FAILURE) {\n\t\treturn;\n\t}\n";
+        } else {
+            $ret['definition'] .= $types;
+            $ret['definition'] .= "\tif (zend_parse_parameters(ZEND_NUM_ARGS TSRMLS_CC, \"" .
+                                  $argshort . '"' . $arglong . ") == FAILURE) {\n\t\tRETURN_NULL;\n\t}\n" . $resources;
+        }
+        if (!$options['no-help']) {
+            if ($proto['class']) {
+                $ret['definition'] .= "\tphp_error(E_WARNING, \"" . $proto['class'] . '::' .
+                                      $proto['function'] .
+                                      ": not yet implemented\");\n";
+            } else {
+                $ret['definition'] .= "\tphp_error(E_WARNING, \"" . $proto['function'] .
+                                      ": not yet implemented\");\n";
+            }
+        }
+        $ret['definition'] .= "}\n/* }}} */\n";
+
+        if ($proto['class']) {
+            $classinfo[$proto['class']][$proto['function']] = $ret;
+        } else {
+            $funcinfo[$proto['function']] = $ret;
+        }
+        return array($funcinfo, $classinfo);
+    }
+
+    function parseProtos($protofile)
+    {
+        $file = file($protofile);
+        $protos = array();
+        foreach ($file as $proto) {
+            if (!$proto) {
+                continue;
+            }
+            $protos[] = $this->parseProto($proto);
+        }
+        return $protos;
+    }
+
+    static function parseProto($proto)
+    {
+        static $map = array(
+            'array' => 'a',
+            'array|object' => 'A',
+            'bool' => 'b',
+            'boolean' => 'b',
+            'callback' => 'f',
+            'class' => 'C',
+            'double' => 'd',
+            'float' => 'd',
+            'handle' => 'r',
+            'int' => 'L',
+            'long' => 'L',
+            'mixed' => 'z',
+            'object' => 'o',
+            'resource' => 'r',
+            'string' => 's',
+            'text' => 'T',
+            'unicode' => 'u',
+            'void' => '',
+            '...' => '*', // if param is not optional, + is used
+        );
+        $ret = array();
+        $ret['function'] = substr($proto, 0, $pos = strpos($proto, '('));
+        if (strpos($ret['function'], ' ')) {
+            $info = explode(' ', $ret['function']);
+            $ret['returns'] = $info[0];
+            $ret['function'] = $info[1];
+            $ret['class'] = false;
+        }
+        if (strpos($ret['function'], '::')) {
+            $info = explode('::', $ret['function']);
+            $ret['class'] = $info[0];
+            $ret['function'] = $info[1];
+        }
+        $ret['proto'] = $proto;
+        // parse arguments
+        $len = strlen($proto);
+        $args = explode(',', substr(str_replace(array(']',')'), '', $proto), $pos + 1));
+        foreach ($args as $index => $arg) {
+            $arginfo = explode(' ', str_replace('[', '', trim($arg)));
+            $arg = explode(' ', trim($arg));
+            $ret['args'][$index]['type'] = $arginfo[0];
+            if (!isset($map[$ret['args'][$index]['type']])) {
+                $ret['args'][$index]['type'] = 'mixed';
+            }
+            $ret['args'][$index]['name'] = $arginfo[1];
+            if ($index == 0) {
+                $ret['args'][$index]['optional'] = $arg[0][0] == '[';
+            } else {
+                $ret['args'][$index]['optional'] = (strpos('[', $lastarg[1]) !== false) || isset($lastarg[2]);
+            }
+            $lastarg = $arg;
+
+            $ret['args'][$index]['code'] = $map[$ret['args'][$index]['type']];
+            if ($ret['args'][$index]['code'] == '*' && !$ret['args'][$index]['optional']) {
+                $ret['args'][$index]['code'] = '+';
+            }
         }
         return $ret;
     }

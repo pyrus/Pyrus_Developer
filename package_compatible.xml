@@ -14,8 +14,8 @@ and commands to create a package from an existing package.xml</description>
   <email>cellog@php.net</email>
   <active>yes</active>
  </lead>
- <date>2009-07-06</date>
- <time>12:29:24</time>
+ <date>2009-08-04</date>
+ <time>21:23:50</time>
  <version>
   <release>0.1.0</release>
   <api>0.1.0</api>
@@ -57,7 +57,17 @@ and commands to create a package from an existing package.xml</description>
    <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/DefaultSourceDecorator.php"/>
    <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Aggregator.php"/>
    <file role="php" name="php/pear2/Pyrus/Developer/CoverageAnalyzer/AbstractSourceDecorator.php"/>
+   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/tests/skeleton/tests/001.phpt"/>
+   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/skeleton.php"/>
+   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/skeleton.dsp"/>
+   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/skeleton.c"/>
+   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/php_skeleton.h"/>
+   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/EXPERIMENTAL"/>
+   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/CREDITS"/>
+   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/create_stubs"/>
    <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/phartemplate.php"/>
+   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/config.w32"/>
+   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/config.m4"/>
    <file role="data" name="customcommand/PEAR2_Pyrus_Developer/pear2.php.net/commands.xml"/>
   </dir>
  </contents>
@@ -74,7 +84,17 @@ and commands to create a package from an existing package.xml</description>
  <phprelease>
   <filelist>
    <install name="customcommand/PEAR2_Pyrus_Developer/pear2.php.net/commands.xml" as="pear2.php.net/commands.xml"/>
+   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/config.m4" as="pear2.php.net/config.m4"/>
+   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/config.w32" as="pear2.php.net/config.w32"/>
    <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/phartemplate.php" as="pear2.php.net/phartemplate.php"/>
+   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/create_stubs" as="pear2.php.net/skeleton/skeleton/create_stubs"/>
+   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/CREDITS" as="pear2.php.net/skeleton/skeleton/CREDITS"/>
+   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/EXPERIMENTAL" as="pear2.php.net/skeleton/skeleton/EXPERIMENTAL"/>
+   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/php_skeleton.h" as="pear2.php.net/skeleton/skeleton/php_skeleton.h"/>
+   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/skeleton.c" as="pear2.php.net/skeleton/skeleton/skeleton.c"/>
+   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/skeleton.dsp" as="pear2.php.net/skeleton/skeleton/skeleton.dsp"/>
+   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/skeleton.php" as="pear2.php.net/skeleton/skeleton/skeleton.php"/>
+   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/tests/skeleton/tests/001.phpt" as="pear2.php.net/skeleton/tests/skeleton/tests/001.phpt"/>
    <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/AbstractSourceDecorator.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/AbstractSourceDecorator.php"/>
    <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/Aggregator.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/Aggregator.php"/>
    <install name="php/pear2/Pyrus/Developer/CoverageAnalyzer/DefaultSourceDecorator.php" as="pear2/Pyrus/Developer/CoverageAnalyzer/DefaultSourceDecorator.php"/>
