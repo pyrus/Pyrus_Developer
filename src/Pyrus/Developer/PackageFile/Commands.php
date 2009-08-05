@@ -692,6 +692,7 @@ instead:
 Repeat steps 3-6 until you are satisfied with ext/$ext/config.m4 and
 step 6 confirms that your module is compiled into PHP. Then, start writing
 code and repeat the last two steps as often as necessary.
+
 eof;
 
     }
@@ -713,7 +714,7 @@ eof;
         foreach ($protos as $proto) {
             list($funcinfo, $classinfo) = $this->getFunctionFromProto($options, $proto, $funcinfo, $classinfo);
         }
-        list($globals, $classdef, $methoddefs) = $this->getClassDefinition($classinfo, $ext);
+        list($header, $globals, $classdef, $methoddefs) = $this->getClassDefinition($classinfo, $ext);
         foreach ($funcinfo as $function) {
             $funcdecl .= $function['headerdeclare'];
             $functions .= $function['definition'];
@@ -738,7 +739,7 @@ eof;
                                                            => "/* True global resources - no " .
                                                               "need for thread safety here */\n" .
                                                               $globals,
-                    "/* __function_declarations_here__ */" => $funcdecl,
+                    "/* __function_declarations_here__ */" => $header . $funcdecl,
                     '/* __header_here__ */'                => $this->header,
                     '/* __footer_here__ */'                => $this->footer,
                     'extname'                              => $ext,
@@ -769,9 +770,11 @@ eof;
     function getClassDefinition($classinfo, $extension)
     {
         $decl = "\tzend_class_entry *ce;\n";
-        $methoddecls = $globals = '';
+        $methoddecls = $globals = $header = '';
         foreach ($classinfo as $class => $methods) {
             $lowerclass = strtolower($class);
+            $header .= 'typedef struct _' . $extension . '_' . $lowerclass . " {\n} " .
+                       $extension . '_' . $lowerclass . ";\n";
             $globals .= "PHP_" . strtoupper($extension) . "_API zend_class_entry *" .
                         $extension . "_ce_" . $class . ";\n";
             $decl .= "\tINIT_CLASS_ENTRY(ce, \"" . $class . "\", " . $lowerclass . "_methods);\n\t" .
@@ -783,7 +786,8 @@ eof;
             }
             $methoddecls .= "\t{NULL, NULL, NULL}\n}\n";
         }
-        return array($globals, $decl, $methoddecls);
+        $header = "\n" . $header . "\n";
+        return array($header, $globals, $decl, $methoddecls);
     }
 
     function getFunctionFromProto($options, $proto, $funcinfo = array(), $classinfo = array())
@@ -870,10 +874,18 @@ eof;
         $ret['arginfo'] = $arginfo . $required . ")\n" . $argopts . "ZEND_END_ARGINFO()\n";
 
         if ($proto['class']) {
+            $vmap = array('public' => 'ZEND_ACC_PUBLIC',
+                          'protected' => 'ZEND_ACC_PROTECTED',
+                          'private' => 'ZEND_ACC_PRIVATE');
+            $visibility = $vmap[$proto['visibility']];
+            if ($proto['static']) {
+                $visibility .= '|ZEND_ACC_STATIC';
+            }
             $ret['definition'] = '/* {{{ proto ' . $proto['proto'] . "*/\n" .
                                  'PHP_METHOD(' . $proto['class'] . ', ' . $proto['function'] . ")\n{\n";
             $ret['declaration'] = "\tPHP_ME(" . $proto['class'] . ', ' . $proto['function'] .
-                                  ",\targinfo_" . $proto['class'] . '_' . $proto['function'] . ")\n";
+                                  ",\targinfo_" . $proto['class'] . '_' . $proto['function'] .
+                                  ",\t" . $visibility . ")\n";
         } else {
             $ret['definition'] = '/* {{{ proto ' . $proto['proto'] . "*/\n" .
                                  'PHP_FUNCTION(' . $proto['function'] . ")\n{\n";
@@ -888,7 +900,7 @@ eof;
             $ret['definition'] .= "\tif (zend_parse_parameters(ZEND_NUM_ARGS TSRMLS_CC, \"" .
                                   $argshort . '"' . $arglong . ") == FAILURE) {\n\t\tRETURN_NULL;\n\t}\n" . $resources;
         }
-        if (!$options['no-help']) {
+        if (!$options['nohelp']) {
             if ($proto['class']) {
                 $ret['definition'] .= "\tphp_error(E_WARNING, \"" . $proto['class'] . '::' .
                                       $proto['function'] .
@@ -898,7 +910,7 @@ eof;
                                       ": not yet implemented\");\n";
             }
         }
-        $ret['definition'] .= "}\n/* }}} */\n";
+        $ret['definition'] .= "}\n/* }}} */\n\n";
 
         if ($proto['class']) {
             $classinfo[$proto['class']][$proto['function']] = $ret;
@@ -913,7 +925,7 @@ eof;
         $file = file($protofile);
         $protos = array();
         foreach ($file as $proto) {
-            if (!$proto) {
+            if (!trim($proto)) {
                 continue;
             }
             $protos[] = $this->parseProto($proto);
@@ -946,11 +958,26 @@ eof;
         );
         $ret = array();
         $ret['function'] = substr($proto, 0, $pos = strpos($proto, '('));
+        $ret['static'] = $ret['class'] = false;
+        $ret['visibility'] = 'public';
         if (strpos($ret['function'], ' ')) {
             $info = explode(' ', $ret['function']);
+            $tried = 0;
+            while (count($info) > 2 && ++$tried < 4) {
+                if (in_array($info[0], array('private', 'public', 'protected'))) {
+                    $ret['visibility'] = array_shift($info);
+                }
+                if ($info[0] == 'static') {
+                    $ret['static'] = true;
+                    array_shift($info);
+                }
+            }
+            if ($tried > 2) {
+                throw new \pear2\Pyrus\Developer\Creator\Exception('Invalid proto ' .
+                                                                   $proto);
+            }
             $ret['returns'] = $info[0];
             $ret['function'] = $info[1];
-            $ret['class'] = false;
         }
         if (strpos($ret['function'], '::')) {
             $info = explode('::', $ret['function']);
@@ -960,8 +987,12 @@ eof;
         $ret['proto'] = $proto;
         // parse arguments
         $len = strlen($proto);
-        $args = explode(',', substr(str_replace(array(']',')'), '', $proto), $pos + 1));
+        $args = explode(',', substr(str_replace(array(']',')'), '', trim($proto)), $pos + 1));
+        $ret['args'] = array();
         foreach ($args as $index => $arg) {
+            if (!trim($arg)) {
+                continue;
+            }
             $arginfo = explode(' ', str_replace('[', '', trim($arg)));
             $arg = explode(' ', trim($arg));
             $ret['args'][$index]['type'] = $arginfo[0];
