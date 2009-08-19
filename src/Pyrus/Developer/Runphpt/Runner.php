@@ -948,7 +948,11 @@ $return_value
         if ($section_text['CLEAN']) {
             // perform test cleanup
             $this->save_text($temp_clean, $section_text['CLEAN']);
-            $output = $this->system_with_timeout("$this->_php $temp_clean  2>&1");
+            if (isset($this->_savephp)) {
+                $output = $this->system_with_timeout("$this->_savephp $temp_clean  2>&1");
+            } else {
+                $output = $this->system_with_timeout("$this->_php $temp_clean  2>&1");
+            }
             if (strlen($output[1])) {
                 echo "BORKED --CLEAN-- section! output:\n", $output[1];
             }
