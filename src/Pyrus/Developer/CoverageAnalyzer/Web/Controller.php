@@ -16,11 +16,11 @@ class Controller {
     {
         if (!isset($_SESSION['fullpath']) || isset($_GET['restart'])) {
             unset($_SESSION['fullpath']);
-            if (isset($_POST['setdatabase'])) {
-                if (file_exists($_POST['setdatabase'])) {
+            if (isset($_GET['setdatabase'])) {
+                if (file_exists($_GET['setdatabase'])) {
                     try {
-                        $this->sqlite = new Aggregator($_POST['setdatabase']);
-                        $_SESSION['fullpath'] = $_POST['setdatabase'];
+                        $this->sqlite = new Aggregator($_GET['setdatabase']);
+                        $_SESSION['fullpath'] = $_GET['setdatabase'];
                         return $this->view->TOC($this->sqlite);
                     } catch (\Exception $e) {
                         echo $e->getMessage() . '<br />';

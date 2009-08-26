@@ -27,7 +27,7 @@ class View
           $output->writeElement('h2', 'Please enter the path to a coverage database');
           $output->startElement('form');
            $output->writeAttribute('name', 'getdatabase');
-           $output->writeAttribute('method', 'POST');
+           $output->writeAttribute('method', 'GET');
            $output->writeAttribute('action', $this->controller->getTOCLink());
            $output->startElement('input');
             $output->writeAttribute('type', 'text');
