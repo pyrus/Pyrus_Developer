@@ -118,6 +118,7 @@ class Aggregator
         $this->testpath = $testpath;
 
         // get a list of all xdebug files
+        $xdebugs = array();
         foreach (new \RegexIterator(
                                     new \RecursiveIteratorIterator(
                                         new \RecursiveDirectoryIterator($testpath,
