@@ -30,6 +30,7 @@ class View
            $output->writeAttribute('method', 'GET');
            $output->writeAttribute('action', $this->controller->getTOCLink());
            $output->startElement('input');
+            $output->writeAttribute('size', '90');
             $output->writeAttribute('type', 'text');
             $output->writeAttribute('name', 'setdatabase');
            $output->endElement();
