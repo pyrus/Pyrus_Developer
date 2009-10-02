@@ -392,7 +392,11 @@ dorender:
                             $codepath,
                             $testpath . '/pear2coverage.db');
         $coverage = $a->retrieveProjectCoverage();
-        echo "Project coverage: ", (($coverage[0] / $coverage[1]) * 100), "%\n";
+        if ($coverage[1]) {
+            echo "Project coverage: ", (($coverage[0] / $coverage[1]) * 100), "%\n";
+        } else {
+            echo "Unknown coverage.\n";
+        }
     }
 
     function pear2Skeleton($frontend, $args, $options)
