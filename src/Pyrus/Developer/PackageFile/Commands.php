@@ -534,9 +534,9 @@ try {
 }
 function " . $info['package'] . "_autoload(\$class)
 {
-    \$class = str_replace('_', '\\', \$class);
-    if (file_exists('phar://' . __FILE__ . '/" . $info['package'] . "-@PACKAGE_VERSION@/php/' . implode('/', explode('\\', \$class)) . '.php')) {
-        include 'phar://' . __FILE__ . '/" . $info['package'] . "-@PACKAGE_VERSION@/php/' . implode('/', explode('\\', \$class)) . '.php';
+    \$class = str_replace('_', '\\\', \$class);
+    if (file_exists('phar://' . __FILE__ . '/" . $info['package'] . "-@PACKAGE_VERSION@/php/' . implode('/', explode('\\\', \$class)) . '.php')) {
+        include 'phar://' . __FILE__ . '/" . $info['package'] . "-@PACKAGE_VERSION@/php/' . implode('/', explode('\\\', \$class)) . '.php';
     }
 }
 spl_autoload_register(\"" . $info['package'] . "_autoload\");
