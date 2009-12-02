@@ -39,10 +39,15 @@ class Filter extends \FilterIterator
         if ($this->getInnerIterator()->current()->getBasename() == 'pear2coverage.db') {
             return false;
         }
-            $invalid_extensions = array('diff','exp','log','out', 'xdebug');
+        $invalid_extensions = array('diff','exp','log','out', 'xdebug');
         $info = pathinfo($this->getInnerIterator()->current()->getPathName());
         if (!isset($info['extension'])) {
             return true;
+        }
+        if ($info['extension'] == 'php'
+            && file_exists($info['dirname'].DIRECTORY_SEPARATOR.$info['filename'].'.phpt')) {
+            // Assume this is the result of a failed .phpt test
+            return false;
         }
         return !in_array($info['extension'], $invalid_extensions);
     }
