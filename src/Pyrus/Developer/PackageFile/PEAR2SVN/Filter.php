@@ -13,37 +13,37 @@ class Filter extends \FilterIterator
 
     public function accept()
     {
-    	if ($this->getInnerIterator()->isDot()) {
-    	    return false;
-    	}
+        if ($this->getInnerIterator()->isDot()) {
+            return false;
+        }
     
-    	$path = str_replace('\\', '/', $this->path);
+        $path = str_replace('\\', '/', $this->path);
         $path = str_replace($path, '', $this->getInnerIterator()->current()->getPathName());
         if ($path && $path[0] === DIRECTORY_SEPARATOR) {
             $path = substr($path, 1);
         }
         
         if (preg_match('@/?\.svn/@', $path)) {
-        	return false;
+            return false;
         }
         
         switch($this->role) {
-	    case 'test':
-		    return $this->filterTestsDir();
+        case 'test':
+            return $this->filterTestsDir();
         }
         return true;
     }
     
     function filterTestsDir()
     {
-	if ($this->getInnerIterator()->current()->getBasename() == 'pear2coverage.db') {
-	    return false;
-	}
-    	$invalid_extensions = array('diff','exp','log','out', 'xdebug');
-	$info = pathinfo($this->getInnerIterator()->current()->getPathName());
-	if (!isset($info['extension'])) {
-	    return true;
-	}
-	return !in_array($info['extension'], $invalid_extensions);
+        if ($this->getInnerIterator()->current()->getBasename() == 'pear2coverage.db') {
+            return false;
+        }
+            $invalid_extensions = array('diff','exp','log','out', 'xdebug');
+        $info = pathinfo($this->getInnerIterator()->current()->getPathName());
+        if (!isset($info['extension'])) {
+            return true;
+        }
+        return !in_array($info['extension'], $invalid_extensions);
     }
 }
