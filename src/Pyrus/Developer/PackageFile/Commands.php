@@ -469,6 +469,8 @@ class Main
 /**
  * This file is used to provide extra files/packages outside package.xml
  */
+\$extrafiles = array();
+
 /**
  * for example:
 if (basename(__DIR__) == 'trunk') {
