@@ -65,19 +65,11 @@ class Runner
     function system_with_timeout($commandline, $env = null, $stdin = null)
     {
         $data = '';
-        if (version_compare(phpversion(), '5.0.0', '<')) {
-            $proc = proc_open($commandline, array(
-                0 => array('pipe', 'r'),
-                1 => array('pipe', 'w'),
-                2 => array('pipe', 'w')
-                ), $pipes);
-        } else {
-            $proc = proc_open($commandline, array(
-                0 => array('pipe', 'r'),
-                1 => array('pipe', 'w'),
-                2 => array('pipe', 'w')
-                ), $pipes, null, $env, array('suppress_errors' => true));
-        }
+        $proc = proc_open($commandline, array(
+            0 => array('pipe', 'r'),
+            1 => array('pipe', 'w'),
+            2 => array('pipe', 'w')
+            ), $pipes, null, $env, array('suppress_errors' => true));
 
         if (!$proc) {
             return false;
