@@ -1,5 +1,5 @@
 <?php
-namespace pear2\Pyrus\Developer\CoverageAnalyzer {
+namespace pear2\Pyrus\Developer\CoverageAnalyzer;
 class SourceFile
 {
     protected $source;
@@ -10,7 +10,7 @@ class SourceFile
     protected $testpath;
     protected $linelinks;
 
-    function __construct($path, Aggregator $agg, $testpath, $sourcepath)
+    function __construct($path, Aggregator $agg, $testpath, $sourcepath, $coverage = true)
     {
         $this->source = file($path);
         $this->path = $path;
@@ -21,7 +21,9 @@ class SourceFile
 
         $this->aggregator = $agg;
         $this->testpath = $testpath;
-        $this->setCoverage();
+        if ($coverage === true) {
+            $this->setCoverage();
+        }
     }
 
     function setCoverage()
@@ -47,11 +49,16 @@ class SourceFile
         return $decorator->render($this);
     }
 
-    function coverage($line)
+    function coverage($line = null)
     {
+        if ($line === null) {
+            return $this->coverage;
+        }
+
         if (!isset($this->coverage[$line])) {
             return false;
         }
+
         return $this->coverage[$line];
     }
 
@@ -77,6 +84,23 @@ class SourceFile
 
     function source()
     {
+        /* Make sure we have as many lines as required
+         * Sometimes Xdebug returns coverage on one line beyond what
+         * our file has, this is PHP doing a return on the file.
+         */
+        $endLine = max(array_keys($this->coverage()));
+        if (count($this->source) < $endLine) {
+            // Add extra new line if required since we use <pre> to format
+            $secondLast = $endLine - 1;
+            $this->source[$secondLast] = str_replace("\r", '', $this->source[$secondLast]);
+            $len = strlen($this->source[$secondLast]) - 1;
+            if (substr($this->source[$secondLast], $len) != "\n") {
+                $this->source[$secondLast] .= "\n";
+            }
+
+            $this->source[$endLine] = "\n";
+        }
+
         return $this->source;
     }
 
@@ -91,11 +115,11 @@ class SourceFile
         if (!isset($this->linelinks)) {
             $this->linelinks = $this->aggregator->retrieveLineLinks($this->path);
         }
+
         if (isset($this->linelinks[$line])) {
             return $this->linelinks[$line];
         }
+
         return false;
     }
 }
-}
-?>

@@ -1,5 +1,5 @@
 <?php
-namespace pear2\Pyrus\Developer\CoverageAnalyzer\Web {
+namespace pear2\Pyrus\Developer\CoverageAnalyzer\Web;
 use pear2\Pyrus\Developer\CoverageAnalyzer\SourceFile;
 /**
  * Takes a source file and outputs HTML source highlighting showing the
@@ -61,7 +61,7 @@ class View
     function TOC($sqlite)
     {
         $coverage = $sqlite->retrieveProjectCoverage();
-        $this->renderSummary($sqlite, $sqlite->retrievePaths(), false, $coverage[1], $coverage[0]);
+        $this->renderSummary($sqlite, $sqlite->retrievePaths(), false, $coverage[1], $coverage[0], $coverage[2]);
     }
 
     function testTOC($sqlite, $test = null)
@@ -189,9 +189,13 @@ class View
             $output->writeElement('h2', 'Code Coverage for ' . $source->shortName());
         }
         $output->text("\n ");
-        $output->writeElement('h3', 'Coverage: ' . $source->coveragePercentage() . '%');
+        $output->writeElement('h3', 'Coverage: ' . $source->coveragePercentage() . '% (Covered lines / Executable lines)');
         $info = $source->coverageInfo();
-        $output->writeElement('h3', 'Total lines: ' . $info[1] . ', Covered lines: ' . $info[0]);
+        $sourceCode = $source->source();
+
+        $total = count($sourceCode);
+        $output->writeRaw('<p><strong>' . $total . '</strong> total lines, of which <strong>' . $info[1] . '</strong> are executable, <strong>' . $info[2] .'</strong> are dead and <strong>' . ($total - $info[2] - $info[1]) . '</strong> are non-executable lines</p>');
+        $output->writeRaw('<p>Of those <strong>' . $info[1] . '</strong> executable lines there are <strong>' . $info[0] . '</strong> lines covered with tests and <strong>' . ($info[1] - $info[0]) . '</strong> lack coverage</p>');
         $output->text("\n ");
         $output->startElement('p');
         $output->startElement('a');
@@ -200,7 +204,8 @@ class View
         $output->endElement();
         $output->endElement();
         $output->startElement('pre');
-        foreach ($source->source() as $num => $line) {
+
+        foreach ($sourceCode as $num => $line) {
             $coverage = $source->coverage($num);
 
             $output->startElement('span');
@@ -214,7 +219,11 @@ class View
             }
 
             $output->startElement('span');
-            if ($coverage < 1) {
+            $cov = is_array($coverage) ? $coverage['coverage'] : $coverage;
+            if ($cov === -2) {
+                $output->writeAttribute('class', 'dead');
+                $output->text('           ');
+            } elseif ($cov < 1) {
                 $output->writeAttribute('class', 'nc');
                 $output->text('           ');
             } else {
@@ -223,7 +232,9 @@ class View
                     $output->startElement('a');
                     $output->writeAttribute('href', $this->getLineLink($source->name(), $num));
                 }
-                $output->text(str_pad($coverage, 10, ' ', STR_PAD_LEFT) . ' ');
+
+                $text = is_string($coverage) ? $coverage : $coverage['link'];
+                $output->text(str_pad($text, 10, ' ', STR_PAD_LEFT) . ' ');
                 if (!$istest) {
                     $output->endElement();
                 }
@@ -232,6 +243,7 @@ class View
             $output->text(': ' .  $line);
             $output->endElement();
         }
+
         $output->endElement();
         $output->text("\n ");
         $output->endElement();
@@ -240,7 +252,7 @@ class View
         $output->endDocument();
     }
 
-    function renderSummary(Aggregator $agg, array $results, $istest = false, $total = 1, $covered = 1)
+    function renderSummary(Aggregator $agg, array $results, $istest = false, $total = 1, $covered = 1, $dead = 1)
     {
         $output = new \XMLWriter;
         if (!$output->openUri('php://output')) {
@@ -266,10 +278,10 @@ class View
             $output->writeElement('h2', 'Code Coverage Files for test ' . $istest);
         } else {
             $output->writeElement('h2', 'Code Coverage Files');
-            $output->writeElement('h3', 'Total lines: ' . $total . ', covered lines: ' . $covered);
+            $output->writeElement('h3', 'Total lines: ' . $total . ', covered lines: ' . $covered . ', dead lines: ' . $dead);
             $percent = 0;
             if ($total > 0) {
-                $percent = ($covered / $total) * 100;
+                $percent = round(($covered / $total) * 100, 1);
             }
             $output->startElement('p');
             if ($percent < 50) {
@@ -292,10 +304,10 @@ class View
         $output->startElement('ul');
         foreach ($results as $i => $name) {
             $output->flush();
-            $source = new SourceFile($name, $agg, $agg->testpath, $agg->codepath);
+            $source = new SourceFile($name, $agg, $agg->testpath, $agg->codepath, null, false);
             $output->startElement('li');
             $percent = $source->coveragePercentage();
-            $output->startElement('span');
+            $output->startElement('div');
             if ($percent < 50) {
                 $output->writeAttribute('class', 'bad');
             } elseif ($percent < 75) {
@@ -383,7 +395,7 @@ class View
             $source = new SourceFile\PerTest($name, $agg, $agg->testpath, $agg->codepath, $test);
             $output->startElement('li');
             $percent = $source->coveragePercentage();
-            $output->startElement('span');
+            $output->startElement('div');
             if ($percent < 50) {
                 $output->writeAttribute('class', 'bad');
             } elseif ($percent < 75) {
@@ -404,5 +416,3 @@ class View
         $output->endDocument();
     }
 }
-}
-?>

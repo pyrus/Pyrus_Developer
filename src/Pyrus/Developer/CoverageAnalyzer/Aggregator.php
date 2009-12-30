@@ -131,8 +131,7 @@ class Aggregator
         }
         echo count($xdebugs), ' total...';
 
-        $modified = array();
-        $unmodified = array();
+        $unmodified = $modified = array();
         foreach ($xdebugs as $path) {
             if ($this->sqlite->unChangedXdebug($path)) {
                 $unmodified[$path] = true;
@@ -165,7 +164,7 @@ class Aggregator
         $coverage = $this->sqlite->retrieveProjectCoverage();
         echo "done\n";
         $decorator->renderSummary($this, $this->retrievePaths(), $this->codepath, false, $coverage[1],
-                                  $coverage[0]);
+                                  $coverage[0], $coverage[2]);
         $a = $this->codepath;
         echo "[Step 2 of 2] Rendering per-test coverage...";
         $decorator->renderTestCoverage($this, $this->testpath, $a);

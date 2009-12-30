@@ -24,7 +24,8 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
 .nc {background-color:red;}
 .bad {background-color:red;white-space:pre;font-family:courier;}
 .ok {background-color:yellow;white-space:pre;font-family:courier;}
-.good {background-color:green;white-space:pre;font-family:courier;}');
+.good {background-color:green;white-space:pre;font-family:courier;}
+.dead {background-color:orange;white-space:pre;font-family:courier;}');
     }
 
     function manglePath($path, $istest = false)
@@ -197,7 +198,7 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
         $output->endDocument();
     }
 
-    function renderSummary(Aggregator $agg, array $results, $basePath, $istest = false, $total = 1, $covered = 1)
+    function renderSummary(Aggregator $agg, array $results, $basePath, $istest = false, $total = 1, $covered = 1, $dead = 1)
     {
         $output = new \XMLWriter;
         if ($istest) {
@@ -229,7 +230,7 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
             $output->writeElement('h2', 'Code Coverage Files for test ' . $istest);
         } else {
             $output->writeElement('h2', 'Code Coverage Files for ' . $basePath);
-            $output->writeElement('h3', 'Total lines: ' . $total . ', covered lines: ' . $covered);
+            $output->writeElement('h3', 'Total lines: ' . $total . ', covered lines: ' . $covered . ', dead lines: ' . $dead);
             $percent = 0;
             if ($total > 0) {
                 $percent = round(($covered / $total) * 100);
@@ -258,7 +259,7 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
             $source = new SourceFile($name, $agg, $this->testPath, $this->sourcePath);
             $output->startElement('li');
             $percent = $source->coveragePercentage();
-            $output->startElement('span');
+            $output->startElement('div');
             if ($percent < 50) {
                 $output->writeAttribute('class', 'bad');
             } elseif ($percent < 75) {
@@ -353,7 +354,7 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
                 $this->render($source, $reltest);
                 $output->startElement('li');
                 $percent = $source->coveragePercentage();
-                $output->startElement('span');
+                $output->startElement('div');
                 if ($percent < 50) {
                     $output->writeAttribute('class', 'bad');
                 } elseif ($percent < 75) {

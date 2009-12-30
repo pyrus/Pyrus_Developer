@@ -6,10 +6,10 @@ class PerTest extends \pear2\Pyrus\Developer\CoverageAnalyzer\SourceFile
 {
     protected $testname;
 
-    function __construct($path, Aggregator $agg, $testpath, $sourcepath, $testname)
+    function __construct($path, Aggregator $agg, $testpath, $sourcepath, $testname, $coverage =  true)
     {
         $this->testname = $testname;
-        parent::__construct($path, $agg, $testpath, $sourcepath);
+        parent::__construct($path, $agg, $testpath, $sourcepath, $coverage);
     }
 
     function setCoverage()
