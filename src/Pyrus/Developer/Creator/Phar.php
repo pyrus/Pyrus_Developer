@@ -70,7 +70,7 @@ class Phar implements \pear2\Pyrus\Package\ICreator
             $info = openssl_x509_parse($cert['cert']);
             $details = openssl_pkey_get_details($pub);
             if (true !== openssl_x509_checkpurpose($cert['cert'], X509_PURPOSE_SSL_SERVER,
-                                                   \pear2\Pyrus\Channel\Remotepackage::authorities())) {
+                                                   \pear2\Pyrus\Channel\RemotePackage::authorities())) {
                 throw new \pear2\Pyrus\Developer\Creator\Exception(
                     'releasing maintainer\'s certificate is invalid');
             }
