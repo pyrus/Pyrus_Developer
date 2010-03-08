@@ -84,11 +84,16 @@ class SourceFile
 
     function source()
     {
+        $cov = $this->coverage();
+        if (empty($cov)) {
+            return $this->source;
+        }
+
         /* Make sure we have as many lines as required
          * Sometimes Xdebug returns coverage on one line beyond what
          * our file has, this is PHP doing a return on the file.
          */
-        $endLine = max(array_keys($this->coverage()));
+        $endLine = max(array_keys($cov));
         if (count($this->source) < $endLine) {
             // Add extra new line if required since we use <pre> to format
             $secondLast = $endLine - 1;
