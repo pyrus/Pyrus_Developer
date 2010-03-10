@@ -33,7 +33,7 @@ class Commands
             $args['channel'] = 'pear2.php.net';
         }
         echo "Creating package.xml...";
-        $pear2svn = new \pear2\Pyrus\Developer\PackageFile\PEAR2SVN($dir, $args['packagename'], $args['channel'],
+        $pear2svn = new PEAR2SVN($dir, $args['packagename'], $args['channel'],
                                                        false, true, !$options['nocompatible']);
         if (!$options['packagexmlsetup'] && file_exists($pear2svn->path . '/packagexmlsetup.php')) {
             $options['packagexmlsetup'] = 'packagexmlsetup.php';
@@ -103,7 +103,7 @@ class Commands
             $args['channel'] = 'pecl.php.net';
         }
         echo "Creating package.xml...";
-        $package = new \pear2\Pyrus\Developer\PackageFile\PECL($dir, $args['packagename'], $args['channel'], $sourceextensions);
+        $package = new PECL($dir, $args['packagename'], $args['channel'], $sourceextensions);
         echo "done\n";
         if ($options['donotpackage']) {
             return;
@@ -647,7 +647,7 @@ __HALT_COMPILER();
 ");
         $this->saveConfigM4($ext);
         $this->saveConfigW32($ext);
-        
+
         $replace = $this->postProcessProtos($options, $ext, $protos);
         foreach (array('skeleton.c', 'skeleton.php', 'php_skeleton.h', 'CREDITS',
                        'EXPERIMENTAL', 'tests/001.phpt') as $file) {

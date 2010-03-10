@@ -13,25 +13,31 @@ class Sqlite
     public $testpath;
 
     private $statement;
+    private $lines = array();
+    private $files = array();
 
     const COVERAGE_COVERED      = 1;
     const COVERAGE_NOT_EXECUTED = 0;
     const COVERAGE_NOT_COVERED  = -1;
     const COVERAGE_DEAD         = -2;
 
-    function __construct($path = ':memory:', $codepath = null, $testpath = null)
+    function __construct($path = ':memory:', $codepath = null, $testpath = null, $codefiles = array())
     {
+        $this->files = $codefiles;
         $this->db = new \Sqlite3($path);
+        $this->db->exec('PRAGMA temp_store=2');
+        $this->db->exec('PRAGMA count_changes=OFF');
 
+        $version = '5.3.0';
         $sql = 'SELECT version FROM analyzerversion';
-        if (@$this->db->querySingle($sql) == '5.2.0') {
+        if (@$this->db->querySingle($sql) == $version) {
             $this->codepath = $this->db->querySingle('SELECT codepath FROM paths');
             $this->testpath = $this->db->querySingle('SELECT testpath FROM paths');
             return;
         }
 
         // restart the database
-        echo "Upgrading database to version 5.1.0";
+        echo "Upgrading database to version $version";
         if (!$codepath || !$testpath) {
             throw new Exception('Both codepath and testpath must be set in ' .
                                 'order to initialize a coverage database');
@@ -60,13 +66,11 @@ class Sqlite
         $this->db->exec('DROP TABLE IF EXISTS xdebugs;');
         echo ".";
         $this->db->exec('DROP TABLE IF EXISTS analyzerversion;');
-        echo ".";
-        $this->db->exec('VACUUM;');
 
         echo ".";
         $this->db->exec('BEGIN');
 
-        $query = '
+        $sql = '
             CREATE TABLE coverage (
               files_id integer NOT NULL,
               tests_id integer NOT NULL,
@@ -75,7 +79,9 @@ class Sqlite
               PRIMARY KEY (files_id, linenumber, tests_id)
             );
 
-            CREATE INDEX idx_coveragestats ON coverage (files_id, tests_id, state);
+            CREATE INDEX idx_coveragestats  ON coverage (files_id, tests_id, state);
+            CREATE INDEX idx_coveragestats2 ON coverage (files_id, linenumber, tests_id, state);
+            CREATE INDEX idx_coveragestats3 ON coverage (files_id, tests_id);
 
             CREATE TABLE all_lines (
               files_id integer NOT NULL,
@@ -94,107 +100,82 @@ class Sqlite
               PRIMARY KEY (files_id)
             );
           ';
-        $worked = $this->db->exec($query);
-        if (!$worked) {
-            @$this->db->exec('ROLLBACK');
-            $error = $this->db->lastErrorMsg();
-            throw new Exception('Unable to create Code Coverage SQLite3 database: ' . $error);
-        }
+        $this->exec($sql);
 
         echo ".";
-        $query = '
+        $sql = '
           CREATE TABLE coverage_nonsource (
             files_id integer NOT NULL,
             tests_id integer NOT NULL,
             PRIMARY KEY (files_id, tests_id)
           );
           ';
-        $worked = $this->db->exec($query);
-        if (!$worked) {
-            @$this->db->exec('ROLLBACK');
-            $error = $this->db->lastErrorMsg();
-            throw new Exception('Unable to create Code Coverage SQLite3 database: ' . $error);
-        }
+        $this->exec($sql);
 
         echo ".";
-        $query = '
+        $sql = '
           CREATE TABLE files (
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-            filepath TEXT(500) NOT NULL,
-            filepathmd5 TEXT(32) NOT NULL,
+            path TEXT(500) NOT NULL,
+            hash TEXT(32) NOT NULL,
             issource BOOL NOT NULL,
-            UNIQUE (filepath)
+            UNIQUE (path)
           );
           CREATE INDEX files_issource on files (issource);
           ';
-        $worked = $this->db->exec($query);
-        if (!$worked) {
-            @$this->db->exec('ROLLBACK');
-            $error = $this->db->lastErrorMsg();
-            throw new Exception('Unable to create Code Coverage SQLite3 database: ' . $error);
-        }
+        $this->exec($sql);
 
         echo ".";
-        $query = '
+        $sql = '
           CREATE TABLE xdebugs (
-            xdebugpath TEXT(500) NOT NULL,
-            xdebugpathmd5 TEXT(32) NOT NULL,
-            PRIMARY KEY (xdebugpath)
+            path TEXT(500) NOT NULL,
+            hash TEXT(32) NOT NULL,
+            PRIMARY KEY (path)
           );';
-        $worked = $this->db->exec($query);
-        if (!$worked) {
-            @$this->db->exec('ROLLBACK');
-            $error = $this->db->lastErrorMsg();
-            throw new Exception('Unable to create Code Coverage SQLite3 database: ' . $error);
-        }
+        $this->exec($sql);
 
         echo ".";
-        $query = '
+        $sql = '
           CREATE TABLE tests (
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             testpath TEXT(500) NOT NULL,
-            testpathmd5 TEXT(32) NOT NULL,
+            hash TEXT(32) NOT NULL,
             UNIQUE (testpath)
           );';
-        $worked = $this->db->exec($query);
-        if (!$worked) {
-            @$this->db->exec('ROLLBACK');
-            $error = $this->db->lastErrorMsg();
-            throw new Exception('Unable to create Code Coverage SQLite3 database: ' . $error);
-        }
+        $this->exec($sql);
 
         echo ".";
-        $query = '
+        $sql = '
           CREATE TABLE analyzerversion (
             version TEXT(5) NOT NULL
           );
 
-          INSERT INTO analyzerversion VALUES("5.2.0");
+          INSERT INTO analyzerversion VALUES("' . $version . '");
 
           CREATE TABLE paths (
             codepath TEXT NOT NULL,
             testpath TEXT NOT NULL
           );';
-        $worked = $this->db->exec($query);
-        if (!$worked) {
-            @$this->db->exec('ROLLBACK');
-            $error = $this->db->lastErrorMsg();
-            throw new Exception('Unable to create Code Coverage SQLite3 database: ' . $error);
-        }
+        $this->exec($sql);
 
         echo ".";
-        $query = '
+        $sql = '
           INSERT INTO paths VALUES(
             "' . $this->db->escapeString($codepath) . '",
             "' . $this->db->escapeString($testpath). '");';
-        $worked = $this->db->exec($query);
+        $this->exec($sql);
+        $this->db->exec('COMMIT');
+        echo "done\n";
+    }
+
+    public function exec($sql)
+    {
+        $worked = $this->db->exec($sql);
         if (!$worked) {
             @$this->db->exec('ROLLBACK');
             $error = $this->db->lastErrorMsg();
             throw new Exception('Unable to create Code Coverage SQLite3 database: ' . $error);
         }
-        $this->db->exec('COMMIT');
-        echo "done\n";
     }
 
     function retrieveLineLinks($file, $id = null)
@@ -203,12 +184,12 @@ class Sqlite
             $id = $this->getFileId($file);
         }
 
-        $query = 'SELECT t.testpath, c.linenumber
+        $sql = 'SELECT t.testpath, c.linenumber
             FROM
                 coverage c, tests t
             WHERE
                 c.files_id = ' . $id . ' AND t.id = c.tests_id';
-        $result = $this->db->query($query);
+        $result = $this->db->query($sql);
         if (!$result) {
             $error = $this->db->lastErrorMsg();
             throw new Exception('Cannot retrieve line links for ' . $file .
@@ -224,8 +205,8 @@ class Sqlite
 
     function retrieveTestPaths()
     {
-        $query = 'SELECT testpath from tests ORDER BY testpath';
-        $result = $this->db->query($query);
+        $sql = 'SELECT testpath from tests ORDER BY testpath';
+        $result = $this->db->query($sql);
         if (!$result) {
             $error = $this->db->lastErrorMsg();
             throw new Exception('Cannot retrieve test paths :' . $error);
@@ -242,13 +223,14 @@ class Sqlite
         $id = $this->getTestId($test);
         $ret = array();
         if ($all) {
-            $query = 'SELECT DISTINCT filepath
+            $sql = '
+                SELECT DISTINCT path
                 FROM coverage_nonsource c, files
                 WHERE c.tests_id = ' . $id . '
                     AND files.id = c.files_id
                 GROUP BY c.files_id
-                ORDER BY filepath';
-            $result = $this->db->query($query);
+                ORDER BY path';
+            $result = $this->db->query($sql);
             if (!$result) {
                 $error = $this->db->lastErrorMsg();
                 throw new Exception('Cannot retrieve file paths for test ' . $test . ':' . $error);
@@ -259,15 +241,16 @@ class Sqlite
             }
         }
 
-        $query = 'SELECT DISTINCT filepath
+        $sql = '
+            SELECT DISTINCT path
             FROM coverage c, files
             WHERE
                 c.tests_id = ' . $id . '
               AND
                 files.id = c.files_id
             GROUP BY c.files_id
-            ORDER BY filepath';
-        $result = $this->db->query($query);
+            ORDER BY path';
+        $result = $this->db->query($sql);
         if (!$result) {
             $error = $this->db->lastErrorMsg();
             throw new Exception('Cannot retrieve file paths for test ' . $test . ':' . $error);
@@ -283,12 +266,12 @@ class Sqlite
     function retrievePaths($all = 0)
     {
         if ($all) {
-            $query = 'SELECT filepath from files ORDER BY filepath';
+            $sql = 'SELECT path from files ORDER BY path';
         } else {
-            $query = 'SELECT filepath from files WHERE issource=1 ORDER BY filepath';
+            $sql = 'SELECT path from files WHERE issource = 1 ORDER BY path';
         }
 
-        $result = $this->db->query($query);
+        $result = $this->db->query($sql);
         if (!$result) {
             $error = $this->db->lastErrorMsg();
             throw new Exception('Cannot retrieve file paths :' . $error);
@@ -323,24 +306,24 @@ class Sqlite
             return array($this->coveredlines, $this->totallines, $this->deadlines);
         }
 
-        $query = '
-            SELECT covered, total, dead, filepath
+        $sql = '
+            SELECT covered, total, dead, path
             FROM line_info, files
             WHERE files.id = line_info.files_id';
         if ($path !== null) {
-            $query .= ' AND files.filepath = "' . $this->db->escapeString($path) . '"';
+            $sql .= ' AND files.path = "' . $this->db->escapeString($path) . '"';
         }
 
-        $result = $this->db->query($query);
+        $result = $this->db->query($sql);
         if (!$result) {
             $error = $this->db->lastErrorMsg();
             throw new Exception('Cannot retrieve coverage for ' . $path.  ': ' . $error);
         }
 
         while ($res = $result->fetchArray(SQLITE3_ASSOC)) {
-            $this->pathTotal[$res['filepath']]   = $res['total'];
-            $this->pathCovered[$res['filepath']] = $res['covered'];
-            $this->pathDead[$res['filepath']]    = $res['dead'];
+            $this->pathTotal[$res['path']]   = $res['total'];
+            $this->pathCovered[$res['path']] = $res['covered'];
+            $this->pathDead[$res['path']]    = $res['dead'];
             $this->coveredlines += $res['covered'];
             $this->totallines   += $res['total'];
             $this->deadlines    += $res['dead'];
@@ -368,12 +351,12 @@ class Sqlite
         $id = $this->getFileId($path);
         $testid = $this->getTestId($test);
 
-        $query = '
+        $sql = '
             SELECT state, COUNT(linenumber) AS ln
             FROM coverage
             WHERE files_id = ' . $id. ' AND tests_id = ' . $testid . '
             GROUP BY state';
-        $result = $this->db->query($query);
+        $result = $this->db->query($sql);
         if (!$result) {
             $error = $this->db->lastErrorMsg();
             throw new Exception('Cannot retrieve path coverage for ' . $path .
@@ -401,10 +384,10 @@ class Sqlite
         $id = $this->getFileId($path);
         $testid = $this->getTestId($test);
 
-        $query = 'SELECT state AS coverage, linenumber FROM coverage
+        $sql = 'SELECT state AS coverage, linenumber FROM coverage
                     WHERE files_id = ' . $id . ' AND tests_id = ' . $testid . '
                     ORDER BY linenumber ASC';
-        $result = $this->db->query($query);
+        $result = $this->db->query($sql);
         if (!$result) {
             $error = $this->db->lastErrorMsg();
             throw new Exception('Cannot retrieve test ' . $test .
@@ -421,8 +404,8 @@ class Sqlite
 
     function getFileId($path)
     {
-        $query = 'SELECT id FROM files WHERE filepath = "' . $this->db->escapeString($path) .'"';
-        $id = $this->db->querySingle($query);
+        $sql = 'SELECT id FROM files WHERE path = "' . $this->db->escapeString($path) .'"';
+        $id = $this->db->querySingle($sql);
         if ($id === false || $id === null) {
             throw new Exception('Unable to retrieve file ' . $path . ' id from database');
         }
@@ -432,8 +415,8 @@ class Sqlite
 
     function getTestId($path)
     {
-        $query = 'SELECT id FROM tests WHERE testpath = "' . $this->db->escapeString($path) . '"';
-        $id = $this->db->querySingle($query);
+        $sql = 'SELECT id FROM tests WHERE testpath = "' . $this->db->escapeString($path) . '"';
+        $id = $this->db->querySingle($sql);
         if ($id === false || $id === null) {
             throw new Exception('Unable to retrieve test file ' . $path . ' id from database');
         }
@@ -454,7 +437,7 @@ class Sqlite
         echo '.';
         $this->db->exec('DELETE FROM coverage_nonsource WHERE tests_id = ' . $id);
         echo '.';
-        $this->db->exec('DELETE FROM xdebugs WHERE xdebugpath = "' .
+        $this->db->exec('DELETE FROM xdebugs WHERE path = "' .
                         $this->db->escapeString(str_replace('.phpt', '.xdebug', $testpath)) . '"');
         echo "done\n";
     }
@@ -463,11 +446,11 @@ class Sqlite
     {
         try {
             $id = $this->getTestId($testpath);
-            $this->db->exec('UPDATE tests SET testpathmd5 = "' . md5_file($testpath) . '" WHERE id = ' . $id);
+            $this->db->exec('UPDATE tests SET hash = "' . md5_file($testpath) . '" WHERE id = ' . $id);
         } catch (Exception $e) {
             echo "Adding new test $testpath\n";
-            $query = 'INSERT INTO tests (testpath, testpathmd5) VALUES(:testpath, :md5)';
-            $stmt = $this->db->prepare($query);
+            $sql = 'INSERT INTO tests (testpath, hash) VALUES(:testpath, :md5)';
+            $stmt = $this->db->prepare($sql);
             $stmt->bindValue(':testpath', $testpath);
             $stmt->bindValue(':md5', md5_file($testpath));
             $stmt->execute();
@@ -475,20 +458,19 @@ class Sqlite
         }
 
         $file  = str_replace('.phpt', '.xdebug', $testpath);
-        $query = 'REPLACE INTO xdebugs (xdebugpath, xdebugpathmd5) VALUES(:testpath, :md5)';
-        $stmt = $this->db->prepare($query);
-        $stmt->bindValue(':testpath', $file);
+        $sql = 'REPLACE INTO xdebugs (path, hash) VALUES(:path, :md5)';
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':path', $file);
         $stmt->bindValue(':md5', md5_file($file));
         $stmt->execute();
+
         return $id;
     }
 
     function unChangedXdebug($path)
     {
-        $query = 'SELECT xdebugpathmd5
-                  FROM xdebugs
-                  WHERE xdebugpath = "' . $this->db->escapeString($path) . '"';
-        $md5 = $this->db->querySingle($query);
+        $sql = 'SELECT hash FROM xdebugs WHERE path = "' . $this->db->escapeString($path) . '"';
+        $md5 = $this->db->querySingle($sql);
         if (!$md5 || $md5 != md5_file($path)) {
             return false;
         }
@@ -502,12 +484,12 @@ class Sqlite
         $links = $this->retrieveLineLinks($path, $id);
         $links = array_map(function ($arr) {return count($arr);}, $links);
 
-        $query = '
+        $sql = '
             SELECT state AS coverage, linenumber
             FROM all_lines
             WHERE files_id = ' . $id . '
             ORDER BY linenumber ASC';
-        $result = $this->db->query($query);
+        $result = $this->db->query($sql);
         if (!$result) {
             $error = $this->db->lastErrorMsg();
             throw new Exception('Cannot retrieve coverage for ' . $path.  ': ' . $error);
@@ -550,47 +532,41 @@ class Sqlite
     {
         echo "Updating coverage per-file intermediate table\n";
 
-        $query = '
-            SELECT COUNT(DISTINCT linenumber) AS ln, state, files_id
+        $sql = '
+            SELECT files_id, linenumber, state
             FROM all_lines
-            GROUP BY files_id, state';
-        $result = $this->db->query($query);
+            ORDER BY files_id, linenumber ASC';
+        $result = $this->db->query($sql);
+        $lines = array();
+        while ($res = $result->fetchArray(SQLITE3_ASSOC)) {
+            if (!isset($lines[$res['files_id']])) {
+                $lines[$res['files_id']] = array();
+            }
 
-        echo ".";
-        if (!$result) {
-            $error = $this->db->lastErrorMsg();
-            throw new Exception('Cannot retrieve coverage for ' . $path.  ': ' . $error);
+            $lines[$res['files_id']][$res['linenumber']] = $res['state'];
         }
 
         $ret = array();
-        while ($res = $result->fetchArray(SQLITE3_ASSOC)) {
-            if (!isset($ret[$res['files_id']]['covered'])) {
-                $ret[$res['files_id']]['covered']     = 0;
-                $ret[$res['files_id']]['dead']        = 0;
-                $ret[$res['files_id']]['not_covered'] = 0;
-            }
+        foreach ($lines as $file => $lines) {
+            $ret[$file]['covered']     = 0;
+            $ret[$file]['dead']        = 0;
+            $ret[$file]['not_covered'] = 0;
+            foreach (array_count_values($lines) as $state => $count) {
+                if ($state === Sqlite::COVERAGE_COVERED) {
+                    $ret[$file]['covered'] = $count;
+                }
 
-            if ($res['state'] === Sqlite::COVERAGE_COVERED) {
-                $ret[$res['files_id']]['covered'] = $res['ln'];
-            }
+                if ($state === Sqlite::COVERAGE_NOT_COVERED) {
+                    $ret[$file]['not_covered'] = $count;
+                }
 
-            if ($res['state'] === Sqlite::COVERAGE_NOT_COVERED) {
-                $ret[$res['files_id']]['not_covered'] = $res['ln'];
-            }
-
-            if ($res['state'] === Sqlite::COVERAGE_DEAD) {
-                $ret[$res['files_id']]['dead'] = $res['ln'];
+                if ($state === Sqlite::COVERAGE_DEAD) {
+                    $ret[$file]['dead'] = $count;
+                }
             }
         }
 
         foreach ($ret as $id => $line) {
-            if (!isset($line['covered'])) {
-                // this file has no coverage any more (was deleted), remove it
-                $this->db->exec('DELETE FROM all_lines WHERE files_id = ' . $id);
-                $this->db->exec('DELETE FROM files WHERE id = ' . $id);
-                continue;
-            }
-
             $covered     = $line['covered'];
             $dead        = $line['dead'];
             $not_covered = $line['not_covered'];
@@ -599,165 +575,166 @@ class Sqlite
             echo ".";
         }
 
-        echo "done\n";
+        echo "\ndone\n";
     }
 
-    function updateAllLines($id, $results)
+    public function updateAllLines()
     {
-        $query = '
-            SELECT linenumber, state
+        echo "Updating the all lines internal table\n";
+
+        $keys = implode(', ', array_keys($this->lines));
+        $sql = '
+            SELECT files_id, linenumber, state
             FROM all_lines
-            WHERE files_id = ' . $id . '
+            WHERE files_id IN (' . $keys . ')
             ORDER BY linenumber ASC';
-        $result = $this->db->query($query);
-        $lines = array();
-        while ($res = $result->fetchArray(SQLITE3_NUM)) {
-            $lines[$res[0]] = $res[1];
+
+        $result = $this->db->query($sql);
+        $data = array();
+        while ($res = $result->fetchArray(SQLITE3_ASSOC)) {
+            if (!isset($data[$res['files_id']])) {
+                $data[$res['files_id']] = array();
+            }
+
+            $data[$res['files_id']][$res['linenumber']] = $res['state'];
         }
 
-        // Figure out which lines have changed.
-        $new = array_diff_assoc($results, $lines);
-
-        // See if any lines have been removed
-        $old = array_diff(array_keys($lines), array_keys($results));
-
-        if (count($new)) {
-            if (!isset($this->statement->all_lines)) {
-                $query = 'INSERT INTO all_lines
-                          (files_id, linenumber, state)
-                          VALUES (:id, :line, :state)';
-                $this->statement->all_lines = $this->db->prepare($query);
-            }
-
-            if (!isset($this->statement->all_lines_update)) {
-                $query = 'UPDATE all_lines SET state = :state
-                          WHERE
-                            files_id = :id AND linenumber = :line';
-                            // AND state != 1 AND state != :state';
-                $this->statement->all_lines_update = $this->db->prepare($query);
+        foreach ($data as $id => $lines) {
+            foreach ($lines as $line => $state) {
+                if (
+                    // Only allow lines that are in the new rollout.
+                    isset($this->lines[$id][$line]) ||
+                    // Line already marked as covered.
+                    (isset($this->lines[$id][$line]) && $this->lines[$id][$line] !== 1 && $state > $this->lines[$id][$line])
+                ) {
+                    $this->lines[$id][$line] = $state;
+                }
             }
         }
+        unset($data);
 
-        foreach ($new as $line => $state) {
-            if (!$line) {
-                continue; // line 0 does not exist, skip this (xdebug quirk)
-            }
+        echo '.';
+        $sql  = 'DELETE FROM all_lines WHERE files_id IN (' . $keys . ');';
+        $this->db->exec($sql);
 
-            $result = isset($lines[$line]) ? $lines[$line] : null;
-            if ($result === 1) {
+        $sql = 'INSERT INTO all_lines (files_id, linenumber, state) VALUES (:id, :line, :state);';
+        $stmt = $this->db->prepare($sql);
+        foreach ($this->lines as $file => $lines) {
+            if (!is_array($lines)) {
                 continue;
             }
 
-            if ($result === $state) {
-                continue;
-            }
-
-            if ($result === null) {
-                $this->statement->all_lines->bindValue(':id',    $id,    SQLITE3_INTEGER);
-                $this->statement->all_lines->bindValue(':line',  $line,  SQLITE3_INTEGER);
-                $this->statement->all_lines->bindValue(':state', $state, SQLITE3_INTEGER);
-                $this->statement->all_lines->execute();
-            } else {
-                $this->statement->all_lines_update->bindValue(':id',    $id,    SQLITE3_INTEGER);
-                $this->statement->all_lines_update->bindValue(':line',  $line,  SQLITE3_INTEGER);
-                $this->statement->all_lines_update->bindValue(':state', $state, SQLITE3_INTEGER);
-                $this->statement->all_lines_update->execute();
+            echo '.';
+            foreach ($lines as $line => $state) {
+                $stmt->bindValue(':id',    $file,  SQLITE3_INTEGER);
+                $stmt->bindValue(':line',  $line,  SQLITE3_INTEGER);
+                $stmt->bindValue(':state', $state, SQLITE3_INTEGER);
+                $stmt->execute();
             }
         }
 
-        if (count($old)) {
-            $query = 'DELETE FROM all_lines WHERE files_id = ' . $id .
-                ' AND linenumber IN (' . implode(',', array_keys($old)) . ')';
-            $this->db->exec($query);
-
-            $query = 'DELETE FROM coverage WHERE files_id = ' . $id .
-                ' AND linenumber IN (' . implode(',', array_keys($old)) . ')';
-            $this->db->exec($query);
-        }
+        echo "\ndone\n";
     }
 
-    function addFile($filepath, $issource = 0, $results = array())
+    function addFile($path, $issource = 0)
     {
-        $query = 'SELECT id FROM files WHERE filepath = "' . $this->db->escapeString($filepath) . '"';
-        $id = $this->db->querySingle($query);
+        $sql = 'SELECT id FROM files WHERE path = "' . $this->db->escapeString($path) . '"';
+        $id = $this->db->querySingle($sql);
         if ($id === false) {
-            throw new Exception('Unable to add file ' . $filepath . ' to database');
+            throw new Exception('Unable to add file ' . $path . ' to database');
         }
 
         if ($id !== null) {
-            $query = '
-                UPDATE files SET
-                    filepathmd5 = :md5,
-                    issource = :issource
-                    WHERE filepath = :filepath';
+            $sql = 'UPDATE files SET hash = :md5, issource = :issource WHERE path = :path';
         } else {
-            $query = 'INSERT INTO files
-                     (filepath, filepathmd5, issource)
-                      VALUES(:filepath, :md5, :issource)';
+            $sql = 'INSERT INTO files (path, hash, issource) VALUES(:path, :md5, :issource)';
         }
 
-        $stmt = $this->db->prepare($query);
-        $stmt->bindValue(':filepath', $filepath);
-        $stmt->bindValue(':md5',      md5_file($filepath));
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':path',     $path);
+        $stmt->bindValue(':md5',      md5_file($path));
         $stmt->bindValue(':issource', $issource);
         if (!$stmt->execute()) {
-            throw new Exception('Problem running this particular SQL: ' . $query);
+            throw new Exception('Problem running this particular SQL: ' . $sql);
         }
 
         if ($id === null) {
             $id = $this->db->lastInsertRowID();
         }
 
-        if ($issource) {
-            $this->updateAllLines($id, $results);
+        return $id;
+    }
+
+    public function addNoCoverageFiles()
+    {
+        echo "Adding files with no coverage information\n";
+        foreach ($this->files as $file) {
+            if (empty($file)) {
+                continue;
+            }
+
+            echo "$file\n";
+            $id = $this->addFile($file, 1);
+
+            // Figure out of the file has been already inclduded or not
+            $included = false;
+
+            $class = str_replace(array($this->codepath, '.php'), '', $file);
+            $class = 'pear2' . str_replace('/', '\\', $class);
+
+            $classes = array_merge(get_declared_classes(), get_declared_interfaces());
+            if (in_array($class, $classes)) {
+                $included = true;
+            }
+
+            // Get basic coverage information on the file
+            if ($included === false) {
+                xdebug_start_code_coverage(XDEBUG_CC_UNUSED | XDEBUG_CC_DEAD_CODE);
+                include $file;
+                $data = xdebug_get_code_coverage(true);
+                $this->lines[$id] = $data[$file];
+            }
         }
 
-        return $id;
+        echo "Done\n";
     }
 
     function addCoverage($testpath, $testid, $xdebug)
     {
-        $query = 'DELETE FROM coverage WHERE tests_id = ' . $testid . ';
-                  DELETE FROM coverage_nonsource WHERE tests_id = ' . $testid;
-        $worked = $this->db->exec($query);
+        $sql = 'DELETE FROM coverage WHERE tests_id = ' . $testid . ';
+                DELETE FROM coverage_nonsource WHERE tests_id = ' . $testid;
+        $worked = $this->db->exec($sql);
 
-        if (!isset($this->statement->coverage)) {
-            $query = 'INSERT INTO coverage
-                      (files_id, linenumber, tests_id, state)
-                      VALUES(:id, :line, :test, :state)';
-            $this->statement->coverage = $this->db->prepare($query);
-        }
-
-        if (!isset($this->statement->coverageUpdate)) {
-            $query = 'UPDATE coverage SET state = :state
-                      WHERE
-                        files_id = :id AND linenumber = :line AND
-                        tests_id = :test AND state != 1 AND state != -2';
-            $this->statement->coverageUpdate = $this->db->prepare($query);
-        }
-
+        echo "\n";
         foreach ($xdebug as $path => $results) {
             if (!file_exists($path)) {
                 continue;
             }
 
-            if (strpos($path, $this->codepath) !== 0) {
+            $issource = 1;
+            if (
+                strpos($path, $this->codepath) !== 0 ||
+                strpos($path, $this->testpath) === 0
+            ) {
                 $issource = 0;
-            } else {
-                if (strpos($path, $this->testpath) === 0) {
-                    $issource = 0;
-                } else {
-                    $issource = 1;
-                }
             }
 
             echo ".";
-            $id = $this->addFile($path, $issource, $results);
-            if (!$issource) {
-                $query = 'REPLACE INTO coverage_nonsource
-                          (files_id, tests_id)
-                          VALUES(' . $id . ', ' . $testid . ')';
-                $worked = $this->db->exec($query);
+            $id = $this->addFile($path, $issource);
+            $key = array_search($path, $this->files);
+            if (isset($this->files[$key])) {
+                unset($this->files[$key]);
+            }
+
+            if ($issource) {
+                if (!isset($this->lines[$id])) {
+                    $this->lines[$id] = array();
+                }
+            } elseif (!$issource) {
+                $sql2 = 'INSERT INTO coverage_nonsource
+                        (files_id, tests_id)
+                        VALUES(' . $id . ', ' . $testid . ')';
+                $worked = $this->db->exec($sql2);
                 if (!$worked) {
                     $error = $this->db->lastErrorMsg();
                     throw new Exception('Cannot add coverage for test ' . $testpath .
@@ -766,29 +743,34 @@ class Sqlite
                 continue;
             }
 
+            $sql = '';
             foreach ($results as $line => $state) {
                 if (!$line) {
                     continue; // line 0 does not exist, skip this (xdebug quirk)
                 }
 
-                $this->statement->coverage->bindValue(':id',    $id,     SQLITE3_INTEGER);
-                $this->statement->coverage->bindValue(':line',  $line,   SQLITE3_INTEGER);
-                $this->statement->coverage->bindValue(':test',  $testid, SQLITE3_INTEGER);
-                $this->statement->coverage->bindValue(':state', $state,  SQLITE3_INTEGER);
-
-                // Insert failed, lets try update
-                if (!$this->statement->coverage->execute()) {
-                    $this->statement->coverageUpdate->bindValue(':id',    $id,     SQLITE3_INTEGER);
-                    $this->statement->coverageUpdate->bindValue(':line',  $line,   SQLITE3_INTEGER);
-                    $this->statement->coverageUpdate->bindValue(':test',  $testid, SQLITE3_INTEGER);
-                    $this->statement->coverageUpdate->bindValue(':state', $state,  SQLITE3_INTEGER);
-
-                    // Update failed, error out
-                    if (!$this->statement->coverageUpdate->execute()) {
-                        $error = $this->db->lastErrorMsg();
-                        throw new Exception('Cannot add coverage for test ' . $testpath .
-                                            ', covered file ' . $path . ': ' . $error);
+                if ($issource) {
+                    if (
+                        !isset($this->lines[$id][$line]) ||
+                        // Line already marked as covered.
+                        $this->lines[$id][$line] !== 1 ||
+                        $state > $this->lines[$id][$line]
+                    ) {
+                        $this->lines[$id][$line] = $state;
                     }
+                }
+
+                $sql .= 'INSERT INTO coverage
+                    (files_id, tests_id, linenumber, state)
+                    VALUES (' . $id . ', ' . $testid . ', ' . $line . ', ' . $state. ');';
+            }
+
+            if ($sql !== '') {
+                $worked = $this->db->exec($sql);
+                if (!$worked) {
+                    $error = $this->db->lastErrorMsg();
+                    throw new Exception('Cannot add coverage for test ' . $testpath .
+                                        ', covered file ' . $path . ': ' . $error . "\nSQL: $sql");
                 }
             }
         }
@@ -804,6 +786,7 @@ class Sqlite
     {
         $this->db->exec('COMMIT');
         $this->db->exec('PRAGMA synchronous=NORMAL'); // make inserts super fast
+        echo "Compatcing the database\n";
         $this->db->exec('VACUUM');
     }
 
@@ -843,12 +826,11 @@ class Sqlite
         echo "Scanning ", count($paths), " source files";
         foreach ($paths as $path) {
             echo '.';
-            $query = '
-                SELECT id, filepathmd5, issource FROM files WHERE filepath = "' .
-                $this->db->escapeString($path) . '"';
-            $result = $this->db->query($query);
+
+            $sql = 'SELECT id, hash, issource FROM files WHERE path = "' . $this->db->escapeString($path) . '"';
+            $result = $this->db->query($sql);
             while ($res = $result->fetchArray(SQLITE3_ASSOC)) {
-                if (!file_exists($path) || md5_file($path) == $res['filepathmd5']) {
+                if (!file_exists($path) || md5_file($path) == $res['hash']) {
                     if ($res['issource'] && !file_exists($path)) {
                         $this->db->exec('
                             DELETE FROM files WHERE id = '. $res['id'] .';
@@ -862,30 +844,28 @@ class Sqlite
                 $modifiedPaths[] = $path;
                 // file is modified, get a list of tests that execute this file
                 if ($res['issource']) {
-                    $query = '
+                    $sql = '
                         SELECT t.testpath
                         FROM coverage c, tests t
                         WHERE
                             c.files_id = ' . $res['id'] . '
                           AND
                             t.id = c.tests_id';
-                    $result2 = $this->db->query($query);
-                    while ($res = $result2->fetchArray(SQLITE3_NUM)) {
-                        $modifiedTests[$res[0]] = true;
-                    }
                 } else {
-                    $query = '
+                    $sql = '
                         SELECT t.testpath
                         FROM coverage_nonsource c, tests t
                         WHERE
                             c.files_id = ' . $res['id'] . '
                           AND
                             t.id = c.tests_id';
-                    $result2 = $this->db->query($query);
-                    while ($res = $result2->fetchArray(SQLITE3_NUM)) {
-                        $modifiedTests[$res[0]] = true;
-                    }
                 }
+
+                $result2 = $this->db->query($sql);
+                while ($res = $result2->fetchArray(SQLITE3_NUM)) {
+                    $modifiedTests[$res[0]] = true;
+                }
+
                 break;
             }
         }
@@ -897,17 +877,17 @@ class Sqlite
         echo "Scanning ", count($paths), " test paths";
         foreach ($paths as $path) {
             echo '.';
-            $query = '
-                SELECT id, testpathmd5 FROM tests where testpath = "' .
+            $sql = '
+                SELECT id, hash FROM tests where testpath = "' .
                 $this->db->escapeString($path) . '"';
-            $result = $this->db->query($query);
+            $result = $this->db->query($sql);
             while ($res = $result->fetchArray(SQLITE3_ASSOC)) {
                 if (!file_exists($path)) {
                     $this->removeOldTest($path, $res['id']);
                     continue;
                 }
 
-                if (md5_file($path) != $res['testpathmd5']) {
+                if (md5_file($path) != $res['hash']) {
                     $modifiedTests[$path] = true;
                 }
             }

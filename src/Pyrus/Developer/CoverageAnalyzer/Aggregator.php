@@ -23,7 +23,21 @@ class Aggregator
         } else {
             $codepath = $newcodepath;
         }
-        $this->sqlite = new Sqlite($db, $codepath, $testpath);
+
+        $files = array();
+        foreach (new \RegexIterator(
+                    new \RecursiveIteratorIterator(
+                        new \RecursiveDirectoryIterator($codepath, 0|\RecursiveDirectoryIterator::SKIP_DOTS)
+                    ),
+                    '/\.php$/') as $file) {
+            if (strpos((string) $file, '.svn') || strpos($testpath, (string)$file)) {
+                continue;
+            }
+
+            $files[] = realpath((string) $file);
+        }
+
+        $this->sqlite = new Sqlite($db, $codepath, $testpath, $files);
         $this->codepath = $codepath;
         $this->sqlite->begin();
         echo "Scanning for xdebug coverage files...";
@@ -31,22 +45,36 @@ class Aggregator
         echo "done\n";
         $infostring = '';
         echo "Parsing xdebug results\n";
-        if (count($files)) {
-            foreach ($files as $testid => $xdebugfile) {
-                if (!file_exists(str_replace('.xdebug', '.phpt', $xdebugfile))) {
-                    echo "\nWARNING: outdated .xdebug file $xdebugfile, delete this relic\n";
-                    continue;
-                }
-                $id = $this->sqlite->addTest(str_replace('.xdebug', '.phpt', $xdebugfile));
-                echo '(' . $testid . ' of ' . count($files) . ') ' . $xdebugfile;
-                $this->retrieveXdebug($xdebugfile, $id);
-                echo "done\n";
-            }
-            echo "done\n";
-            $this->sqlite->updateTotalCoverage();
-            $this->sqlite->commit();
-        } else {
+        if (!count($files)) {
             echo "done (no modified xdebug files)\n";
+            return;
+        }
+
+        $delete = array();
+        foreach ($files as $testid => $xdebugfile) {
+            $phpt = str_replace('.xdebug', '.phpt', $xdebugfile);
+            if (!file_exists($phpt)) {
+                $delete[] = $xdebugfile;
+                continue;
+            }
+
+            $id = $this->sqlite->addTest($phpt);
+            echo '(' . $testid . ' of ' . count($files) . ') ' . $xdebugfile;
+            $this->retrieveXdebug($xdebugfile, $id);
+            echo "done\n";
+        }
+
+        echo "done\n";
+        $this->sqlite->addNoCoverageFiles();
+        $this->sqlite->updateAllLines();
+        $this->sqlite->updateTotalCoverage();
+        $this->sqlite->commit();
+
+        if (count($delete)) {
+            echo "\nWARNING: The following .xdebug files are outdated relics and should be deleted\n";
+            foreach ($delete as $d) {
+                echo "$d\n";
+            }
         }
     }
 
@@ -114,6 +142,7 @@ class Aggregator
         if (!$testpath) {
             throw new Exception('Unable to process path' . $a);
         }
+
         $testpath = str_replace('\\', '/', $testpath);
         $this->testpath = $testpath;
 
@@ -137,8 +166,10 @@ class Aggregator
                 $unmodified[$path] = true;
                 continue;
             }
+
             $modified[] = $path;
         }
+
         $xdebugs = $modified;
         sort($xdebugs);
         // index from 1
@@ -150,10 +181,12 @@ class Aggregator
             if (isset($test[$xdebugpath]) || isset($unmodified[$xdebugpath])) {
                 continue;
             }
+
             // remove outdated tests
             echo "Removing results from $xdebugpath\n";
             $this->sqlite->removeOldTest($path);
         }
+
         return $xdebugs;
     }
 
