@@ -668,6 +668,17 @@ class Sqlite
     public function addNoCoverageFiles()
     {
         echo "Adding files with no coverage information\n";
+
+        // Start by pruning out files we already have information about
+        $sql = 'SELECT * FROM files WHERE issource = 1';
+        $result = $this->db->query($sql);
+        while ($res = $result->fetchArray(SQLITE3_ASSOC)) {
+            $key = array_search($res['path'], $this->files);
+            if (isset($this->files[$key])) {
+                unset($this->files[$key]);
+            }
+        }
+
         foreach ($this->files as $file) {
             if (empty($file)) {
                 continue;
