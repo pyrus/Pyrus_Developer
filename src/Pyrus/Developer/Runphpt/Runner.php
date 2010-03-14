@@ -400,15 +400,7 @@ class Runner
             $text = '<?php';
             $text .= "\n" . 'function coverage_shutdown() {' .
                      "\n" . '    $xdebug = var_export(xdebug_get_code_coverage(), true);';
-            if (!function_exists('file_put_contents')) {
-                $text .= "\n" . '    $fh = fopen(\'' . $xdebug_file . '\', "wb");' .
-                        "\n" . '    if ($fh !== false) {' .
-                        "\n" . '        fwrite($fh, $xdebug);' .
-                        "\n" . '        fclose($fh);' .
-                        "\n" . '    }';
-            } else {
-                $text .= "\n" . '    file_put_contents(\'' . $xdebug_file . '\', $xdebug);';
-            }
+            $text .= "\n" . '    file_put_contents(\'' . $xdebug_file . '\', $xdebug);';
 
             $text .= "\n" . 'xdebug_stop_code_coverage();' .
                 "\n" . '} // end coverage_shutdown()' .
