@@ -389,6 +389,13 @@ class Runner
         // Check if test should be skipped.
         $res  = $this->_runSkipIf($section_text, $temp_skipif, $tested, $ini_settings);
         if (count($res) != 2) {
+            if (isset($this->_options['coverage']) && $this->xdebug_loaded) {
+                $xdebug_file = $temp_dir . DIRECTORY_SEPARATOR . $main_file_name . 'xdebug';
+                if (file_exists($xdebug_file)) {
+                    @unlink($xdebug_file);
+                }
+            }
+
             return $res;
         }
         $info = $res['info'];
