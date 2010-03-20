@@ -130,6 +130,10 @@ class Aggregator
 
     function retrieveXdebug($path, $testid)
     {
+        if (file_exists($path) === false) {
+            return;
+        }
+
         $source = '$xdebug = ' . file_get_contents($path) . ";\n";
         eval($source);
         $this->sqlite->addCoverage(str_replace('.xdebug', '.phpt', $path), $testid, $xdebug);
@@ -156,6 +160,7 @@ class Aggregator
             if (strpos((string) $file, '.svn')) {
                 continue;
             }
+
             $xdebugs[] = realpath((string) $file);
         }
         echo count($xdebugs), ' total...';
@@ -176,6 +181,8 @@ class Aggregator
         array_unshift($xdebugs, '');
         unset($xdebugs[0]);
         $test = array_flip($xdebugs);
+
+        echo "\n\n";
         foreach ($this->sqlite->retrieveTestPaths() as $path) {
             $xdebugpath = str_replace('.phpt', '.xdebug', $path);
             if (isset($test[$xdebugpath]) || isset($unmodified[$xdebugpath])) {
