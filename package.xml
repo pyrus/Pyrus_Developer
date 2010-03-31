@@ -5,19 +5,40 @@
  <summary>Developer tools for the Pyrus installer
 </summary>
  <description>
-This package contains several custom commands for Pyrus,
-including command to automatically generate a package.xml,
-and commands to create a package from an existing package.xml</description>
+This package contains several custom commands for Pyrus.
+
+Included are commands for:
+* Creating pear2 and pecl package skeletons
+ $ php pyrus.phar generate-pear2 MyNewPackage
+* Creating a package.xml file
+ $ php pyrus.phar make
+* Packaging PEAR2 and PEAR releases
+ $ php pyrus.phar package
+* Running phpt tests and generating code coverage reports
+ $ php pyrus.phar run-phpt -m
+</description>
  <lead>
   <name>Gregory Beaver</name>
   <user>cellog</user>
   <email>cellog@php.net</email>
   <active>yes</active>
  </lead>
- <date>2009-08-04</date>
- <time>21:23:50</time>
+ <lead>
+  <name>Helgi Þormar Þorbjörnsson</name>
+  <user>dufuz</user>
+  <email>helgi@php.net</email>
+  <active>yes</active>
+ </lead>
+ <lead>
+  <name>Brett Bieber</name>
+  <user>saltybeagle</user>
+  <email>saltybeagle@php.net</email>
+  <active>yes</active>
+ </lead>
+ <date>2010-03-31</date>
+ <time>12:14:31</time>
  <version>
-  <release>0.1.0</release>
+  <release>0.2.0</release>
   <api>0.1.0</api>
  </version>
  <stability>
@@ -25,7 +46,23 @@ and commands to create a package from an existing package.xml</description>
   <api>alpha</api>
  </stability>
  <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
- <notes>Initial development release</notes>
+ <notes>Feature Release:
+
+Basic fixes:
+* Only add pear2 baseinstalldir if the package is for pear2.php.net [saltybeagle]
+* Add empty $extrafiles array to prevent an exception when packaging a newly generated skeleton. [saltybeagle]
+* Update interface references to PEAR2 standards [saltybeagle]
+* Simplify the autoload included in skeleton package stub [saltybeagle]
+
+Code Coverage Improvements:
+* Improved color schema for the coverage. [helgi]
+* New database schema to handle more information. [helgi]
+* Show dead code as dead instead of not covered [helgi]
+* Improve the code coverage detection, handle xdebug edge cases [helgi]
+* Better overall coverage of Pyrus with better processing of xdebug coverage [helgi]
+* Speed improvements [helgi]
+* Make output easier to read [helgi]
+</notes>
  <contents>
   <dir name="/">
    <dir name="customcommand" baseinstalldir="/">

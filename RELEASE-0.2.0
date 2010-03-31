@@ -1,0 +1,16 @@
+Feature Release:
+
+Basic fixes:
+* Only add pear2 baseinstalldir if the package is for pear2.php.net [saltybeagle]
+* Add empty $extrafiles array to prevent an exception when packaging a newly generated skeleton. [saltybeagle]
+* Update interface references to PEAR2 standards [saltybeagle]
+* Simplify the autoload included in skeleton package stub [saltybeagle]
+
+Code Coverage Improvements:
+* Improved color schema for the coverage. [helgi]
+* New database schema to handle more information. [helgi]
+* Show dead code as dead instead of not covered [helgi]
+* Improve the code coverage detection, handle xdebug edge cases [helgi]
+* Better overall coverage of Pyrus with better processing of xdebug coverage [helgi]
+* Speed improvements [helgi]
+* Make output easier to read [helgi]
