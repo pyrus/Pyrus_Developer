@@ -1,6 +1,6 @@
 <?php
-namespace pear2\Pyrus\Developer\Creator;
-class Phar implements \pear2\Pyrus\Package\CreatorInterface
+namespace PEAR2\Pyrus\Developer\Creator;
+class Phar implements \PEAR2\Pyrus\Package\CreatorInterface
 {
     /**
      * @var Phar
@@ -36,10 +36,10 @@ class Phar implements \pear2\Pyrus\Package\CreatorInterface
      * @param string passphrase, if any, for the PKCS12 certificate.
      */
     function __construct($path, $stub = false, $fileformat = \Phar::TAR, $compression = \Phar::GZ, array $others = null,
-                         $releaser = null, \pear2\Pyrus\Package $new = null, $pkcs12 = null, $passphrase = '')
+                         $releaser = null, \PEAR2\Pyrus\Package $new = null, $pkcs12 = null, $passphrase = '')
     {
         if (!class_exists('Phar')) {
-            throw new \pear2\Pyrus\Developer\Creator\Exception(
+            throw new \PEAR2\Pyrus\Developer\Creator\Exception(
                 'Phar extension is not available');
         }
         if (!\Phar::canWrite() || !\Phar::isValidPharFilename($path, true)) {
@@ -51,7 +51,7 @@ class Phar implements \pear2\Pyrus\Package\CreatorInterface
         $this->others = $others;
         $this->stub = $stub;
         if ($pkcs12 && !extension_loaded('openssl')) {
-            throw new \pear2\Pyrus\Developer\Creator\Exception('Unable to use ' .
+            throw new \PEAR2\Pyrus\Developer\Creator\Exception('Unable to use ' .
                         'OpenSSL signing of phars, enable the openssl PHP extension');
         }
         $this->pkcs12 = $pkcs12;
@@ -60,30 +60,30 @@ class Phar implements \pear2\Pyrus\Package\CreatorInterface
             $cert = array();
             $pkcs = openssl_pkcs12_read(file_get_contents($this->pkcs12), $cert, $this->passphrase);
             if (!$pkcs) {
-                throw new \pear2\Pyrus\Developer\Creator\Exception('Unable to process openssl key');
+                throw new \PEAR2\Pyrus\Developer\Creator\Exception('Unable to process openssl key');
             }
             $private = openssl_pkey_get_private($cert['pkey']);
             if (!$private) {
-                throw new \pear2\Pyrus\Developer\Creator\Exception('Unable to extract private openssl key');
+                throw new \PEAR2\Pyrus\Developer\Creator\Exception('Unable to extract private openssl key');
             }
             $pub = openssl_pkey_get_public($cert['cert']);
             $info = openssl_x509_parse($cert['cert']);
             $details = openssl_pkey_get_details($pub);
             if (true !== openssl_x509_checkpurpose($cert['cert'], X509_PURPOSE_SSL_SERVER,
-                                                   \pear2\Pyrus\Channel\RemotePackage::authorities())) {
-                throw new \pear2\Pyrus\Developer\Creator\Exception(
+                                                   \PEAR2\Pyrus\Channel\RemotePackage::authorities())) {
+                throw new \PEAR2\Pyrus\Developer\Creator\Exception(
                     'releasing maintainer\'s certificate is invalid');
             }
             // now verify that this cert is in fact the releasing maintainer's certificate
             // by verifying that alternate name is the releaser's email address
             if (!isset($info['subject']) || !isset($info['subject']['emailAddress'])) {
-                throw new \pear2\Pyrus\Developer\Creator\Exception(
+                throw new \PEAR2\Pyrus\Developer\Creator\Exception(
                     'releasing maintainer\'s certificate does not contain' .
                     ' an alternate name corresponding to the releaser\'s email address');
             }
             
             if ($info['subject']['emailAddress'] != $new->maintainer[$releaser]->email) {
-                throw new \pear2\Pyrus\Developer\Creator\Exception(
+                throw new \PEAR2\Pyrus\Developer\Creator\Exception(
                     'releasing maintainer\'s certificate ' .
                     'alternate name does not match the releaser\'s email address ' .
                     $new->maintainer[$releaser]->email);
@@ -150,7 +150,7 @@ class Phar implements \pear2\Pyrus\Package\CreatorInterface
                 $this->phar->setStub($this->stub);
             }
         } catch (Exception $e) {
-            throw new \pear2\Pyrus\Developer\Creator\Exception(
+            throw new \PEAR2\Pyrus\Developer\Creator\Exception(
                 'Cannot open Phar archive ' . $this->path, $e
             );
         }

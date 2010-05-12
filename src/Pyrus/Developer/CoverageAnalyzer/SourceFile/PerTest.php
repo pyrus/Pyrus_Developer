@@ -1,8 +1,8 @@
 <?php
-namespace pear2\Pyrus\Developer\CoverageAnalyzer\SourceFile {
-use pear2\Pyrus\Developer\CoverageAnalyzer\Aggregator,
-    pear2\Pyrus\Developer\CoverageAnalyzer\AbstractSourceDecorator;
-class PerTest extends \pear2\Pyrus\Developer\CoverageAnalyzer\SourceFile
+namespace PEAR2\Pyrus\Developer\CoverageAnalyzer\SourceFile {
+use PEAR2\Pyrus\Developer\CoverageAnalyzer\Aggregator,
+    PEAR2\Pyrus\Developer\CoverageAnalyzer\AbstractSourceDecorator;
+class PerTest extends \PEAR2\Pyrus\Developer\CoverageAnalyzer\SourceFile
 {
     protected $testname;
 

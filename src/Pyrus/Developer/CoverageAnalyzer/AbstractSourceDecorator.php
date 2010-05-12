@@ -1,5 +1,5 @@
 <?php
-namespace pear2\Pyrus\Developer\CoverageAnalyzer {
+namespace PEAR2\Pyrus\Developer\CoverageAnalyzer {
 abstract class AbstractSourceDecorator
 {
     abstract function render(SourceFile $source);

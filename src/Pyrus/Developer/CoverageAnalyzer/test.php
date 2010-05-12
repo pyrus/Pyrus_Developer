@@ -2,12 +2,12 @@
 namespace {
 function __autoload($c)
 {
-    $c = str_replace(array('pear2\Pyrus\Developer\CoverageAnalyzer\\',
+    $c = str_replace(array('PEAR2\Pyrus\Developer\CoverageAnalyzer\\',
                            '\\'), array('', '/'), $c);
     include __DIR__ . '/' . $c . '.php';
 }
 }
-namespace pear2\Pyrus\Developer\CoverageAnalyzer {
+namespace PEAR2\Pyrus\Developer\CoverageAnalyzer {
     $a = new Aggregator($testpath = realpath(__DIR__ . '/../../../../../Pyrus/tests'),
                         realpath(__DIR__ . '/../../../../../Pyrus/src'),
                         $testpath . '/pear2coverage.db');

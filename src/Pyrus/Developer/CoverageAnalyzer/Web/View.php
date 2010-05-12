@@ -1,6 +1,6 @@
 <?php
-namespace pear2\Pyrus\Developer\CoverageAnalyzer\Web;
-use pear2\Pyrus\Developer\CoverageAnalyzer\SourceFile;
+namespace PEAR2\Pyrus\Developer\CoverageAnalyzer\Web;
+use PEAR2\Pyrus\Developer\CoverageAnalyzer\SourceFile;
 /**
  * Takes a source file and outputs HTML source highlighting showing the
  * number of hits on each line, highlights un-executed lines in red
@@ -150,7 +150,7 @@ class View
     }
 
     /**
-     * @param pear2\Pyrus\Developer\CodeCoverage\SourceFile $source
+     * @param PEAR2\Pyrus\Developer\CodeCoverage\SourceFile $source
      * @param string $istest path to test file this is covering, or false for aggregate
      */
     function render(SourceFile $source, $istest = false)

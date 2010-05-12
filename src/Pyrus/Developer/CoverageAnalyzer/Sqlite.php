@@ -1,5 +1,5 @@
 <?php
-namespace pear2\Pyrus\Developer\CoverageAnalyzer;
+namespace PEAR2\Pyrus\Developer\CoverageAnalyzer;
 class Sqlite
 {
     protected $db;
@@ -691,7 +691,7 @@ class Sqlite
             $included = false;
 
             $class = str_replace(array($this->codepath, '.php'), '', $file);
-            $class = 'pear2' . str_replace('/', '\\', $class);
+            $class = 'PEAR2' . str_replace('/', '\\', $class);
 
             $classes = array_merge(get_declared_classes(), get_declared_interfaces());
             if (in_array($class, $classes)) {

@@ -2,8 +2,8 @@
 /**
  * Create a phar with PHP_Archive embedded
  */
-namespace pear2\Pyrus\Developer\Creator\Phar;
-class PHPArchive extends \pear2\Pyrus\Developer\Creator\Phar
+namespace PEAR2\Pyrus\Developer\Creator\Phar;
+class PHPArchive extends \PEAR2\Pyrus\Developer\Creator\Phar
 {
     /**
      * @var Phar
@@ -18,7 +18,7 @@ class PHPArchive extends \pear2\Pyrus\Developer\Creator\Phar
         parent::__construct($path, false, $fileformat, $compression, $others);
         $phparchive = @file_get_contents('PHP/Archive.php', true);
         if (!$phparchive) {
-            throw new \pear2\Pyrus\Developer\Creator\Exception('Could not locate' .
+            throw new \PEAR2\Pyrus\Developer\Creator\Exception('Could not locate' .
                 ' PHP_Archive class for phar creation');
         }
         $phparchive = '?>' . $phparchive . '<?php';

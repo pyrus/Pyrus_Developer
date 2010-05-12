@@ -85,7 +85,7 @@ Code Coverage Improvements:
     <file role="data" name="config.w32"/>
     <file role="data" name="phartemplate.php"/>
    </dir>
-   <dir name="src" baseinstalldir="pear2">
+   <dir name="src" baseinstalldir="PEAR2">
     <dir name="Pyrus">
      <dir name="Developer">
       <dir name="CoverageAnalyzer">

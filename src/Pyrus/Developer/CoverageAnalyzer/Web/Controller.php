@@ -1,5 +1,5 @@
 <?php
-namespace pear2\Pyrus\Developer\CoverageAnalyzer\Web {
+namespace PEAR2\Pyrus\Developer\CoverageAnalyzer\Web {
 class Controller {
     protected $view;
     protected $sqlite;

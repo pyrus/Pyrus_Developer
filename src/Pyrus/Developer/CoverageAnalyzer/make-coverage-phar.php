@@ -6,7 +6,7 @@ $phar = new Phar(__DIR__ . '/pear2coverage.phar.php');
 $phar->setStub('<?php
 function __autoload($class)
 {
-    $class = str_replace("pear2\\Pyrus\\Developer\\CoverageAnalyzer", "", $class);
+    $class = str_replace("PEAR2\\Pyrus\\Developer\\CoverageAnalyzer", "", $class);
     include "phar://" . __FILE__ . str_replace("\\\\", "/", $class) . ".php";
 }
 Phar::webPhar("pear2coverage.phar.php");
@@ -45,7 +45,7 @@ div.bad, div.ok, div.good {
 .good {background-color:#588526;}
 ';
 $phar['index.php'] = '<?php
-namespace pear2\Pyrus\Developer\CoverageAnalyzer {
+namespace PEAR2\Pyrus\Developer\CoverageAnalyzer {
 session_start();
 $view = new Web\View;
 $rooturl = parse_url($_SERVER["REQUEST_URI"]);

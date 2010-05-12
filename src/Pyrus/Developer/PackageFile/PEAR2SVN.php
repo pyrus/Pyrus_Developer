@@ -24,7 +24,7 @@
  *     Name [handle] <email> (role)
  *     Name2 [handle2] <email> (role/inactive)
  */
-namespace pear2\Pyrus\Developer\PackageFile;
+namespace PEAR2\Pyrus\Developer\PackageFile;
 class PEAR2SVN
 {
     protected $path;
@@ -55,23 +55,23 @@ class PEAR2SVN
         $this->doCompatible = $doCompatible;
         if (file_exists($path . DIRECTORY_SEPARATOR . 'package.xml')) {
             try {
-                $this->pxml = new \pear2\Pyrus\PackageFile(
+                $this->pxml = new \PEAR2\Pyrus\PackageFile(
                     $path . DIRECTORY_SEPARATOR . 'package.xml',
-                    'pear2\Pyrus\Developer\PackageFile\v2');
+                    'PEAR2\Pyrus\Developer\PackageFile\v2');
                 $this->pxml = $this->pxml->info;
                 $this->pxml->setFilelist(array());
             } catch (Exception $e) {
-                $this->pxml = new \pear2\Pyrus\Developer\PackageFile\v2;
+                $this->pxml = new \PEAR2\Pyrus\Developer\PackageFile\v2;
                 $this->pxml->name = $packagename;
                 $this->pxml->channel = $channel;
             }
         } else {
-            $this->pxml = new \pear2\Pyrus\Developer\PackageFile\v2;
+            $this->pxml = new \PEAR2\Pyrus\Developer\PackageFile\v2;
             $this->pxml->name = $packagename;
             $this->pxml->channel = $channel;
         }
         if ($doCompatible) {
-            $this->pxml_compatible = new \pear2\Pyrus\Developer\PackageFile\v2;
+            $this->pxml_compatible = new \PEAR2\Pyrus\Developer\PackageFile\v2;
             $this->pxml_compatible->name = $packagename;
             $this->pxml_compatible->channel = $channel;
         }
@@ -86,7 +86,7 @@ class PEAR2SVN
 
         if ($fullpathsused) {
             if ($this->pxml->channel == 'pear2.php.net') {
-                $packagepath = array('pear2');
+                $packagepath = array('PEAR2');
             } else {
                 $packagepath = array('/');
             }
@@ -153,7 +153,7 @@ class PEAR2SVN
         foreach ($rolemap as $dir => $role) {
             if (file_exists($this->path . DIRECTORY_SEPARATOR . $dir)) {
                 $basepath = ($dir === 'examples') ? 'examples' : '';
-                foreach (new \pear2\Pyrus\Developer\PackageFile\PEAR2SVN\Filter(
+                foreach (new \PEAR2\Pyrus\Developer\PackageFile\PEAR2SVN\Filter(
                             $this->path . DIRECTORY_SEPARATOR . $dir,
                          new \RecursiveIteratorIterator(
                          new \RecursiveDirectoryIterator($this->path . DIRECTORY_SEPARATOR . $dir),
@@ -171,7 +171,7 @@ class PEAR2SVN
                             'attribs' => array('role' => $role)
                         );
 
-                    $roleobject = \pear2\Pyrus\Installer\Role::factory($this->pxml->type, $role);
+                    $roleobject = \PEAR2\Pyrus\Installer\Role::factory($this->pxml->type, $role);
                     if ($role == 'customcommand' || $role == 'customrole' || $role == 'customtask') {
                         $compatiblerole = 'data';
                     } else {
@@ -358,9 +358,9 @@ class PEAR2SVN
 
     function validate()
     {
-        $package = new \pear2\Pyrus\Package(false);
-        $xmlcontainer = new \pear2\Pyrus\PackageFile($this->pxml);
-        $xml = new \pear2\Pyrus\Package\Xml($this->path . '/package.xml', $package, $xmlcontainer);
+        $package = new \PEAR2\Pyrus\Package(false);
+        $xmlcontainer = new \PEAR2\Pyrus\PackageFile($this->pxml);
+        $xml = new \PEAR2\Pyrus\Package\Xml($this->path . '/package.xml', $package, $xmlcontainer);
         $package->setInternalPackage($xml);
 
         $this->pxml->getValidator()->validate($package);
@@ -378,7 +378,7 @@ class PEAR2SVN
             $this->pxml_compatible->date = date('Y-m-d');
             $this->pxml_compatible->time = date('H:i:s');
             $info = $this->pxml_compatible->toArray(true);
-            $stuff = new \pear2\Pyrus\XMLWriter($info);
+            $stuff = new \PEAR2\Pyrus\XMLWriter($info);
             file_put_contents($this->path . '/package_compatible.xml', $stuff);
         }
     }
