@@ -313,17 +313,19 @@ class PEAR2SVN
         }
         if (count($files)) {
             uksort($files, 'version_compare');
-            $info = array_pop($files);
-            $stability = $this->guessStabilityFromVersion($info[1]);
-            $this->pxml->version['api'] = $info[1];
+            list($apinotesfile, $apiversion) = array_pop($files);
+            $stability = $this->guessStabilityFromVersion($apiversion);
+
+            $this->pxml->version['api']   = $apiversion;
             $this->pxml->stability['api'] = $stability;
+
             $this->pxml->notes = $this->pxml->notes .
-                "\n\n" . file_get_contents($this->path . DIRECTORY_SEPARATOR . $info[0]);
+                "\n\n" . file_get_contents($this->path . DIRECTORY_SEPARATOR . $apinotesfile);
+
             if ($this->doCompatible) {
-                $this->pxml_compatible->version['api'] = $info[1];
+                $this->pxml_compatible->version['api']   = $apiversion;
                 $this->pxml_compatible->stability['api'] = $stability;
-                $this->pxml_compatible->notes = $this->pxml_compatible->notes .
-                    "\n\n" . file_get_contents($this->path . DIRECTORY_SEPARATOR . $info[0]);
+                $this->pxml_compatible->notes            = $this->pxml->notes;
             }
         }
     }
