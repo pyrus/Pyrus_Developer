@@ -269,27 +269,32 @@ class PEAR2SVN
         }
         if (count($files)) {
             uksort($files, 'version_compare');
-            $info = array_pop($files);
-            $stability = $this->guessStabilityFromVersion($info[1]);
-            $this->pxml->version['release'] = $info[1];
+            list($releasenotesfile, $releaseversion) = array_pop($files);
+            $stability = $this->guessStabilityFromVersion($releaseversion);
+
+            $this->pxml->version['release']   = $releaseversion;
             $this->pxml->stability['release'] = $stability;
+            $this->pxml->notes                = file_get_contents($this->path . DIRECTORY_SEPARATOR . $releasenotesfile);
+
             $apistability = $stability;
-            $apiversion = $this->pxml->version['api'];
+            $apiversion   = $this->pxml->version['api'];
+
             if ($stability == 'beta') {
-                if ($this->pxml->version['api'] == '0.1.0') {
+                if ($apiversion == '0.1.0') {
                     $apiversion = '1.0.0';
                 }
                 $apistability = 'stable';
             }
-            $this->pxml->version['api'] = $apiversion;
+
+            $this->pxml->version['api']   = $apiversion;
             $this->pxml->stability['api'] = $apistability;
-            $this->pxml->notes = file_get_contents($this->path . DIRECTORY_SEPARATOR . $info[0]);
+
             if ($this->doCompatible) {
-                $this->pxml_compatible->version['release'] = $info[1];
+                $this->pxml_compatible->version['release']   = $releaseversion;
                 $this->pxml_compatible->stability['release'] = $stability;
-                $this->pxml_compatible->version['api'] = $apiversion;
-                $this->pxml_compatible->stability['api'] = $apistability;
-                $this->pxml_compatible->notes = file_get_contents($this->path . DIRECTORY_SEPARATOR . $info[0]);
+                $this->pxml_compatible->version['api']       = $apiversion;
+                $this->pxml_compatible->stability['api']     = $apistability;
+                $this->pxml_compatible->notes                = $this->pxml->notes;
             }
         }
     }
