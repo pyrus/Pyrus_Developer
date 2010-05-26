@@ -40,10 +40,11 @@ class Aggregator
         $this->sqlite = new Sqlite($db, $codepath, $testpath, $files);
         $this->codepath = $codepath;
         $this->sqlite->begin();
-        echo "Scanning for xdebug coverage files...";
+
+        echo "Scanning for xdebug coverage files...\n";
         $files = $this->scan($testpath);
         echo "done\n";
-        $infostring = '';
+
         echo "Parsing xdebug results\n";
         if (!count($files)) {
             echo "done (no modified xdebug files)\n";
@@ -61,20 +62,21 @@ class Aggregator
             $id = $this->sqlite->addTest($phpt);
             echo '(' . $testid . ' of ' . count($files) . ') ' . $xdebugfile;
             $this->retrieveXdebug($xdebugfile, $id);
-            echo "done\n";
+            echo "\ndone\n";
         }
 
-        echo "done\n";
         $this->sqlite->addNoCoverageFiles();
         $this->sqlite->updateAllLines();
         $this->sqlite->updateTotalCoverage();
         $this->sqlite->commit();
 
         if (count($delete)) {
-            echo "\nWARNING: The following .xdebug files are outdated relics and should be deleted\n";
+            echo "\nNote: The following .xdebug files were outdated relics and have been deleted\n";
             foreach ($delete as $d) {
+                unlink($d);
                 echo "$d\n";
             }
+            echo "\n";
         }
     }
 
@@ -139,31 +141,30 @@ class Aggregator
         $this->sqlite->addCoverage(str_replace('.xdebug', '.phpt', $path), $testid, $xdebug);
     }
 
-    function scan($testpath)
+    function scan($path)
     {
-        $a = $testpath;
-        $testpath = realpath($testpath);
+        $testpath = realpath($path);
         if (!$testpath) {
-            throw new Exception('Unable to process path' . $a);
+            throw new Exception('Unable to process path' . $path);
         }
 
-        $testpath = str_replace('\\', '/', $testpath);
-        $this->testpath = $testpath;
+        $this->testpath = str_replace('\\', '/', $testpath);
 
         // get a list of all xdebug files
         $xdebugs = array();
         foreach (new \RegexIterator(
-                                    new \RecursiveIteratorIterator(
-                                        new \RecursiveDirectoryIterator($testpath,
-                                                                        0|\RecursiveDirectoryIterator::SKIP_DOTS)),
-                                    '/\.xdebug$/') as $file) {
+                    new \RecursiveIteratorIterator(
+                        new \RecursiveDirectoryIterator($this->testpath,
+                                                        0|\RecursiveDirectoryIterator::SKIP_DOTS)
+                    ), '/\.xdebug$/') as $file
+        ) {
             if (strpos((string) $file, '.svn')) {
                 continue;
             }
 
             $xdebugs[] = realpath((string) $file);
         }
-        echo count($xdebugs), ' total...';
+        echo count($xdebugs), " total...\n";
 
         $unmodified = $modified = array();
         foreach ($xdebugs as $path) {
@@ -200,13 +201,13 @@ class Aggregator
     function render($toPath)
     {
         $decorator = new DefaultSourceDecorator($toPath, $this->testpath, $this->codepath);
-        echo "Generating project coverage data...";
+        echo "Generating project coverage data...\n";
         $coverage = $this->sqlite->retrieveProjectCoverage();
         echo "done\n";
         $decorator->renderSummary($this, $this->retrievePaths(), $this->codepath, false, $coverage[1],
                                   $coverage[0], $coverage[2]);
         $a = $this->codepath;
-        echo "[Step 2 of 2] Rendering per-test coverage...";
+        echo "[Step 2 of 2] Rendering per-test coverage...\n";
         $decorator->renderTestCoverage($this, $this->testpath, $a);
         echo "done\n";
     }
