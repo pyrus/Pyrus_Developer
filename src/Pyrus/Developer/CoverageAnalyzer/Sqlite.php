@@ -15,6 +15,7 @@ class Sqlite
     private $statement;
     private $lines = array();
     private $files = array();
+    private $deleted = array();
 
     const COVERAGE_COVERED      = 1;
     const COVERAGE_NOT_EXECUTED = 0;
@@ -430,16 +431,31 @@ class Sqlite
             $id = $this->getTestId($testpath);
         }
 
-        echo "deleting old test ", $testpath,'.';
+        // gather information
+        $sql = 'SELECT DISTINCT files_id FROM coverage
+                WHERE
+                    tests_id = ' . $id ;
+        if (!empty($this->deleted)) {
+            $sql .= '
+                AND
+                    files_id NOT IN (' . implode(', ', $this->deleted) . ')';
+        }
+
+        $result = $this->db->query($sql);
+        while ($res = $result->fetchArray(SQLITE3_ASSOC)) {
+            $this->deleted[] = $res['files_id'];
+        }
+
+        echo "\ndeleting old test ", $testpath," .";
         $this->db->exec('DELETE FROM tests WHERE id = ' . $id);
         echo '.';
         $this->db->exec('DELETE FROM coverage WHERE tests_id = ' . $id);
         echo '.';
         $this->db->exec('DELETE FROM coverage_nonsource WHERE tests_id = ' . $id);
         echo '.';
-        $this->db->exec('DELETE FROM xdebugs WHERE path = "' .
-                        $this->db->escapeString(str_replace('.phpt', '.xdebug', $testpath)) . '"');
-        echo "done\n";
+        $p = $this->db->escapeString(str_replace('.phpt', '.xdebug', $testpath));
+        $this->db->exec('DELETE FROM xdebugs WHERE path = "' . $p . '"');
+        echo " done\n";
     }
 
     function addTest($testpath, $id = null)
@@ -605,7 +621,13 @@ class Sqlite
                     // Only allow lines that are in the new rollout.
                     isset($this->lines[$id][$line]) ||
                     // Line already marked as covered.
-                    (isset($this->lines[$id][$line]) && $this->lines[$id][$line] !== 1 && $state > $this->lines[$id][$line])
+                    (
+                        isset($this->lines[$id][$line]) &&
+                        (
+                         $this->lines[$id][$line] !== Sqlite::COVERAGE_COVERED ||
+                         $state > $this->lines[$id][$line]
+                        )
+                    )
                 ) {
                     $this->lines[$id][$line] = $state;
                 }
@@ -764,7 +786,7 @@ class Sqlite
                     if (
                         !isset($this->lines[$id][$line]) ||
                         // Line already marked as covered.
-                        $this->lines[$id][$line] !== 1 ||
+                        $this->lines[$id][$line] !== Sqlite::COVERAGE_COVERED ||
                         $state > $this->lines[$id][$line]
                     ) {
                         $this->lines[$id][$line] = $state;
@@ -811,10 +833,11 @@ class Sqlite
         // first scan for new .phpt files
         $tests = array();
         foreach (new \RegexIterator(
-                                    new \RecursiveIteratorIterator(
-                                        new \RecursiveDirectoryIterator($this->testpath,
-                                                                        0|\RecursiveDirectoryIterator::SKIP_DOTS)),
-                                    '/\.phpt$/') as $file) {
+                    new \RecursiveIteratorIterator(
+                        new \RecursiveDirectoryIterator($this->testpath,
+                                                        0|\RecursiveDirectoryIterator::SKIP_DOTS)
+                    ), '/\.phpt$/') as $file
+        ) {
             if (strpos((string) $file, '.svn')) {
                 continue;
             }
