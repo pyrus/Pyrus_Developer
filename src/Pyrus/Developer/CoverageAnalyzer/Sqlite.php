@@ -701,6 +701,20 @@ class Sqlite
             }
         }
 
+        $codepath = $this->codepath;
+        spl_autoload_register(function($class) use ($codepath){
+            $file = str_replace(array('\\', '_'), DIRECTORY_SEPARATOR, $class);
+            if (file_exists($codepath . DIRECTORY_SEPARATOR . $file . '.php')) {
+                include $codepath . DIRECTORY_SEPARATOR . $file . '.php';
+                return true;
+            }
+            if ($file = stream_resolve_include_path($file . '.php')) {
+                include $file;
+                return true;
+            }
+            return false;
+        });
+
         foreach ($this->files as $file) {
             if (empty($file)) {
                 continue;
@@ -712,11 +726,19 @@ class Sqlite
             // Figure out of the file has been already inclduded or not
             $included = false;
 
-            $class = str_replace(array($this->codepath, '.php'), '', $file);
-            $class = 'PEAR2' . str_replace('/', '\\', $class);
+            $relative_file = substr($file, strlen($this->codepath . DIRECTORY_SEPARATOR), -4);
+
+            // We need to try a few things here to actually find the correct class
+            // Foo/Bar.php may mean Foo_Bar Foo\Bar or PEAR2\Foo\Bar
+            $class       = str_replace('/', '_', $relative_file);
+            $ns_class    = str_replace('/', '\\', $relative_file);
+            $pear2_class = 'PEAR2\\' . $ns_class;
 
             $classes = array_merge(get_declared_classes(), get_declared_interfaces());
-            if (in_array($class, $classes)) {
+
+            if (in_array($class, $classes)
+                || in_array($ns_class, $classes)
+                || in_array($pear2_class, $classes)) {
                 $included = true;
             }
 
@@ -726,6 +748,11 @@ class Sqlite
                 include $file;
                 $data = xdebug_get_code_coverage(true);
                 $this->lines[$id] = $data[$file];
+            } else {
+                /*
+                 * @TODO files that already have been loaded need to have 
+                 * their missing coverage lines added too
+                 */
             }
         }
 
