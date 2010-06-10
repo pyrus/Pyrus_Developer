@@ -35,10 +35,10 @@ Included are commands for:
   <email>saltybeagle@php.net</email>
   <active>yes</active>
  </lead>
- <date>2010-03-31</date>
- <time>12:14:31</time>
+ <date>2010-06-10</date>
+ <time>10:06:41</time>
  <version>
-  <release>0.2.0</release>
+  <release>0.3.0</release>
   <api>0.1.0</api>
  </version>
  <stability>
@@ -46,25 +46,14 @@ Included are commands for:
   <api>alpha</api>
  </stability>
  <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
- <notes>Feature Release:
+ <notes>Feature release:
 
-Basic fixes:
-* Only add pear2 baseinstalldir if the package is for pear2.php.net [saltybeagle]
-* Add empty $extrafiles array to prevent an exception when packaging a newly generated skeleton. [saltybeagle]
-* Update interface references to PEAR2 standards [saltybeagle]
-* Simplify the autoload included in skeleton package stub [saltybeagle]
-
-Code Coverage Improvements:
-* Improved color schema for the coverage. [helgi]
-* New database schema to handle more information. [helgi]
-* Show dead code as dead instead of not covered [helgi]
-* Improve the code coverage detection, handle xdebug edge cases [helgi]
-* Better overall coverage of Pyrus with better processing of xdebug coverage [helgi]
-* Speed improvements [helgi]
-* Make output easier to read [helgi]
-</notes>
+* Change namespace from pear2 to PEAR2.
+* Add coverage web page example to the www directory.</notes>
  <contents>
   <dir name="/">
+   <file role="www" name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/CoverageAnalyzer/index.php"/>
+   <file role="www" name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/CoverageAnalyzer/cover.css"/>
    <file role="php" name="php/PEAR2/Pyrus/Developer/Runphpt/Runner.php"/>
    <file role="php" name="php/PEAR2/Pyrus/Developer/Runphpt/Exception.php"/>
    <file role="php" name="php/PEAR2/Pyrus/Developer/PackageFile/v2.php"/>
@@ -161,6 +150,8 @@ Code Coverage Improvements:
    <install name="php/PEAR2/Pyrus/Developer/PackageFile/v2.php" as="PEAR2/Pyrus/Developer/PackageFile/v2.php"/>
    <install name="php/PEAR2/Pyrus/Developer/Runphpt/Exception.php" as="PEAR2/Pyrus/Developer/Runphpt/Exception.php"/>
    <install name="php/PEAR2/Pyrus/Developer/Runphpt/Runner.php" as="PEAR2/Pyrus/Developer/Runphpt/Runner.php"/>
+   <install name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/CoverageAnalyzer/cover.css" as="pear2.php.net/CoverageAnalyzer/CoverageAnalyzer/cover.css"/>
+   <install name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/CoverageAnalyzer/index.php" as="pear2.php.net/CoverageAnalyzer/CoverageAnalyzer/index.php"/>
   </filelist>
  </phprelease>
 </package>

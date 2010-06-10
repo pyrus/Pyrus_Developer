@@ -1,0 +1,4 @@
+Feature release:
+
+* Change namespace from pear2 to PEAR2.
+* Add coverage web page example to the www directory.
