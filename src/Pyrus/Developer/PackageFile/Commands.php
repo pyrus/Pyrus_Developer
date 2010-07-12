@@ -411,13 +411,8 @@ dorender:
                                                                ' already exists');
         }
         mkdir($info['path']);
-
         chdir($info['path']);
-        mkdir('trunk');
-        mkdir('tags');
-        mkdir('branches');
 
-        chdir('trunk');
         mkdir('src');
         mkdir('src/' . $info['mainPath'], 0777, true);
         file_put_contents('src/' . $info['mainPath'] . '/Main.php', '<?php
@@ -451,9 +446,9 @@ class Main
 }
 ');
         mkdir('data');
-        mkdir('customcommand');
-        mkdir('customrole');
-        mkdir('customtask');
+//        mkdir('customcommand');
+//        mkdir('customrole');
+//        mkdir('customtask');
         mkdir('tests');
         mkdir('docs');
         mkdir('examples');
@@ -468,6 +463,7 @@ class Main
         file_put_contents('extrasetup.php', "<?php
 /**
  * This file is used to provide extra files/packages outside package.xml
+ * More information: http://pear.php.net/manual/en/pyrus.commands.package.php#pyrus.commands.package.extrasetup
  */
 \$extrafiles = array();
 
@@ -493,6 +489,7 @@ if (basename(__DIR__) == 'trunk') {
         file_put_contents('packagexmlsetup.php', "<?php
 /**
  * Extra package.xml settings such as dependencies.
+ * More information: http://pear.php.net/manual/en/pyrus.commands.make.php#pyrus.commands.make.packagexmlsetup
  */
 /**
  * for example:
@@ -513,6 +510,7 @@ if (basename(__DIR__) == 'trunk') {
 /**
  * If your package does special stuff in phar format, use this file.  Remove if
  * no phar format is ever generated
+ * More information: http://pear.php.net/manual/en/pyrus.commands.package.php#pyrus.commands.package.stub
  */
 if (version_compare(phpversion(), '5.3.1', '<')) {
     if (substr(phpversion(), 0, 5) != '5.3.1') {
