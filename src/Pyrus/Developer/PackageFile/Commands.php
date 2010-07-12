@@ -577,21 +577,22 @@ __HALT_COMPILER();
                 }
                 $ret['package'] = implode('_', $package);
             }
-            $package[0] = 'pear2';
+            $package[0] = 'PEAR2';
             $path = $package;
             array_shift($path);
-            $ret['path'] = implode('_', $path);
+
+            $ret['path']          = implode('_', $path);
             $ret['mainNamespace'] = implode('\\', $package);
-            $ret['mainClass'] = implode('\\', $package) . '\\Main';
-            $ret['mainPath'] = implode('/', $path);
-            $ret['svn'] = 'http://svn.php.net/repository/pear2/' . $ret['package'];
+            $ret['mainClass']     = implode('\\', $package) . '\\Main';
+            $ret['mainPath']      = implode('/', $path);
+            $ret['svn']           = 'http://svn.php.net/repository/pear2/' . $ret['package'];
         } else {
-            $ret['path'] = implode('_', $package);
-            $ret['package'] = implode('_', $package);
+            $ret['path']          = implode('_', $package);
+            $ret['package']       = implode('_', $package);
             $ret['mainNamespace'] = implode('\\', $package);
-            $ret['mainClass'] = implode('\\', $package) . '\\Main';
-            $ret['mainPath'] = implode('/', $package);
-            $ret['svn'] = 'http://svn.' . $channel . '/???';
+            $ret['mainClass']     = implode('\\', $package) . '\\Main';
+            $ret['mainPath']      = implode('/', $package);
+            $ret['svn']           = 'http://svn.' . $channel . '/???';
         }
         return $ret;
     }
