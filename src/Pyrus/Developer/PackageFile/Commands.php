@@ -220,14 +220,14 @@ class Commands
             // running from svn, assume we're in an all checkout
             $svnall = realpath($sourcepath . '/../..');
             if (!file_exists($svnall . '/Exception')) {
-                throw new \PEAR2\Pyrus\Developer\Creator\Exception('Cannot locate pear2/Exception and friends, bailing');
+                throw new \PEAR2\Pyrus\Developer\Creator\Exception('Cannot locate PEAR2/Exception and friends, bailing');
             }
             $exceptionpath = $svnall . '/Exception/src';
             $autoloadpath = $svnall . '/Autoload/src';
             $multierrorspath = $svnall . '/MultiErrors/src';
         } else {
             $exceptionpath = $autoloadpath = $multierrorspath = dirname($sourcepath) .
-                '/pear2';
+                '/PEAR2';
         }
         $extras = array();
         $stub = false;
