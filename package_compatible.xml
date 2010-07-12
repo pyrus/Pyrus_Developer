@@ -8,14 +8,27 @@
 This package contains several custom commands for Pyrus.
 
 Included are commands for:
-* Creating pear2 and pecl package skeletons
- $ php pyrus.phar generate-pear2 MyNewPackage
+
+* Creating PEAR2 and PECL package skeletons
+    * `php pyrus.phar generate-pear2 MyNewPackage`
+    * [generate-pear2 documentation][1]
 * Creating a package.xml file
- $ php pyrus.phar make
+    * `php pyrus.phar make`
+    * [make documentation][2]
 * Packaging PEAR2 and PEAR releases
- $ php pyrus.phar package
+    * `php pyrus.phar package`
+    * [package documentation][3]
 * Running phpt tests and generating code coverage reports
- $ php pyrus.phar run-phpt -m
+    * `php pyrus.phar run-phpt -m`
+    * [run-phpt documentation][4]
+
+For more information, read the [documentation][5].
+
+[1]: http://pear.php.net/manual/en/pyrus.commands.generatepear2.php
+[2]: http://pear.php.net/manual/en/pyrus.commands.make.php
+[3]: http://pear.php.net/manual/en/pyrus.commands.package.php
+[4]: http://pear.php.net/manual/en/pyrus.commands.runphpt.php
+[5]: http://pear.php.net/manual/en/pyrus.developers.php
 </description>
  <lead>
   <name>Gregory Beaver</name>
@@ -35,10 +48,10 @@ Included are commands for:
   <email>saltybeagle@php.net</email>
   <active>yes</active>
  </lead>
- <date>2010-06-10</date>
- <time>10:06:41</time>
+ <date>2010-07-12</date>
+ <time>09:26:58</time>
  <version>
-  <release>0.3.0</release>
+  <release>0.3.1</release>
   <api>0.1.0</api>
  </version>
  <stability>
@@ -46,10 +59,10 @@ Included are commands for:
   <api>alpha</api>
  </stability>
  <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
- <notes>Feature release:
+ <notes>Bugfix Release:
 
-* Change namespace from pear2 to PEAR2.
-* Add coverage web page example to the www directory.</notes>
+* Fix package command failure &quot;Cannot locate PEAR2/Exception.php&quot; [saltybeagle]
+* Remove unused elements in PEAR2 package skeleton generator [saltybeagle]</notes>
  <contents>
   <dir name="/">
    <file role="www" name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/CoverageAnalyzer/index.php"/>
