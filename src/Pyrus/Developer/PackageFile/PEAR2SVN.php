@@ -115,28 +115,20 @@ class PEAR2SVN
      */
     function scanFiles($packagepath)
     {
-        $this->pxml->setBaseInstallDirs(array(
-            'src'     => implode('/', $packagepath),
+        $base_install_dirs = array(
+            'src'           => implode('/', $packagepath),
             'customrole'    => '/',
             'customtask'    => '/',
             'customcommand' => '/',
-            'data'    => '/',
-            'doc'     => '/',
-            'tests'   => '/',
-            'scripts' => '/',
-            'www'     => '/',
-        ));
-        $this->pxml_compatible->setBaseInstallDirs(array(
-            'src'     => implode('/', $packagepath),
-            'customrole'    => '/',
-            'customtask'    => '/',
-            'customcommand' => '/',
-            'data'    => '/',
-            'doc'     => '/',
-            'tests'   => '/',
-            'scripts' => '/',
-            'www'     => '/',
-        ));
+            'data'          => '/',
+            'doc'           => '/',
+            'tests'         => '/',
+            'scripts'       => '/',
+            'www'           => '/',
+        );
+
+        $this->pxml->setBaseInstallDirs($base_install_dirs);
+        $this->pxml_compatible->setBaseInstallDirs($base_install_dirs);
 
         $rolemap = array(
             'src'           => 'php',
@@ -163,9 +155,10 @@ class PEAR2SVN
                     if ($curpath && $curpath[0] === DIRECTORY_SEPARATOR) {
                         $curpath = substr($curpath, 1);
                     }
+
                     $curpath = $dir . '/' . $curpath;
-                    $curpath = str_replace('\\', '/', $curpath);
-                    $curpath = str_replace('//', '/', $curpath);
+                    $curpath = str_replace(array('\\', '//'), '/', $curpath);
+
                     $this->pxml->files[$curpath] =
                         array(
                             'attribs' => array('role' => $role)
