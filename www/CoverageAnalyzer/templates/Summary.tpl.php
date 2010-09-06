@@ -25,14 +25,26 @@ list($covered, $total, $dead) = $coverage;
     ?>
     <p class="<?php echo getClass($percent); ?>"><?php echo $percent; ?>% code coverage</p>
     <p>
-    <a href="/workspace/PEAR2/Pyrus_Developer/www/CoverageAnalyzer/?test=TOC">Code Coverage per PHPT test</a>
+    <a href="<?php echo $parent->context->getRootLink(); ?>?test=TOC">Code Coverage per PHPT test</a>
     </p>
 
-  <ul>
-   <?php foreach ($context as $sourceFile): ?>
-   <li>
-    <div class="<?php echo getClass($sourceFile->coveragePercentage()); ?>"><?php echo ' Coverage: ' . str_pad($sourceFile->coveragePercentage() . '%', 4, ' ', STR_PAD_LEFT); ?></div>
-    <a href="<?php echo $parent->context->getFileLink($sourceFile->name()); ?>"><?php echo $sourceFile->shortName(); ?></a>
-   </li>
+  <table>
+   <thead>
+    <tr>
+        <th>Coverage %</th>
+        <th>Source File</th>
+        <th>Uncovered % of total uncovered</th>
+    </tr>
+   </thead>
+   <tbody>
+   <?php foreach ($context as $sourceFile):
+   list($sourceCovered, $sourceTotal, $sourceDead) = $sourceFile->coverageInfo();
+   ?>
+   <tr>
+    <td class="<?php echo getClass($sourceFile->coveragePercentage()); ?>"><?php echo $sourceFile->coveragePercentage() . '%'; ?></td>
+    <td><a href="<?php echo $parent->context->getFileLink($sourceFile->name()); ?>"><?php echo $sourceFile->shortName(); ?></a></td>
+    <td><?php echo round(($sourceTotal - $sourceCovered)/($total - $covered)*100, 2); ?>%</td>
+   </tr>
    <?php endforeach; ?>
-  </ul>
+   </tbody>
+  </table>
