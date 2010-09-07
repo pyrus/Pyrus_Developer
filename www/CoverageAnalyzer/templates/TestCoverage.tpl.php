@@ -10,7 +10,7 @@ function getClass($percent)
     }
 }
 ?>
-  <h2>Code Coverage Files for test College/Description/__isset.phpt</h2>
+  <h2>Code Coverage Files for test <?php echo str_replace($context->sqlite->testpath . '/', '', $context->test); ?></h2>
   <ul>
    <?php foreach ($context as $file): ?>
    <li>
