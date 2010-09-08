@@ -138,7 +138,7 @@ class Commands
 
     function package($frontend, $args, $options)
     {
-        $package1 = false;
+        $package = false;
         if (!isset($args['packagexml'])) {
             // first try ./package.xml
             if (file_exists('package.xml')) {
@@ -148,11 +148,14 @@ class Commands
                     if ($e->getCode() != -3) {
                         throw $e;
                     }
-                    if (file_exists('package2.xml')) {
-                        $package = new \PEAR2\Pyrus\Package(getcwd() . DIRECTORY_SEPARATOR . 'package2.xml');
-                        // now the creator knows to do the magic of package2.xml/package.xml
-                        $package->thisIsOldAndCrustyCompatible();
+
+                    if (!file_exists('package2.xml')) {
+                        throw $e;
                     }
+
+                    $package = new \PEAR2\Pyrus\Package(getcwd() . DIRECTORY_SEPARATOR . 'package2.xml');
+                    // now the creator knows to do the magic of package2.xml/package.xml
+                    $package->thisIsOldAndCrustyCompatible();
                 }
             }
         } else {
