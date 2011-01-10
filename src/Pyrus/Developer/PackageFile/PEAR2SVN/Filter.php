@@ -32,7 +32,7 @@ class Filter extends \FilterIterator
         foreach ($this->ignore as $testpath => $type) {
             if ($type == 'file') {
                 $test = $path;
-            } elseif ($type == 'path') {
+            } elseif ($type == 'dir') {
                 $test = dirname($path);
             }
             if (strpos($test, $testpath) !== false) {

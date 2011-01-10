@@ -39,14 +39,16 @@ class Commands
         if ($options['scanoptions']) {
             $file = $options['scanoptions'];
             $path = $dir;
-            $getscanoptions = function() use ($scanoptions, $path, $file) {
+            $getscanoptions = function() use ($path, $file) {
+                $scanoptions = array();
                 include $path . '/' . $file;
+                return $scanoptions;
             };
-            $getscanoptions();
+            $scanoptions = $getscanoptions();
         }
         echo "Creating package.xml...";
         $pear2svn = new PEAR2SVN($dir, $args['packagename'], $args['channel'],
-                                                       false, true, !$options['nocompatible']);
+                                 false, true, !$options['nocompatible'], $scanoptions);
         if (!$options['packagexmlsetup'] && file_exists($pear2svn->path . '/packagexmlsetup.php')) {
             $options['packagexmlsetup'] = 'packagexmlsetup.php';
         }
