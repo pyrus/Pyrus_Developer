@@ -32,6 +32,18 @@ class Commands
         if (!isset($args['channel'])) {
             $args['channel'] = 'pear2.php.net';
         }
+        if (!$options['scanoptions'] && file_exists($dir . '/scanoptions.php')) {
+            $options['scanoptions'] = 'scanoptions.php';
+        }
+        $scanoptions = array();
+        if ($options['scanoptions']) {
+            $file = $options['scanoptions'];
+            $path = $dir;
+            $getscanoptions = function() use ($scanoptions, $path, $file) {
+                include $path . '/' . $file;
+            };
+            $getscanoptions();
+        }
         echo "Creating package.xml...";
         $pear2svn = new PEAR2SVN($dir, $args['packagename'], $args['channel'],
                                                        false, true, !$options['nocompatible']);

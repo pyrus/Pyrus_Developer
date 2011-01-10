@@ -21,6 +21,12 @@
     <doc>php file to execute that does customization of the package.xml</doc>
    </option>
    <option>
+    <name>scanoptions</name>
+    <shortopt>o</shortopt>
+    <type><bool/></type>
+    <doc>php file to execute that does customization of the package.xml scanning</doc>
+   </option>
+   <option>
     <name>package</name>
     <shortopt>p</shortopt>
     <type><string/></type>

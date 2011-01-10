@@ -50,7 +50,8 @@ class PEAR2SVN
      *                            should be PEAR2/Package for "/" directory
      */
     function __construct($path, $packagename = '##set me##', $channel = 'pear2.php.net',
-                         $return = false, $fullpathsused = true, $doCompatible = true)
+                         $return = false, $fullpathsused = true, $doCompatible = true,
+                         $scanoptions = array())
     {
         $this->doCompatible = $doCompatible;
         if (file_exists($path . DIRECTORY_SEPARATOR . 'package.xml')) {
@@ -94,7 +95,7 @@ class PEAR2SVN
             array_pop($packagepath);
         }
 
-        $this->scanFiles($packagepath);
+        $this->scanFiles($packagepath, $scanoptions);
 
         $this->validate();
         try {
@@ -113,7 +114,7 @@ class PEAR2SVN
      *
      * @param string $packagepath
      */
-    function scanFiles($packagepath)
+    function scanFiles($packagepath, $scanoptions)
     {
         $base_install_dirs = array(
             'src'           => implode('/', $packagepath),
@@ -126,6 +127,14 @@ class PEAR2SVN
             'scripts'       => '/',
             'www'           => '/',
         );
+        if (isset($scanoptions['baseinstalldirs'])) {
+            if (!is_array($scanoptions['baseinstalldirs'])) {
+                throw new \PEAR2\Pyrus\Developer\Creator\Exception('invalid scan options,' .
+                                                                   'baseinstalldirs must ' .
+                                                                   'be an array');
+            }
+            $base_install_dirs = array_merge($base_install_dirs, $scanoptions['baseinstalldirs']);
+        }
 
         $this->pxml->setBaseInstallDirs($base_install_dirs);
         $this->pxml_compatible->setBaseInstallDirs($base_install_dirs);
@@ -141,11 +150,51 @@ class PEAR2SVN
             'examples'      => 'doc',
             'scripts'       => 'script',
             'www'           => 'www',);
+        if (isset($scanoptions['rolemap'])) {
+            if (!is_array($scanoptions['rolemap'])) {
+                throw new \PEAR2\Pyrus\Developer\Creator\Exception('invalid scan options,' .
+                                                                   'rolemap must ' .
+                                                                   'be an array');
+            }
+            $rolemap = array_merge($rolemap, $scanoptions['rolemap']);
+        }
+
+        if (!isset($scanoptions['mappath'])) {
+            $scanoptions['mappath'] = array();
+        } elseif (!is_array($scanoptions['mappath'])) {
+            throw new \PEAR2\Pyrus\Developer\Creator\Exception('invalid scan options,' .
+                                                               'mappath must ' .
+                                                               'be an array');
+        }
+
+        if (!isset($scanoptions['ignore'])) {
+            $scanoptions['ignore'] = array();
+        } else {
+            if (!is_array($scanoptions['ignore'])) {
+                throw new \PEAR2\Pyrus\Developer\Creator\Exception('invalid scan options,' .
+                                                                   'ignore must ' .
+                                                                   'be an array');
+            }
+            foreach ($scanoptions['ignore'] as $path => $type) {
+                if (!is_string($path)) {
+                    throw new \PEAR2\Pyrus\Developer\Creator\Exception('invalid scan options,' .
+                                                                   'ignore must ' .
+                                                                   'be an associative array ' .
+                                                                   'mapping path to type of ignore');
+                }
+                if ($type !== 'file' && $type !== 'dir') {
+                    throw new \PEAR2\Pyrus\Developer\Creator\Exception('invalid scan options,' .
+                                                                   'ignore of ' . $path .
+                                                                   ' must be either file or dir, but was ' .
+                                                                   $type);
+                }
+            }
+        }
 
         foreach ($rolemap as $dir => $role) {
             if (file_exists($this->path . DIRECTORY_SEPARATOR . $dir)) {
                 $basepath = ($dir === 'examples') ? 'examples' : '';
-                foreach (new \PEAR2\Pyrus\Developer\PackageFile\PEAR2SVN\Filter(
+                foreach (new \PEAR2\Pyrus\Developer\PackageFile\PEAR2SVN\Filter($scanoptions['ignore'],
                             $this->path . DIRECTORY_SEPARATOR . $dir,
                          new \RecursiveIteratorIterator(
                          new \RecursiveDirectoryIterator($this->path . DIRECTORY_SEPARATOR . $dir),
@@ -156,7 +205,11 @@ class PEAR2SVN
                         $curpath = substr($curpath, 1);
                     }
 
-                    $curpath = $dir . '/' . $curpath;
+                    if (isset($scanoptions['mappath'][$dir])) {
+                        $curpath = $scanoptions['mappath'][$dir] . '/' . $curpath;
+                    } else {
+                        $curpath = $dir . '/' . $curpath;
+                    }
                     $curpath = str_replace(array('\\', '//'), '/', $curpath);
 
                     $this->pxml->files[$curpath] =

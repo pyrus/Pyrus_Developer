@@ -48,10 +48,10 @@ For more information, read the [documentation][5].
   <email>saltybeagle@php.net</email>
   <active>yes</active>
  </lead>
- <date>2010-07-12</date>
- <time>09:26:58</time>
+ <date>2011-01-09</date>
+ <time>21:53:21</time>
  <version>
-  <release>0.3.1</release>
+  <release>0.4.0</release>
   <api>0.1.0</api>
  </version>
  <stability>
@@ -59,10 +59,23 @@ For more information, read the [documentation][5].
   <api>alpha</api>
  </stability>
  <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
- <notes>Bugfix Release:
+ <notes>New feature release:
 
-* Fix package command failure &quot;Cannot locate PEAR2/Exception.php&quot; [saltybeagle]
-* Remove unused elements in PEAR2 package skeleton generator [saltybeagle]</notes>
+ * add --scanoptions to the make command, allows configuring several things
+   when generating package.xml.  This option should specify the location of
+   a php script that specifies 3 overrides to the default values for
+   baseinstalldirs, for directory-&gt;role mapping, and for pathnames in package.xml
+   
+   For example:
+   &lt;?php
+   // use &quot;htdocs&quot; as our web directory in the repository, instead of www
+   $scanoptions['baseinstalldirs'] = array('htdocs' =&gt; '/');
+   $scanoptions['rolemap'] = array('htdocs' =&gt; 'www');
+   $scanoptions['mappath'] = array('htdocs' =&gt; 'www');
+   ?&gt;
+   
+   By default, the make command looks for scanoptions.php in the same directory
+   as the package.xml</notes>
  <contents>
   <dir name="/">
    <dir name="customcommand" baseinstalldir="/">
@@ -94,8 +107,14 @@ For more information, read the [documentation][5].
        </dir>
        <dir name="Web">
         <file role="php" name="Aggregator.php"/>
+        <file role="php" name="ClassToTemplateMapper.php"/>
         <file role="php" name="Controller.php"/>
         <file role="php" name="Exception.php"/>
+        <file role="php" name="LineSummary.php"/>
+        <file role="php" name="SelectDatabase.php"/>
+        <file role="php" name="Summary.php"/>
+        <file role="php" name="TestCoverage.php"/>
+        <file role="php" name="TestSummary.php"/>
         <file role="php" name="View.php"/>
        </dir>
        <file role="php" name="AbstractSourceDecorator.php"/>
@@ -140,6 +159,15 @@ For more information, read the [documentation][5].
    </dir>
    <dir name="www" baseinstalldir="/">
     <dir name="CoverageAnalyzer">
+     <dir name="templates">
+      <file role="www" name="Controller.tpl.php"/>
+      <file role="www" name="LineSummary.tpl.php"/>
+      <file role="www" name="SelectDatabase.tpl.php"/>
+      <file role="www" name="SourceFile.tpl.php"/>
+      <file role="www" name="Summary.tpl.php"/>
+      <file role="www" name="TestCoverage.tpl.php"/>
+      <file role="www" name="TestSummary.tpl.php"/>
+     </dir>
      <file role="www" name="cover.css"/>
      <file role="www" name="index.php"/>
     </dir>
