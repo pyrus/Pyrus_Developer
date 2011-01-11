@@ -32,11 +32,12 @@ class Commands
         if (!isset($args['channel'])) {
             $args['channel'] = 'pear2.php.net';
         }
-        if (!$options['scanoptions'] && file_exists($dir . '/scanoptions.php')) {
+        if (!isset($options['scanoptions'])
+            && file_exists($dir . '/scanoptions.php')) {
             $options['scanoptions'] = 'scanoptions.php';
         }
         $scanoptions = array();
-        if ($options['scanoptions']) {
+        if (isset($options['scanoptions'])) {
             $file = $options['scanoptions'];
             $path = $dir;
             $getscanoptions = function() use ($path, $file) {
