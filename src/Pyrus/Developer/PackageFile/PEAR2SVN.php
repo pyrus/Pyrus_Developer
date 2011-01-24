@@ -86,7 +86,8 @@ class PEAR2SVN
         $packagepath = explode('_', $packagename);
 
         if ($fullpathsused) {
-            if ($this->pxml->channel == 'pear2.php.net') {
+            if ($this->pxml->channel == 'pear2.php.net'
+                && !is_dir($path . '/src/PEAR2')) {
                 $packagepath = array('PEAR2');
             } else {
                 $packagepath = array('/');
