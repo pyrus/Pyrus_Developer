@@ -239,7 +239,7 @@ class Commands
             // TODO: Improve this to automatically find latest releases from pear2.php.net
             $exceptionpath = $autoloadpath = $multierrorspath = realpath($sourcepath . '/../../vendor/php') .
                 '/PEAR2';
-            if (!file_exists($exceptionpath . 'Exception.php')) {
+            if (!file_exists($exceptionpath . '/Exception.php')) {
                 throw new \PEAR2\Pyrus\Developer\Creator\Exception(
                     'Cannot locate PEAR2/Exception in a local vendor/ dir. '
                     . 'It is best to install the latest versions of these locally.');
