@@ -49,7 +49,7 @@ For more information, read the [documentation][5].
   <active>yes</active>
  </lead>
  <date>2011-03-07</date>
- <time>14:42:31</time>
+ <time>15:40:07</time>
  <version>
   <release>0.4.0</release>
   <api>0.1.0</api>
@@ -62,12 +62,13 @@ For more information, read the [documentation][5].
  <notes>New feature release:
 
 * Add --scanoptions to the make command [cellog]
-    This allows configuring several things when generating package.xml.
+    This allows configuring several things when generating `package.xml`.
     This option should specify the location of a php script that specifies 3
     overrides to the default values for baseinstalldirs, for directory-&gt;role
-    mapping, and for pathnames in package.xml
+    mapping, and for pathnames in `package.xml`
     
     For example:
+
         &lt;?php
         // use &quot;htdocs&quot; as our web directory in the repository, instead of www
         $scanoptions['baseinstalldirs'] = array('htdocs' =&gt; '/');
@@ -79,17 +80,18 @@ For more information, read the [documentation][5].
         $scanoptions['ignore'] = array('lib' =&gt; 'dir', 'some/file.txt' =&gt; 'file');
         ?&gt;
 
-    By default, the make command looks for scanoptions.php in the same directory
+    By default, the `make` command looks for scanoptions.php in the same directory
     as the package.xml
 * Update source layout so files can be autoloaded from checkout [saltybeagle]
 * Add code coverage reporter to the www directory [saltybeagle]
+* For `$extrafiles`, support any object that implements `PackageInterface` [saltybeagle]
 
 Bugs fixed:
 
 * Increase minimum PHP dependency to 5.3.1RC1 [saltybeagle]
-* Prevent fatal errors when only a package2.xml is present, ala XML_RPC2 [clockwerx]
-* Allow src/PEAR2 base directory for package layout [saltybeagle]
-* Fix Bug #18123 Exception when using pyrus.phar make -n. [saltybeagle]
+* Prevent fatal errors when only a `package2.xml` is present, ala XML_RPC2 [clockwerx]
+* Allow `src/PEAR2` base directory for package layout [saltybeagle]
+* Fix Bug #18123 Exception when using `pyrus.phar make -n`. [saltybeagle]
 * Correct inconsitency of docs directory name. [saltybeagle]</notes>
  <contents>
   <dir name="/">
