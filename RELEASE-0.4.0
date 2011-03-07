@@ -1,21 +1,32 @@
 New feature release:
 
- * add --scanoptions to the make command, allows configuring several things
-   when generating package.xml.  This option should specify the location of
-   a php script that specifies 3 overrides to the default values for
-   baseinstalldirs, for directory->role mapping, and for pathnames in package.xml
-   
-   For example:
-   <?php
-   // use "htdocs" as our web directory in the repository, instead of www
-   $scanoptions['baseinstalldirs'] = array('htdocs' => '/');
-   $scanoptions['rolemap'] = array('htdocs' => 'www');
-   $scanoptions['mappath'] = array('htdocs' => 'www');
+* Add --scanoptions to the make command [cellog]
+    This allows configuring several things when generating package.xml.
+    This option should specify the location of a php script that specifies 3
+    overrides to the default values for baseinstalldirs, for directory->role
+    mapping, and for pathnames in package.xml
+    
+    For example:
+        <?php
+        // use "htdocs" as our web directory in the repository, instead of www
+        $scanoptions['baseinstalldirs'] = array('htdocs' => '/');
+        $scanoptions['rolemap'] = array('htdocs' => 'www');
+        $scanoptions['mappath'] = array('htdocs' => 'www');
+        
+        // ignore a library directory we install using pyrus,
+        // and a specific file
+        $scanoptions['ignore'] = array('lib' => 'dir', 'some/file.txt' => 'file');
+        ?>
 
-   // ignore a library directory we install using pyrus,
-   // and a specific file
-   $scanoptions['ignore'] = array('lib' => 'dir', 'some/file.txt' => 'file');
-   ?>
-   
-   By default, the make command looks for scanoptions.php in the same directory
-   as the package.xml
+    By default, the make command looks for scanoptions.php in the same directory
+    as the package.xml
+* Update source layout so files can be autoloaded from checkout [saltybeagle]
+* Add code coverage reporter to the www directory [saltybeagle]
+
+Bugs fixed:
+
+* Increase minimum PHP dependency to 5.3.1RC1 [saltybeagle]
+* Prevent fatal errors when only a package2.xml is present, ala XML_RPC2 [clockwerx]
+* Allow src/PEAR2 base directory for package layout [saltybeagle]
+* Fix Bug #18123 Exception when using pyrus.phar make -n. [saltybeagle]
+* Correct inconsitency of docs directory name. [saltybeagle]
