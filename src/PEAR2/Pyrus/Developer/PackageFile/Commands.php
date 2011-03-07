@@ -344,11 +344,12 @@ class Commands
                 }
                 foreach ($extrafiles as $path => $file) {
                     if (is_object($file)) {
-                        if ($file instanceof \PEAR2\Pyrus\Package) {
+                        if ($file instanceof \PEAR2\Pyrus\PackageInterface
+                            || $file instanceof \PEAR2\Pyrus\PackageFileInterface) {
                             continue;
                         }
                         throw new \PEAR2\Pyrus\Developer\Creator\Exception(
-                                            'extrasetup file object must be a \PEAR2\Pyrus\Package object');
+                                            'extrasetup file object must implement \PEAR2\Pyrus\PackageInterface or \PEAR2\Pyrus\PackageFileInterface');
                     }
                     if (!file_exists($file)) {
                         throw new \PEAR2\Pyrus\Developer\Creator\Exception(
