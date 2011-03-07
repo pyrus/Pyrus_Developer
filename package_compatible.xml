@@ -48,8 +48,8 @@ For more information, read the [documentation][5].
   <email>saltybeagle@php.net</email>
   <active>yes</active>
  </lead>
- <date>2011-01-09</date>
- <time>21:53:21</time>
+ <date>2011-03-07</date>
+ <time>14:42:31</time>
  <version>
   <release>0.4.0</release>
   <api>0.1.0</api>
@@ -61,32 +61,47 @@ For more information, read the [documentation][5].
  <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
  <notes>New feature release:
 
- * add --scanoptions to the make command, allows configuring several things
-   when generating package.xml.  This option should specify the location of
-   a php script that specifies 3 overrides to the default values for
-   baseinstalldirs, for directory-&gt;role mapping, and for pathnames in package.xml
-   
-   For example:
-   &lt;?php
-   // use &quot;htdocs&quot; as our web directory in the repository, instead of www
-   $scanoptions['baseinstalldirs'] = array('htdocs' =&gt; '/');
-   $scanoptions['rolemap'] = array('htdocs' =&gt; 'www');
-   $scanoptions['mappath'] = array('htdocs' =&gt; 'www');
-   ?&gt;
-   
-   By default, the make command looks for scanoptions.php in the same directory
-   as the package.xml</notes>
+* Add --scanoptions to the make command [cellog]
+    This allows configuring several things when generating package.xml.
+    This option should specify the location of a php script that specifies 3
+    overrides to the default values for baseinstalldirs, for directory-&gt;role
+    mapping, and for pathnames in package.xml
+    
+    For example:
+        &lt;?php
+        // use &quot;htdocs&quot; as our web directory in the repository, instead of www
+        $scanoptions['baseinstalldirs'] = array('htdocs' =&gt; '/');
+        $scanoptions['rolemap'] = array('htdocs' =&gt; 'www');
+        $scanoptions['mappath'] = array('htdocs' =&gt; 'www');
+        
+        // ignore a library directory we install using pyrus,
+        // and a specific file
+        $scanoptions['ignore'] = array('lib' =&gt; 'dir', 'some/file.txt' =&gt; 'file');
+        ?&gt;
+
+    By default, the make command looks for scanoptions.php in the same directory
+    as the package.xml
+* Update source layout so files can be autoloaded from checkout [saltybeagle]
+* Add code coverage reporter to the www directory [saltybeagle]
+
+Bugs fixed:
+
+* Increase minimum PHP dependency to 5.3.1RC1 [saltybeagle]
+* Prevent fatal errors when only a package2.xml is present, ala XML_RPC2 [clockwerx]
+* Allow src/PEAR2 base directory for package layout [saltybeagle]
+* Fix Bug #18123 Exception when using pyrus.phar make -n. [saltybeagle]
+* Correct inconsitency of docs directory name. [saltybeagle]</notes>
  <contents>
   <dir name="/">
-   <file role="www" name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/TestSummary.tpl.php"/>
-   <file role="www" name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/TestCoverage.tpl.php"/>
-   <file role="www" name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Summary.tpl.php"/>
-   <file role="www" name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/SourceFile.tpl.php"/>
-   <file role="www" name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/SelectDatabase.tpl.php"/>
-   <file role="www" name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/LineSummary.tpl.php"/>
-   <file role="www" name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Controller.tpl.php"/>
-   <file role="www" name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/CoverageAnalyzer/index.php"/>
-   <file role="www" name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/CoverageAnalyzer/cover.css"/>
+   <file role="www" name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/TestSummary.tpl.php"/>
+   <file role="www" name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/TestCoverage.tpl.php"/>
+   <file role="www" name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Summary.tpl.php"/>
+   <file role="www" name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/SourceFile.tpl.php"/>
+   <file role="www" name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/SelectDatabase.tpl.php"/>
+   <file role="www" name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/LineSummary.tpl.php"/>
+   <file role="www" name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Controller.tpl.php"/>
+   <file role="www" name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/CoverageAnalyzer/index.php"/>
+   <file role="www" name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/CoverageAnalyzer/cover.css"/>
    <file role="php" name="php/PEAR2/Pyrus/Developer/Runphpt/Runner.php"/>
    <file role="php" name="php/PEAR2/Pyrus/Developer/Runphpt/Exception.php"/>
    <file role="php" name="php/PEAR2/Pyrus/Developer/PackageFile/v2.php"/>
@@ -122,24 +137,16 @@ For more information, read the [documentation][5].
    <file role="php" name="php/PEAR2/Pyrus/Developer/CoverageAnalyzer/DefaultSourceDecorator.php"/>
    <file role="php" name="php/PEAR2/Pyrus/Developer/CoverageAnalyzer/Aggregator.php"/>
    <file role="php" name="php/PEAR2/Pyrus/Developer/CoverageAnalyzer/AbstractSourceDecorator.php"/>
-   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/tests/skeleton/tests/001.phpt"/>
-   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/skeleton.php"/>
-   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/skeleton.dsp"/>
-   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/skeleton.c"/>
-   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/php_skeleton.h"/>
-   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/EXPERIMENTAL"/>
-   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/CREDITS"/>
-   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/create_stubs"/>
-   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/phartemplate.php"/>
-   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/config.w32"/>
-   <file role="data" name="data/PEAR2_Pyrus_Developer/pear2.php.net/config.m4"/>
-   <file role="data" name="customcommand/PEAR2_Pyrus_Developer/pear2.php.net/commands.xml"/>
+   <file role="data" name="data/pear2.php.net/PEAR2_Pyrus_Developer/phartemplate.php"/>
+   <file role="data" name="data/pear2.php.net/PEAR2_Pyrus_Developer/config.w32"/>
+   <file role="data" name="data/pear2.php.net/PEAR2_Pyrus_Developer/config.m4"/>
+   <file role="data" name="customcommand/pear2.php.net/PEAR2_Pyrus_Developer/commands.xml"/>
   </dir>
  </contents>
  <dependencies>
   <required>
    <php>
-    <min>5.2.0</min>
+    <min>5.3.1RC1</min>
    </php>
    <pearinstaller>
     <min>1.4.8</min>
@@ -148,18 +155,10 @@ For more information, read the [documentation][5].
  </dependencies>
  <phprelease>
   <filelist>
-   <install name="customcommand/PEAR2_Pyrus_Developer/pear2.php.net/commands.xml" as="pear2.php.net/commands.xml"/>
-   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/config.m4" as="pear2.php.net/config.m4"/>
-   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/config.w32" as="pear2.php.net/config.w32"/>
-   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/phartemplate.php" as="pear2.php.net/phartemplate.php"/>
-   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/create_stubs" as="pear2.php.net/skeleton/skeleton/create_stubs"/>
-   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/CREDITS" as="pear2.php.net/skeleton/skeleton/CREDITS"/>
-   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/EXPERIMENTAL" as="pear2.php.net/skeleton/skeleton/EXPERIMENTAL"/>
-   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/php_skeleton.h" as="pear2.php.net/skeleton/skeleton/php_skeleton.h"/>
-   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/skeleton.c" as="pear2.php.net/skeleton/skeleton/skeleton.c"/>
-   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/skeleton.dsp" as="pear2.php.net/skeleton/skeleton/skeleton.dsp"/>
-   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/skeleton/skeleton.php" as="pear2.php.net/skeleton/skeleton/skeleton.php"/>
-   <install name="data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton/tests/skeleton/tests/001.phpt" as="pear2.php.net/skeleton/tests/skeleton/tests/001.phpt"/>
+   <install name="customcommand/pear2.php.net/PEAR2_Pyrus_Developer/commands.xml" as="PEAR2_Pyrus_Developer/commands.xml"/>
+   <install name="data/pear2.php.net/PEAR2_Pyrus_Developer/config.m4" as="PEAR2_Pyrus_Developer/config.m4"/>
+   <install name="data/pear2.php.net/PEAR2_Pyrus_Developer/config.w32" as="PEAR2_Pyrus_Developer/config.w32"/>
+   <install name="data/pear2.php.net/PEAR2_Pyrus_Developer/phartemplate.php" as="PEAR2_Pyrus_Developer/phartemplate.php"/>
    <install name="php/PEAR2/Pyrus/Developer/CoverageAnalyzer/AbstractSourceDecorator.php" as="PEAR2/Pyrus/Developer/CoverageAnalyzer/AbstractSourceDecorator.php"/>
    <install name="php/PEAR2/Pyrus/Developer/CoverageAnalyzer/Aggregator.php" as="PEAR2/Pyrus/Developer/CoverageAnalyzer/Aggregator.php"/>
    <install name="php/PEAR2/Pyrus/Developer/CoverageAnalyzer/DefaultSourceDecorator.php" as="PEAR2/Pyrus/Developer/CoverageAnalyzer/DefaultSourceDecorator.php"/>
@@ -195,15 +194,15 @@ For more information, read the [documentation][5].
    <install name="php/PEAR2/Pyrus/Developer/PackageFile/v2.php" as="PEAR2/Pyrus/Developer/PackageFile/v2.php"/>
    <install name="php/PEAR2/Pyrus/Developer/Runphpt/Exception.php" as="PEAR2/Pyrus/Developer/Runphpt/Exception.php"/>
    <install name="php/PEAR2/Pyrus/Developer/Runphpt/Runner.php" as="PEAR2/Pyrus/Developer/Runphpt/Runner.php"/>
-   <install name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/CoverageAnalyzer/cover.css" as="pear2.php.net/CoverageAnalyzer/CoverageAnalyzer/cover.css"/>
-   <install name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/CoverageAnalyzer/index.php" as="pear2.php.net/CoverageAnalyzer/CoverageAnalyzer/index.php"/>
-   <install name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Controller.tpl.php" as="pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Controller.tpl.php"/>
-   <install name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/LineSummary.tpl.php" as="pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/LineSummary.tpl.php"/>
-   <install name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/SelectDatabase.tpl.php" as="pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/SelectDatabase.tpl.php"/>
-   <install name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/SourceFile.tpl.php" as="pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/SourceFile.tpl.php"/>
-   <install name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Summary.tpl.php" as="pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Summary.tpl.php"/>
-   <install name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/TestCoverage.tpl.php" as="pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/TestCoverage.tpl.php"/>
-   <install name="www/PEAR2_Pyrus_Developer/pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/TestSummary.tpl.php" as="pear2.php.net/CoverageAnalyzer/templates/CoverageAnalyzer/templates/TestSummary.tpl.php"/>
+   <install name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/CoverageAnalyzer/cover.css" as="PEAR2_Pyrus_Developer/CoverageAnalyzer/CoverageAnalyzer/cover.css"/>
+   <install name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/CoverageAnalyzer/index.php" as="PEAR2_Pyrus_Developer/CoverageAnalyzer/CoverageAnalyzer/index.php"/>
+   <install name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Controller.tpl.php" as="PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Controller.tpl.php"/>
+   <install name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/LineSummary.tpl.php" as="PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/LineSummary.tpl.php"/>
+   <install name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/SelectDatabase.tpl.php" as="PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/SelectDatabase.tpl.php"/>
+   <install name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/SourceFile.tpl.php" as="PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/SourceFile.tpl.php"/>
+   <install name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Summary.tpl.php" as="PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Summary.tpl.php"/>
+   <install name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/TestCoverage.tpl.php" as="PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/TestCoverage.tpl.php"/>
+   <install name="www/pear2.php.net/PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/TestSummary.tpl.php" as="PEAR2_Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/TestSummary.tpl.php"/>
   </filelist>
  </phprelease>
 </package>
