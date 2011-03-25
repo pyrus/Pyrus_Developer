@@ -8,7 +8,7 @@ class Commands
     protected $footer;
     protected $skeleton;
 
-    function makePackageXml($frontend, $args, $options)
+    function getDirectory($args)
     {
         if (isset($args['dir'])) {
             $dir = $args['dir'];
@@ -18,6 +18,12 @@ class Commands
         } else {
             $dir = getcwd();
         }
+        return $dir;
+    }
+
+    function makePackageXml($frontend, $args, $options)
+    {
+        $dir = $this->getDirectory($args);
         if (!isset($args['packagename']) && file_exists($dir . '/package.xml')) {
             try {
                 $testpackage = new \PEAR2\Pyrus\Package($dir . '/package.xml');
@@ -91,14 +97,7 @@ class Commands
 
     function makePECLPackage($frontend, $args, $options)
     {
-        if (isset($args['dir'])) {
-            $dir = $args['dir'];
-            if (!file_exists($dir)) {
-                throw new Exception('Invalid directory: ' . $dir . ' does not exist');
-            }
-        } else {
-            $dir = getcwd();
-        }
+        $dir = $this->getDirectory($args);
         $sourceextensions = array('c', 'cc', 'h', 'm4', 'w32', 're', 'y', 'l', 'frag');
         if (isset($args['extension'])) {
             $sourceextensions = array_merge($sourceextensions, $args['extension']);
@@ -636,10 +635,9 @@ __HALT_COMPILER();
             throw new \PEAR2\Pyrus\Developer\Creator\Exception('Extension ' . $args['extension'] .
                                                                ' directory already exists');
         }
+        $protos = array();
         if ($options['proto']) {
             $protos = $this->parseProtos($options['proto']);
-        } else {
-            $protos = array();
         }
 
         $ext = $args['extension'];
