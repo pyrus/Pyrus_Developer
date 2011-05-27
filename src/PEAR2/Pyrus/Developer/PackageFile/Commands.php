@@ -792,14 +792,24 @@ eof;
 
     function saveConfigM4($ext)
     {
-        $m4 = file_get_contents(dirname($this->skeleton) . '/config.m4');
+        $filename = dirname($this->skeleton) . '/config.m4';
+        if (!file_exists($filename)) {
+            return false; // FIXME proper handling
+        }
+
+        $m4 = file_get_contents($filename);
         file_put_contents($ext . '/config.m4', str_replace(array('@EXTNAME@', '@extname@'),
                                                            array(strtoupper($ext), $ext), $m4));
     }
 
     function saveConfigW32($ext)
     {
-        $w32 = file_get_contents(dirname($this->skeleton) . '/config.w32');
+        $filename = dirname($this->skeleton) . '/config.w32';
+        if (!file_exists($filename)) {
+            return false; // FIXME proper handling
+        }
+
+        $w32 = file_get_contents($filename);
         file_put_contents($ext . '/config.w32', str_replace(array('@EXTNAME@', '@extname@'),
                                                             array(strtoupper($ext), $ext), $w32));
     }
