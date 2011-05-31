@@ -786,7 +786,12 @@ eof;
 
     function processFile($ext, $source, $dest, $replace)
     {
-        $s = file_get_contents($this->skeleton . '/' . $source);
+        $filename = $this->skeleton . '/' . $source;
+        if (!file_exists($filename)) {
+            return false; // FIXME proper handling
+        }
+
+        $s = file_get_contents($filename);
         file_put_contents($ext . '/' . $dest, str_replace(array_keys($replace), array_values($replace), $s));
     }
 
