@@ -1,0 +1,8 @@
+/run-tests.log
+.DS_Store
+/.settings/
+/.project
+/.buildpath
+/autoload.php
+/Pyrus_Developer-*.*
+*.komodoproject
