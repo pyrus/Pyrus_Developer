@@ -2,7 +2,7 @@
 <commands version="2.0" xmlns="http://pear2.php.net/dtd/customcommand-2.0">
  <command>
   <name>make</name>
-  <class>PEAR2\Pyrus\Developer\PackageFile\Commands</class>
+  <class>Pyrus\Developer\PackageFile\Commands</class>
   <function>makePackageXml</function>
   <autoloadpath></autoloadpath>
   <summary>Create or update a package.xml from a standard PEAR2 directory layout</summary>
@@ -107,7 +107,7 @@ such as --package=phar,tar,zip
  </command>
  <command>
   <name>pickle</name>
-  <class>PEAR2\Pyrus\Developer\PackageFile\Commands</class>
+  <class>Pyrus\Developer\PackageFile\Commands</class>
   <function>makePECLPackage</function>
   <autoloadpath></autoloadpath>
   <summary>Create or update a package.xml and then package a PECL extension release</summary>
@@ -175,7 +175,7 @@ RELEASE-X.Y.Z is used as the release notes.
  </command>
  <command>
   <name>package</name>
-  <class>PEAR2\Pyrus\Developer\PackageFile\Commands</class>
+  <class>Pyrus\Developer\PackageFile\Commands</class>
   <function>package</function>
   <autoloadpath></autoloadpath>
   <summary>Create a release from an existing package.xml</summary>
@@ -258,7 +258,7 @@ directory as package.xml, it will be used for extra setup for all archives.
  </command>
  <command>
   <name>run-phpt</name>
-  <class>PEAR2\Pyrus\Developer\PackageFile\Commands</class>
+  <class>Pyrus\Developer\PackageFile\Commands</class>
   <function>runTests</function>
   <autoloadpath></autoloadpath>
   <summary>Run PHPT tests</summary>
@@ -304,7 +304,7 @@ Coverage can be viewed in a web browser by opening pear2coverage.phar.php
  </command>
  <command>
   <name>generate-pear2</name>
-  <class>PEAR2\Pyrus\Developer\PackageFile\Commands</class>
+  <class>Pyrus\Developer\PackageFile\Commands</class>
   <function>pear2Skeleton</function>
   <autoloadpath></autoloadpath>
   <summary>Generate the subversion source layout for a new PEAR2 package</summary>
@@ -332,7 +332,7 @@ will reside in Subversion.  It creates everything needed except the source code.
  </command>
  <command>
   <name>generate-ext</name>
-  <class>PEAR2\Pyrus\Developer\PackageFile\Commands</class>
+  <class>Pyrus\Developer\PackageFile\Commands</class>
   <function>extSkeleton</function>
   <autoloadpath></autoloadpath>
   <summary>Generate the subversion source layout for a new PHP extension that is PECL-ready</summary>

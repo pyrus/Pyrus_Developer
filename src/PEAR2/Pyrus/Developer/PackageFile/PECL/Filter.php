@@ -1,5 +1,5 @@
 <?php
-namespace PEAR2\Pyrus\Developer\PackageFile\PECL;
+namespace Pyrus\Developer\PackageFile\PECL;
 class Filter extends \FilterIterator
 {
     protected $path;

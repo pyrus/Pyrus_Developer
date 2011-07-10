@@ -1,0 +1,6 @@
+Features:
+
+Bug Fixes/Refactoring:
+
+ - Removed the PEAR2 namespace and made Pyrus the top level namespace.
+   This means all includes and classes need to drop the PEAR2 portion [helgi]

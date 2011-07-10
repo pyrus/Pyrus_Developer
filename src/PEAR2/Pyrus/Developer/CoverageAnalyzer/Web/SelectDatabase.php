@@ -1,6 +1,6 @@
 <?php
-namespace PEAR2\Pyrus\Developer\CoverageAnalyzer\Web;
-use PEAR2\Pyrus\Developer\CoverageAnalyzer\SourceFile;
+namespace Pyrus\Developer\CoverageAnalyzer\Web;
+use Pyrus\Developer\CoverageAnalyzer\SourceFile;
 class SelectDatabase
 {
 

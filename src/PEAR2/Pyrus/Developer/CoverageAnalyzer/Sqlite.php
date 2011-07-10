@@ -1,5 +1,5 @@
 <?php
-namespace PEAR2\Pyrus\Developer\CoverageAnalyzer;
+namespace Pyrus\Developer\CoverageAnalyzer;
 class Sqlite
 {
     public $codepath;
@@ -713,11 +713,15 @@ class Sqlite
                 include $file;
                 return true;
             }
-            $fake_class = '<?php class '.$class.' {}';
-            $fake_class_file = tempnam(sys_get_temp_dir(), 'pyrus_tmp');
-            file_put_contents($fake_class_file, $fake_class);
-            include $fake_class_file;
-            unlink($fake_class_file);
+
+            if (!class_exists($class)) {
+                $fake_class = '<?php class '.$class.' {}';
+                $fake_class_file = tempnam(sys_get_temp_dir(), 'pyrus_tmp');
+                file_put_contents($fake_class_file, $fake_class);
+                include $fake_class_file;
+                unlink($fake_class_file);
+            }
+
             return true;
         });
 
@@ -756,7 +760,7 @@ class Sqlite
                 $this->lines[$id] = $data[$file];
             } else {
                 /*
-                 * @TODO files that already have been loaded need to have 
+                 * @TODO files that already have been loaded need to have
                  * their missing coverage lines added too
                  */
             }

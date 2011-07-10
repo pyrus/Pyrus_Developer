@@ -1,6 +1,6 @@
 <?php
 
-namespace PEAR2\Pyrus\Developer\Runphpt;
+namespace Pyrus\Developer\Runphpt;
 class Runner
 {
     var $_headers = array();
@@ -50,7 +50,7 @@ class Runner
         }
 
         $this->windows = substr(PHP_OS, 0, 3) == 'WIN';
-        $this->_php = \PEAR2\Pyrus\Config::current()->php_bin;
+        $this->_php = \Pyrus\Config::current()->php_bin;
         $this->xdebug_loaded = extension_loaded('xdebug');
     }
 
@@ -331,7 +331,7 @@ class Runner
         $section_text = $this->_readFile($file);
 
         if (isset($section_text['POST_RAW']) && isset($section_text['UPLOAD'])) {
-            throw new \PEAR2\Pyrus\Developer\Runphpt\Exception("Cannot contain both POST_RAW and UPLOAD in test file: $file");
+            throw new \Pyrus\Developer\Runphpt\Exception("Cannot contain both POST_RAW and UPLOAD in test file: $file");
         }
 
         $cwd = getcwd();
@@ -364,7 +364,7 @@ class Runner
               !empty($section_text['COOKIE']) || !empty($section_text['EXPECTHEADERS'])) {
             if (empty($this->_options['cgi'])) {
                 if (!isset($this->_options['quiet'])) {
-                    \PEAR2\Pyrus\Logger::log(0, "SKIP $test_nr$tested (reason: --cgi option needed for this test, type 'pear help run-tests')");
+                    \Pyrus\Logger::log(0, "SKIP $test_nr$tested (reason: --cgi option needed for this test, type 'pear help run-tests')");
                 }
                 if (isset($this->_options['tapoutput'])) {
                     return array('ok', ' # skip --cgi option needed for this test, "pear help run-tests" for info');
@@ -434,7 +434,7 @@ class Runner
         $cmd = $this->_preparePhpBin($this->_php, $temp_file, $ini_settings);
         $cmd.= "$args 2>&1";
         if (isset($this->_logger)) {
-            \PEAR2\Pyrus\Logger::log(2, 'Running command "' . $cmd . '"');
+            \Pyrus\Logger::log(2, 'Running command "' . $cmd . '"');
         }
 
         // Reset environment from any previous test.
@@ -560,7 +560,7 @@ class Runner
                         break;
                     }
                     if (!isset($this->_options['quiet'])) {
-                        \PEAR2\Pyrus\Logger::log(0, "PASS $test_nr$tested$info");
+                        \Pyrus\Logger::log(0, "PASS $test_nr$tested$info");
                     }
                     if (isset($this->_options['tapoutput'])) {
                         return array('ok', ' - ' . $tested);
@@ -571,7 +571,7 @@ class Runner
                 if (isset($section_text['EXPECTFILE'])) {
                     $f = $temp_dir . '/' . trim($section_text['EXPECTFILE']);
                     if (!($fp = @fopen($f, 'rb'))) {
-                        throw new \PEAR2\Pyrus\Developer\Runphpt\Exception('--EXPECTFILE-- section file ' .
+                        throw new \Pyrus\Developer\Runphpt\Exception('--EXPECTFILE-- section file ' .
                             $f . ' not found');
                     }
                     fclose($fp);
@@ -587,7 +587,7 @@ class Runner
                         break;
                     }
                     if (!isset($this->_options['quiet'])) {
-                        \PEAR2\Pyrus\Logger::log(0, "PASS $test_nr$tested$info");
+                        \Pyrus\Logger::log(0, "PASS $test_nr$tested$info");
                     }
                     if (isset($this->_options['tapoutput'])) {
                         return array('ok', ' - ' . $tested);
@@ -606,7 +606,7 @@ class Runner
             $wanted   = preg_replace('/\r/', '', trim($section_text['FAIL']));
             if ($faildiff == $wanted) {
                 if (!isset($this->_options['quiet'])) {
-                    \PEAR2\Pyrus\Logger::log(0, "PASS $test_nr$tested$info");
+                    \Pyrus\Logger::log(0, "PASS $test_nr$tested$info");
                 }
                 if (isset($this->_options['tapoutput'])) {
                     return array('ok', ' - ' . $tested);
@@ -616,14 +616,14 @@ class Runner
             unset($section_text['EXPECTF']);
             $output = $faildiff;
             if (isset($section_text['RETURNS'])) {
-                throw new \PEAR2\Pyrus\Developer\Runphpt\Exception('Cannot have both RETURNS and FAIL in the same test: ' .
+                throw new \Pyrus\Developer\Runphpt\Exception('Cannot have both RETURNS and FAIL in the same test: ' .
                     $file);
             }
         }
 
         // Test failed so we need to report details.
         $txt = $warn ? 'WARN ' : 'FAIL ';
-        \PEAR2\Pyrus\Logger::log(0, $txt . $test_nr . $tested . $info);
+        \Pyrus\Logger::log(0, $txt . $test_nr . $tested . $info);
 
         // write .exp
         $res = $this->_writeLog($exp_filename, $wanted);
@@ -698,7 +698,7 @@ $return_value
     function save_text($filename, $text)
     {
         if (!$fp = fopen($filename, 'w')) {
-            throw new \PEAR2\Pyrus\Developer\Runphpt\Exception("Cannot open file '" . $filename . "' (save_text)");
+            throw new \Pyrus\Developer\Runphpt\Exception("Cannot open file '" . $filename . "' (save_text)");
         }
         fwrite($fp, $text);
         fclose($fp);
@@ -746,7 +746,7 @@ $return_value
                     $skipreason .= '(reason: ' . $m[1] . ')';
                 }
                 if (!isset($this->_options['quiet'])) {
-                    \PEAR2\Pyrus\Logger::log(0, $skipreason);
+                    \Pyrus\Logger::log(0, $skipreason);
                 }
                 if (isset($this->_options['tapoutput'])) {
                     return array('ok', ' # skip ' . $reason);
@@ -815,7 +815,7 @@ $return_value
         );
 
         if (!is_file($file) || !$fp = fopen($file, "r")) {
-            throw new \PEAR2\Pyrus\Developer\Runphpt\Exception("Cannot open test file: $file");
+            throw new \Pyrus\Developer\Runphpt\Exception("Cannot open test file: $file");
         }
 
         $section = '';
@@ -829,7 +829,7 @@ $return_value
                 continue;
             } elseif (empty($section)) {
                 fclose($fp);
-                throw new \PEAR2\Pyrus\Developer\Runphpt\Exception("Invalid sections formats in test file: $file");
+                throw new \Pyrus\Developer\Runphpt\Exception("Invalid sections formats in test file: $file");
             }
 
             // Add to the section text.
@@ -843,7 +843,7 @@ $return_value
     function _writeLog($logname, $data)
     {
         if (!$log = fopen($logname, 'w')) {
-            throw new \PEAR2\Pyrus\Developer\Runphpt\Exception("Cannot create test log - $logname");
+            throw new \Pyrus\Developer\Runphpt\Exception("Cannot create test log - $logname");
         }
         fwrite($log, $data);
         fclose($log);
@@ -898,10 +898,10 @@ $return_value
             foreach ($upload_files as $fileinfo) {
                 $fileinfo = explode('=', $fileinfo);
                 if (count($fileinfo) != 2) {
-                    throw new \PEAR2\Pyrus\Developer\Runphpt\Exception("Invalid UPLOAD section in test file: $file");
+                    throw new \Pyrus\Developer\Runphpt\Exception("Invalid UPLOAD section in test file: $file");
                 }
                 if (!realpath(dirname($file) . '/' . $fileinfo[1])) {
-                    throw new \PEAR2\Pyrus\Developer\Runphpt\Exception("File for upload does not exist: $fileinfo[1] " .
+                    throw new \Pyrus\Developer\Runphpt\Exception("File for upload does not exist: $fileinfo[1] " .
                         "in test file: $file");
                 }
                 $file_contents = file_get_contents(dirname($file) . '/' . $fileinfo[1]);
@@ -919,7 +919,7 @@ $return_value
                 foreach ($post as $i => $post_info) {
                     $post_info = explode('=', $post_info);
                     if (count($post_info) != 2) {
-                        throw new \PEAR2\Pyrus\Developer\Runphpt\Exception("Invalid POST data in test file: $file");
+                        throw new \Pyrus\Developer\Runphpt\Exception("Invalid POST data in test file: $file");
                     }
                     $post_info[0] = rawurldecode($post_info[0]);
                     $post_info[1] = rawurldecode($post_info[1]);

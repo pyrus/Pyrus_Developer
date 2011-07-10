@@ -1,7 +1,7 @@
 <?php
-namespace PEAR2\Pyrus\Developer\PackageFile;
+namespace Pyrus\Developer\PackageFile;
 
-use PEAR2\Pyrus\Developer\CoverageAnalyzer as Coverage;
+use Pyrus\Developer\CoverageAnalyzer as Coverage;
 class Commands
 {
     protected $header;
@@ -26,13 +26,13 @@ class Commands
         $dir = $this->getDirectory($args);
         if (!isset($args['packagename']) && file_exists($dir . '/package.xml')) {
             try {
-                $testpackage = new \PEAR2\Pyrus\Package($dir . '/package.xml');
+                $testpackage = new \Pyrus\Package($dir . '/package.xml');
                 $args['packagename'] = $testpackage->name;
                 // if packagename isn't set, channel can't be set
                 $args['channel'] = $testpackage->channel;
             } catch (\Exception $e) {
                 // won't work, user has to be explicit
-                throw new \PEAR2\Pyrus\Developer\Creator\Exception('missing first argument: PackageName');
+                throw new \Pyrus\Developer\Creator\Exception('missing first argument: PackageName');
             }
         }
         if (!isset($args['channel'])) {
@@ -66,7 +66,7 @@ class Commands
             $file = $options['packagexmlsetup'];
             $path = $pear2svn->path;
             if (!file_exists($path . '/' . $file)) {
-                throw new \PEAR2\Pyrus\Developer\Creator\Exception(
+                throw new \Pyrus\Developer\Creator\Exception(
                                     'packagexmlsetup file must be in a subdirectory of the package.xml');
             }
             $getinfo = function() use ($file, $path, $package, $compatible) {
@@ -104,13 +104,13 @@ class Commands
         }
         if (!isset($args['packagename']) && file_exists($dir . '/package.xml')) {
             try {
-                $testpackage = new \PEAR2\Pyrus\Package($dir . '/package.xml');
+                $testpackage = new \Pyrus\Package($dir . '/package.xml');
                 $args['packagename'] = $testpackage->name;
                 // if packagename isn't set, channel can't be set
                 $args['channel'] = $testpackage->channel;
             } catch (\Exception $e) {
                 // won't work, user has to be explicit
-                throw new \PEAR2\Pyrus\Developer\Creator\Exception('missing first argument: PackageName');
+                throw new \Pyrus\Developer\Creator\Exception('missing first argument: PackageName');
             }
         }
         if (!isset($args['channel'])) {
@@ -154,21 +154,21 @@ class Commands
     function package($frontend, $args, $options)
     {
         $path = getcwd() . DIRECTORY_SEPARATOR;
-        $package = new \PEAR2\Pyrus\Package(null);
+        $package = new \Pyrus\Package(null);
 
 
         if (!isset($args['packagexml']) && !file_exists($path . 'package.xml') && !file_exists($path . 'package2.xml')) {
-            throw new \PEAR2\Pyrus\PackageFile\Exception("No package.xml or package2.xml found in " . $path);
+            throw new \Pyrus\PackageFile\Exception("No package.xml or package2.xml found in " . $path);
         }
 
         if (isset($args['packagexml'])) {
-            $package = new \PEAR2\Pyrus\Package($args['packagexml']);
+            $package = new \Pyrus\Package($args['packagexml']);
         } else {
             // first try ./package.xml
             if (file_exists($path . 'package.xml')) {
                 try {
-                    $package = new \PEAR2\Pyrus\Package($path . 'package.xml');
-                } catch (\PEAR2\Pyrus\PackageFile\Exception $e) {
+                    $package = new \Pyrus\Package($path . 'package.xml');
+                } catch (\Pyrus\PackageFile\Exception $e) {
                     if ($e->getCode() != -3) {
                         throw $e;
                     }
@@ -177,7 +177,7 @@ class Commands
                         throw $e;
                     }
 
-                    $package = new \PEAR2\Pyrus\Package($path . 'package2.xml');
+                    $package = new \Pyrus\Package($path . 'package2.xml');
                     // now the creator knows to do the magic of package2.xml/package.xml
                     $package->thisIsOldAndCrustyCompatible();
                 }
@@ -185,7 +185,7 @@ class Commands
 
             // Alternatively; there's only a package2.xml
             if (file_exists($path . 'package2.xml') && !file_exists($path . 'package.xml')) {
-                $package = new \PEAR2\Pyrus\Package($path . 'package2.xml');
+                $package = new \Pyrus\Package($path . 'package2.xml');
             }
         }
 
@@ -199,7 +199,7 @@ class Commands
                 }
             }
             if ($options['phar'] && ini_get('phar.readonly')) {
-                throw new \PEAR2\Pyrus\Developer\Creator\Exception("Cannot create phar archive, pass -dphar.readonly=0");
+                throw new \Pyrus\Developer\Creator\Exception("Cannot create phar archive, pass -dphar.readonly=0");
             }
         } else {
             if ($options['zip'] || $options['phar']) {
@@ -213,24 +213,24 @@ class Commands
         }
 
         // get openssl cert if set, and password
-        if (\PEAR2\Pyrus\Config::current()->openssl_cert) {
+        if (\Pyrus\Config::current()->openssl_cert) {
             if ('yes' == $frontend->ask('Sign package?', array('yes', 'no'), 'yes')) {
-                $cert = \PEAR2\Pyrus\Config::current()->openssl_cert;
+                $cert = \Pyrus\Config::current()->openssl_cert;
                 if (!file_exists($cert)) {
-                    throw new \PEAR2\Pyrus\Developer\Creator\Exception('OpenSSL certificate ' .
+                    throw new \Pyrus\Developer\Creator\Exception('OpenSSL certificate ' .
                         $cert . ' does not exist');
                 }
-                $releaser = \PEAR2\Pyrus\Config::current()->handle;
+                $releaser = \Pyrus\Config::current()->handle;
                 $maintainers = array();
                 foreach ($package->maintainer as $maintainer) {
                     $maintainers[] = $maintainer->user;
                 }
                 if (!strlen($releaser)) {
-                    throw new \PEAR2\Pyrus\Developer\Creator\Exception('handle configuration variable must be from ' .
+                    throw new \Pyrus\Developer\Creator\Exception('handle configuration variable must be from ' .
                             'package.xml (one of ' . implode(', ', $maintainers) . ')');
                 }
                 if (!in_array($releaser, $maintainers)) {
-                    throw new \PEAR2\Pyrus\Developer\Creator\Exception('handle configuration variable must be from ' .
+                    throw new \Pyrus\Developer\Creator\Exception('handle configuration variable must be from ' .
                             'package.xml (one of ' . implode(', ', $maintainers) . ')');
                 }
                 $passphrase = $frontend->ask('passphrase for OpenSSL PKCS#12 certificate?');
@@ -246,14 +246,14 @@ class Commands
             $passphrase = '';
         }
 
-        $sourcepath = \PEAR2\Pyrus\Main::getSourcePath();
+        $sourcepath = \Pyrus\Main::getSourcePath();
         if (0 !== strpos($sourcepath, 'phar://')) {
             // running from svn, assume we're in a standard package layout with a vendor dir
             // TODO: Improve this to automatically find latest releases from pear2.php.net
             $exceptionpath = $autoloadpath = $multierrorspath = realpath($sourcepath . '/../../vendor/php') .
                 '/PEAR2';
             if (!file_exists($exceptionpath . '/Exception.php')) {
-                throw new \PEAR2\Pyrus\Developer\Creator\Exception(
+                throw new \Pyrus\Developer\Creator\Exception(
                     'Cannot locate PEAR2/Exception in a local vendor/ dir. '
                     . 'It is best to install the latest versions of these locally.');
             }
@@ -308,7 +308,7 @@ class Commands
         }
         echo "Creating ", $mainfile, "\n";
         if (null == $cert) {
-            $cloner = new \PEAR2\Pyrus\Package\Cloner($mainfile);
+            $cloner = new \Pyrus\Package\Cloner($mainfile);
             $clone = $extras;
             $extras = array();
         } else {
@@ -317,8 +317,8 @@ class Commands
             }
             $clone = array();
         }
-        $creator = new \PEAR2\Pyrus\Package\Creator(array(
-                    new \PEAR2\Pyrus\Developer\Creator\Phar($mainfile, $stub, $mainformat, $maincompress,
+        $creator = new \Pyrus\Package\Creator(array(
+                    new \Pyrus\Developer\Creator\Phar($mainfile, $stub, $mainformat, $maincompress,
                                                            $extras, $releaser, $package, $cert, $passphrase)),
                                                    $exceptionpath, $autoloadpath, $multierrorspath);
         if (!$options['extrasetup'] && file_exists(dirname($package->archivefile) . '/extrasetup.php')) {
@@ -329,33 +329,33 @@ class Commands
             $getinfo = function() use ($options, $package) {
                 $file = $options['extrasetup'];
                 if (!file_exists(dirname($package->archivefile) . '/' . $file)) {
-                    throw new \PEAR2\Pyrus\Developer\Creator\Exception(
+                    throw new \Pyrus\Developer\Creator\Exception(
                                         'extrasetup file must be in the same directory as package.xml');
                 }
                 include dirname($package->archivefile) . '/' . $file;
                 if (!isset($extrafiles)) {
-                    throw new \PEAR2\Pyrus\Developer\Creator\Exception(
+                    throw new \Pyrus\Developer\Creator\Exception(
                                         'extrasetup file must set $extrafiles variable to an array of files');
                 }
                 if (!is_array($extrafiles)) {
-                    throw new \PEAR2\Pyrus\Developer\Creator\Exception(
+                    throw new \Pyrus\Developer\Creator\Exception(
                                         'extrasetup file must set $extrafiles variable to an array of files');
                 }
                 foreach ($extrafiles as $path => $file) {
                     if (is_object($file)) {
-                        if ($file instanceof \PEAR2\Pyrus\PackageInterface
-                            || $file instanceof \PEAR2\Pyrus\PackageFileInterface) {
+                        if ($file instanceof \Pyrus\PackageInterface
+                            || $file instanceof \Pyrus\PackageFileInterface) {
                             continue;
                         }
-                        throw new \PEAR2\Pyrus\Developer\Creator\Exception(
-                                            'extrasetup file object must implement \PEAR2\Pyrus\PackageInterface or \PEAR2\Pyrus\PackageFileInterface');
+                        throw new \Pyrus\Developer\Creator\Exception(
+                                            'extrasetup file object must implement \Pyrus\PackageInterface or \Pyrus\PackageFileInterface');
                     }
                     if (!file_exists($file)) {
-                        throw new \PEAR2\Pyrus\Developer\Creator\Exception(
+                        throw new \Pyrus\Developer\Creator\Exception(
                                             'extrasetup file ' . $file . ' does not exist');
                     }
                     if (!is_string($path)) {
-                        throw new \PEAR2\Pyrus\Developer\Creator\Exception(
+                        throw new \Pyrus\Developer\Creator\Exception(
                                             'extrasetup file ' . $file . ' index should be the path to save in the' .
                                             ' release');
                     }
@@ -399,7 +399,7 @@ class Commands
         } else {
             $modified = $args['path'];
         }
-        $runner = new \PEAR2\Pyrus\Developer\Runphpt\Runner($options['coverage'], $options['recursive']);
+        $runner = new \Pyrus\Developer\Runphpt\Runner($options['coverage'], $options['recursive']);
 
         try {
             if (!$runner->runTests($modified)) {
@@ -440,7 +440,7 @@ dorender:
         $info = $this->parsePackageName($args['package'], $args['channel']);
 
         if (file_exists($info['path'])) {
-            throw new \PEAR2\Pyrus\Developer\Creator\Exception('Path ' . $info['path'] .
+            throw new \Pyrus\Developer\Creator\Exception('Path ' . $info['path'] .
                                                                ' already exists');
         }
         mkdir($info['path']);
@@ -504,17 +504,17 @@ class Main
  * for example:
 if (basename(__DIR__) == 'trunk') {
     \$extrafiles = array(
-        new \PEAR2\Pyrus\Package(__DIR__ . '/../../HTTP_Request/trunk/package.xml'),
-        new \PEAR2\Pyrus\Package(__DIR__ . '/../../sandbox/Console_CommandLine/trunk/package.xml'),
-        new \PEAR2\Pyrus\Package(__DIR__ . '/../../MultiErrors/trunk/package.xml'),
-        new \PEAR2\Pyrus\Package(__DIR__ . '/../../Exception/trunk/package.xml'),
+        new \Pyrus\Package(__DIR__ . '/../../HTTP_Request/trunk/package.xml'),
+        new \Pyrus\Package(__DIR__ . '/../../sandbox/Console_CommandLine/trunk/package.xml'),
+        new \Pyrus\Package(__DIR__ . '/../../MultiErrors/trunk/package.xml'),
+        new \Pyrus\Package(__DIR__ . '/../../Exception/trunk/package.xml'),
     );
 } else {
     \$extrafiles = array(
-        new \PEAR2\Pyrus\Package(__DIR__ . '/../HTTP_Request/package.xml'),
-        new \PEAR2\Pyrus\Package(__DIR__ . '/../sandbox/Console_CommandLine/package.xml'),
-        new \PEAR2\Pyrus\Package(__DIR__ . '/../MultiErrors/package.xml'),
-        new \PEAR2\Pyrus\Package(__DIR__ . '/../Exception/package.xml'),
+        new \Pyrus\Package(__DIR__ . '/../HTTP_Request/package.xml'),
+        new \Pyrus\Package(__DIR__ . '/../sandbox/Console_CommandLine/package.xml'),
+        new \Pyrus\Package(__DIR__ . '/../MultiErrors/package.xml'),
+        new \Pyrus\Package(__DIR__ . '/../Exception/package.xml'),
     );
 }
 */
@@ -581,7 +581,7 @@ define('" . $info['package'] . "_SIGTYPE', \$sig['hash_type']);
 // your package-specific stuff here, for instance, here is what Pyrus does:
 
 /**
- * \$frontend = new \PEAR2\Pyrus\ScriptFrontend\Commands;
+ * \$frontend = new \Pyrus\ScriptFrontend\Commands;
  * @array_shift(\$_SERVER['argv']);
  * \$frontend->run(\$_SERVER['argv']);
  */
@@ -633,7 +633,7 @@ __HALT_COMPILER();
     function extSkeleton($frontend, $args, $options)
     {
         if (file_exists($args['extension'])) {
-            throw new \PEAR2\Pyrus\Developer\Creator\Exception('Extension ' . $args['extension'] .
+            throw new \Pyrus\Developer\Creator\Exception('Extension ' . $args['extension'] .
                                                                ' directory already exists');
         }
         $protos = array();
@@ -1029,7 +1029,7 @@ eof;
                 }
             }
             if ($tried > 2) {
-                throw new \PEAR2\Pyrus\Developer\Creator\Exception('Invalid proto ' .
+                throw new \Pyrus\Developer\Creator\Exception('Invalid proto ' .
                                                                    $proto);
             }
             $ret['returns'] = $info[0];

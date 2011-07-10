@@ -26,7 +26,7 @@ $phar['SourceFile/PerTest.php'] = file_get_contents(__DIR__ . '/SourceFile/PerTe
 
 $phar['cover.css'] = file_get_contents(__DIR__ . '/../../../../www/CoverageAnalyzer/cover.css');
 $phar['index.php'] = '<?php
-namespace PEAR2\Pyrus\Developer\CoverageAnalyzer {
+namespace Pyrus\Developer\CoverageAnalyzer {
 session_start();
 $view = new Web\View;
 $rooturl = parse_url($_SERVER["REQUEST_URI"]);
