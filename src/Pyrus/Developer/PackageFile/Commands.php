@@ -645,7 +645,7 @@ __HALT_COMPILER();
         mkdir($ext);
         mkdir($ext . '/tests');
 
-        $this->skeleton = realpath(__DIR__ . '/../../../../../data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton');
+        $this->skeleton = realpath(__DIR__ . '/../../../../data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton');
         $this->footer = "\n" .
         "/*\n" .
         " * Local variables:\n" .

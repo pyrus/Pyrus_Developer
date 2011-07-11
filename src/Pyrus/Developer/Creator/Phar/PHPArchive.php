@@ -22,9 +22,9 @@ class PHPArchive extends \Pyrus\Developer\Creator\Phar
                 ' PHP_Archive class for phar creation');
         }
         $phparchive = '?>' . $phparchive . '<?php';
-        $template = @file_get_contents(dirname(__FILE__) . '/../../../../../../data/PEAR2_Pyrus_Developer/pear2.php.net/phartemplate.php');
+        $template = @file_get_contents(dirname(__FILE__) . '/../../../../../data/PEAR2_Pyrus_Developer/pear2.php.net/phartemplate.php');
         if (!$template) {
-            $template = file_get_contents(__DIR__ . '/../../../../../data/phartemplate.php');
+            $template = file_get_contents(__DIR__ . '/../../../../data/phartemplate.php');
         }
         $this->stub = str_replace('@PHPARCHIVE@', $phparchive, $template);
         if ($startupfile === false) {

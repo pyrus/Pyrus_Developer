@@ -8,8 +8,8 @@ function __autoload($c)
 }
 }
 namespace Pyrus\Developer\CoverageAnalyzer {
-    $a = new Aggregator($testpath = realpath(__DIR__ . '/../../../../../Pyrus/tests'),
-                        realpath(__DIR__ . '/../../../../../Pyrus/src'),
+    $a = new Aggregator($testpath = realpath(__DIR__ . '/../../../../Pyrus/tests'),
+                        realpath(__DIR__ . '/../../../../Pyrus/src'),
                         $testpath . '/pear2coverage.db');
     if (file_exists(__DIR__ . '/test')) {
         foreach (new \DirectoryIterator(__DIR__ . '/test') as $file) {

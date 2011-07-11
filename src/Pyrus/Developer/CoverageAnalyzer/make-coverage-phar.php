@@ -24,7 +24,7 @@ $phar['Exception.php']          = file_get_contents(__DIR__ . '/Exception.php');
 $phar['Sqlite.php']             = file_get_contents(__DIR__ . '/Sqlite.php');
 $phar['SourceFile/PerTest.php'] = file_get_contents(__DIR__ . '/SourceFile/PerTest.php');
 
-$phar['cover.css'] = file_get_contents(__DIR__ . '/../../../../www/CoverageAnalyzer/cover.css');
+$phar['cover.css'] = file_get_contents(__DIR__ . '/../../../www/CoverageAnalyzer/cover.css');
 $phar['index.php'] = '<?php
 namespace Pyrus\Developer\CoverageAnalyzer {
 session_start();
