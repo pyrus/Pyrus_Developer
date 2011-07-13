@@ -26,21 +26,23 @@ use \Pyrus\Developer\PackageFile\Commands;
 class PEAR2SkeletonTestCase extends \PHPUnit_Framework_TestCase
 {
     protected $base;
-    protected $packageName = 'PEAR2_Foo_Bar';
+    protected $packageName = 'PEAR2_Foo';
 
     protected function setUp()
     {
         $this->base = __DIR__ . '/package-test';
         @mkdir($this->base);
+        chdir($this->base);
     }
 
     protected function tearDown()
     {
-        system("rm -rf {$this->base}/{$this->packageName}");
+        exec("rm -rf {$this->base}/Foo");
     }
 
     /**
-     * We need to verify the content of $info
+     * Info array is just like the array returned from
+     * {@link Pyrus\Developer\PackageFile\Commands::parsePackageName()}
      *
      * @return void
      */
@@ -48,29 +50,25 @@ class PEAR2SkeletonTestCase extends \PHPUnit_Framework_TestCase
     {
         $info = array();
 
-        $info['path']          = $this->base . '/' . $this->packageName;
-        $info['mainClass']     = 'Bar';
-        $info['mainNamespace'] = '\PEAR2\Foo';
-        $info['svn']           = 'http://svn.example.org/' . $this->packageName;
+        $info['path']          = 'Foo';
+        $info['mainPath']      = 'Foo';
+        $info['mainClass']     = 'PEAR2\Foo\Main';
+        $info['mainNamespace'] = 'PEAR2\Foo';
+        $info['svn']           = 'http://svn.php.net/repository/pear2/PEAR2_Foo';
         $info['package']       = $this->packageName;
-        $info['mainPath']      = 'PEAR2/Foo';
-        $args = array();
-        
-        $args['package'] = $this->packageName;
-        $args['channel'] = 'pear2.php.net';
 
-        $skeleton = new Commands\PEAR2Skeleton($args, $info);
+        $skeleton = new Commands\PEAR2Skeleton($info);
         $skeleton->generate();
 
-        $this->assertFileExists($info['path'] . '/src/' . $info['mainPath'] . '/Main.php');
+        $this->assertFileExists($this->base . '/' . $info['path'] . '/src/' . $info['mainPath'] . '/Main.php');
 
-        $this->assertFileExists($info['path'] . '/' . $skeleton->getStub());
-        $this->assertFileExists($info['path'] . '/' . $skeleton->getExtraSetup());
-        $this->assertFileExists($info['path'] . '/' . $skeleton->getPackageXmlSetup());
+        $this->assertFileExists($this->base . '/' . $info['path'] . '/' . $skeleton->getStub());
+        $this->assertFileExists($this->base . '/' . $info['path'] . '/' . $skeleton->getExtraSetup());
+        $this->assertFileExists($this->base . '/' . $info['path'] . '/' . $skeleton->getPackageXmlSetup());
         
         $releaseFiles = $skeleton->getReleaseFiles();
         foreach ($releaseFiles as $releaseFile => $fileContent) {
-            $this->assertFileExists($info['path'] . '/' . $releaseFile);
+            $this->assertFileExists($this->base . '/' . $info['path'] . '/' . $releaseFile);
         }
     }
 }
