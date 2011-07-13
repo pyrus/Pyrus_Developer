@@ -15,6 +15,7 @@ class PEAR2Skeleton
 {
     /**
      * @var array $info
+     * @see \Pyrus\Developer\PackageFile\Commands::parsePackageName()
      */
     protected $info;
     
@@ -40,6 +41,9 @@ class PEAR2Skeleton
      * @var string $templatePath Path to templates for the above.
      * @see self::__construct()
      * @see self::generate()
+     * @see self::$extraSetupFile
+     * @see self::$packageXmlSetupFile
+     * @see self::$stubFile
      */
     protected $templatePath;
 
@@ -97,11 +101,17 @@ class PEAR2Skeleton
         $this->createStub();
     }
 
+    /**
+     * @return string
+     */
     public function getExtraSetup()
     {
         return $this->extraSetupFile;
     }
 
+    /**
+     * @return string
+     */
     public function getPackageXmlSetup()
     {
         return $this->packageXmlSetupFile;
@@ -115,6 +125,9 @@ class PEAR2Skeleton
         return $this->releaseFiles;
     }
 
+    /**
+     * @return string
+     */
     public function getStub()
     {
         return $this->stubFile;
