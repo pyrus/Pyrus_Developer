@@ -435,7 +435,7 @@ dorender:
     /**
      * Create the PEAR2 skeleton
      *
-     * @param mixed $frontend
+     * @param mixed $frontend \Pyrus\ScriptFrontend\Commands
      * @param array $args
      * @param array $options
      *
@@ -444,17 +444,15 @@ dorender:
      * @uses Pyrus\Developer\PackageFile\Commands\PEAR2Skeleton
      * @uses self::makePackageXml()
      */
-    public function pear2Skeleton($frontend, $args, $options)
+    public function pear2Skeleton($frontend, array $args, array $options)
     {
         if (!isset($args['channel'])) {
             $args['channel'] = 'pear2.php.net';
         }
 
         $info = $this->parsePackageName($args['package'], $args['channel']);
-        var_dump($frontend, $info, $args);
-        exit;
 
-        $skeleton = new Commands\PEAR2Skeleton($args, $info);
+        $skeleton = new Commands\PEAR2Skeleton($info);
         $skeleton->generate();
         
         $options['stub']            = $skeleton->getStub();

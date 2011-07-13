@@ -14,11 +14,6 @@ namespace Pyrus\Developer\PackageFile\Commands;
 class PEAR2Skeleton
 {
     /**
-     * @var array $args
-     */
-    protected $args;
-    
-    /**
      * @var array $info
      */
     protected $info;
@@ -51,7 +46,6 @@ class PEAR2Skeleton
     /**
      * __construct
      *
-     * @param array  $args
      * @param array  $info
      * @param string $format
      *
@@ -59,7 +53,7 @@ class PEAR2Skeleton
      * @throws \Pyrus\Developer\Creator\Exception When the path of the package does
      *                                            not exist.
      */
-    public function __construct(array $args, array $info, $format = 'simple')
+    public function __construct(array $info, $format = 'simple')
     {
         if (file_exists($info['path'])) {
             throw new \Pyrus\Developer\Creator\Exception(
@@ -73,7 +67,6 @@ class PEAR2Skeleton
             );
         }
 
-        $this->args = $args;
         $this->info = $info;
 
         $this->templatePath = __DIR__ . '/templates';
