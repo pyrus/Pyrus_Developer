@@ -535,6 +535,10 @@ if (basename(__DIR__) == 'trunk') {
 \$compatible->dependencies['required']->package['pear2.php.net/PEAR2_Exception']->save();
 \$compatible->dependencies['required']->package['pear2.php.net/PEAR2_MultiErrors']->save();
 \$compatible->dependencies['required']->package['pear2.php.net/PEAR2_HTTP_Request']->save();
+
+// ignore files
+unset(\$package->files['www/config.inc.php']);
+unset(\$package->files['www/.htaccess']);
 */
 ?>
 ");
