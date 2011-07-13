@@ -13,8 +13,8 @@ $topLevel = __DIR__ . '/../../../../..';
 /**
  * @ignore
  */
-require_once $topLevel . '/vendor/PEAR2_Exception/src/Exception.php';
-require_once $topLevel . '/vendor/PEAR2_Autoload/src/PEAR2/Autoload.php';
+require_once $topLevel . '/../Pyrus/vendor/php/PEAR2/Exception.php';
+require_once $topLevel . '/../Pyrus/vendor/php/PEAR2/Autoload.php';
 \PEAR2\Autoload::initialize($topLevel . '/src');
 
 use \Pyrus\Developer\PackageFile;
