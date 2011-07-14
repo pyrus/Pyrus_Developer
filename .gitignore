@@ -6,3 +6,5 @@
 /autoload.php
 /Pyrus_Developer-*.*
 *.komodoproject
+tests/*package-test*
+vendor*
