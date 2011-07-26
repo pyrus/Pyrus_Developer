@@ -12,19 +12,19 @@ $total = count($sourceCode);
  <p><a href="<?php echo $parent->context->getRootLink(); ?>">Aggregate Code Coverage for all tests</a></p>
  <pre>
 <?php foreach ($context->source() as $num => $line):
- 
+
  $coverage = $context->coverage($num);
  echo '<span class="ln">';
     echo str_pad($num, 8, ' ', STR_PAD_LEFT);
     echo '</span>';
-    
+
     if ($coverage === false) {
         echo (str_pad(': ', 13, ' ', STR_PAD_LEFT) . htmlentities($line));
         continue;
     }
-    
+
     echo '<span ';
-    $cov = is_array($coverage) ? $coverage['coverage'] : $coverage;
+    $cov = is_object($coverage) ? $coverage['coverage'] : $coverage;
     if ($cov === -2) {
         echo 'class="dead">';
         echo '           ';
@@ -36,14 +36,14 @@ $total = count($sourceCode);
         if (!isset($context->coverage)) {
             echo '<a href="'.$parent->context->getFileLink($context->name(), null, $num).'">';
         }
-    
+
         $text = is_string($coverage) ? $coverage : $coverage['link'];
         echo str_pad($text, 10, ' ', STR_PAD_LEFT) . ' ';
         if (!isset($context->coverage)) {
             echo '</a>';
         }
     }
-    
+
     echo ': ' .  htmlentities($line);
     echo '</span>';
  endforeach; ?>
