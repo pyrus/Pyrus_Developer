@@ -13,7 +13,7 @@ $total = count($sourceCode);
  <pre>
 <?php foreach ($context->source() as $num => $line):
  
- $coverage = $context->coverage($num);
+ $coverage = $context->getRawObject()->coverage($num);
  echo '<span class="ln">';
     echo str_pad($num, 8, ' ', STR_PAD_LEFT);
     echo '</span>';
