@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__DIR__).'/../../autoload.php';
+require_once dirname(__DIR__).'/../autoload.php';
 ini_set('display_errors',true);
 session_start();
 
