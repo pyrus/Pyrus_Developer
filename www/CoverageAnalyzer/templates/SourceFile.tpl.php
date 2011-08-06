@@ -24,7 +24,7 @@ $total = count($sourceCode);
     }
 
     echo '<span ';
-    $cov = is_object($coverage) ? $coverage['coverage'] : $coverage;
+    $cov = is_array($coverage) ? $coverage['coverage'] : $coverage;
     if ($cov === -2) {
         echo 'class="dead">';
         echo '           ';
