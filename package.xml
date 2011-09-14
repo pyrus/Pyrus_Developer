@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package version="2.1" xmlns="http://pear.php.net/dtd/package-2.1" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0     http://pear.php.net/dtd/tasks-1.0.xsd     http://pear.php.net/dtd/package-2.1     http://pear.php.net/dtd/package-2.1.xsd">
- <name>PEAR2_Pyrus_Developer</name>
- <channel>pear2.php.net</channel>
+ <name>Pyrus_Developer</name>
+ <channel>pyrus.net</channel>
  <summary>Developer tools for the Pyrus installer
 </summary>
  <description>
@@ -48,10 +48,10 @@ For more information, read the [documentation][5].
   <email>saltybeagle@php.net</email>
   <active>yes</active>
  </lead>
- <date>2011-03-07</date>
- <time>15:40:06</time>
+ <date>2011-09-14</date>
+ <time>13:26:28</time>
  <version>
-  <release>0.4.0</release>
+  <release>0.5.0</release>
   <api>0.1.0</api>
  </version>
  <stability>
@@ -59,40 +59,12 @@ For more information, read the [documentation][5].
   <api>alpha</api>
  </stability>
  <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
- <notes>New feature release:
+ <notes>Features:
 
-* Add --scanoptions to the make command [cellog]
-    This allows configuring several things when generating `package.xml`.
-    This option should specify the location of a php script that specifies 3
-    overrides to the default values for baseinstalldirs, for directory-&gt;role
-    mapping, and for pathnames in `package.xml`
-    
-    For example:
+Bug Fixes/Refactoring:
 
-        &lt;?php
-        // use &quot;htdocs&quot; as our web directory in the repository, instead of www
-        $scanoptions['baseinstalldirs'] = array('htdocs' =&gt; '/');
-        $scanoptions['rolemap'] = array('htdocs' =&gt; 'www');
-        $scanoptions['mappath'] = array('htdocs' =&gt; 'www');
-        
-        // ignore a library directory we install using pyrus,
-        // and a specific file
-        $scanoptions['ignore'] = array('lib' =&gt; 'dir', 'some/file.txt' =&gt; 'file');
-        ?&gt;
-
-    By default, the `make` command looks for scanoptions.php in the same directory
-    as the package.xml
-* Update source layout so files can be autoloaded from checkout [saltybeagle]
-* Add code coverage reporter to the www directory [saltybeagle]
-* For `$extrafiles`, support any object that implements `PackageInterface` [saltybeagle]
-
-Bugs fixed:
-
-* Increase minimum PHP dependency to 5.3.1RC1 [saltybeagle]
-* Prevent fatal errors when only a `package2.xml` is present, ala XML_RPC2 [clockwerx]
-* Allow `src/PEAR2` base directory for package layout [saltybeagle]
-* Fix Bug #18123 Exception when using `pyrus.phar make -n`. [saltybeagle]
-* Correct inconsitency of docs directory name. [saltybeagle]</notes>
+ - Removed the PEAR2 namespace and made Pyrus the top level namespace.
+   This means all includes and classes need to drop the PEAR2 portion [helgi]</notes>
  <contents>
   <dir name="/">
    <dir name="customcommand" baseinstalldir="/">
@@ -104,61 +76,79 @@ Bugs fixed:
     <file role="data" name="phartemplate.php"/>
    </dir>
    <dir name="src" baseinstalldir="/">
-    <dir name="PEAR2">
-     <dir name="Pyrus">
-      <dir name="Developer">
-       <dir name="CoverageAnalyzer">
-        <dir name="SourceFile">
-         <file role="php" name="PerTest.php"/>
-        </dir>
-        <dir name="Web">
-         <file role="php" name="Aggregator.php"/>
-         <file role="php" name="ClassToTemplateMapper.php"/>
-         <file role="php" name="Controller.php"/>
-         <file role="php" name="Exception.php"/>
-         <file role="php" name="LineSummary.php"/>
-         <file role="php" name="SelectDatabase.php"/>
-         <file role="php" name="Summary.php"/>
-         <file role="php" name="TestCoverage.php"/>
-         <file role="php" name="TestSummary.php"/>
-         <file role="php" name="View.php"/>
-        </dir>
-        <file role="php" name="AbstractSourceDecorator.php"/>
+    <dir name="Pyrus">
+     <dir name="Developer">
+      <dir name="CoverageAnalyzer">
+       <dir name="SourceFile">
+        <file role="php" name="PerTest.php"/>
+       </dir>
+       <dir name="Web">
         <file role="php" name="Aggregator.php"/>
-        <file role="php" name="DefaultSourceDecorator.php"/>
+        <file role="php" name="ClassToTemplateMapper.php"/>
+        <file role="php" name="Controller.php"/>
         <file role="php" name="Exception.php"/>
-        <file role="php" name="make-coverage-phar.php"/>
-        <file role="php" name="pear2coverage.phar.php"/>
-        <file role="php" name="SourceFile.php"/>
-        <file role="php" name="Sqlite.php"/>
-        <file role="php" name="test-modified.php"/>
-        <file role="php" name="test.php"/>
+        <file role="php" name="LineSummary.php"/>
+        <file role="php" name="SelectDatabase.php"/>
+        <file role="php" name="Summary.php"/>
+        <file role="php" name="TestCoverage.php"/>
+        <file role="php" name="TestSummary.php"/>
+        <file role="php" name="View.php"/>
        </dir>
-       <dir name="Creator">
-        <dir name="Phar">
-         <file role="php" name="PHPArchive.php"/>
-        </dir>
-        <file role="php" name="Exception.php"/>
-        <file role="php" name="Phar.php"/>
-        <file role="php" name="Tar.php"/>
-        <file role="php" name="Xml.php"/>
-        <file role="php" name="Zip.php"/>
+       <file role="php" name="AbstractSourceDecorator.php"/>
+       <file role="php" name="Aggregator.php"/>
+       <file role="php" name="DefaultSourceDecorator.php"/>
+       <file role="php" name="Exception.php"/>
+       <file role="php" name="make-coverage-phar.php"/>
+       <file role="php" name="pear2coverage.phar.php"/>
+       <file role="php" name="SourceFile.php"/>
+       <file role="php" name="Sqlite.php"/>
+       <file role="php" name="test-modified.php"/>
+       <file role="php" name="test.php"/>
+      </dir>
+      <dir name="Creator">
+       <dir name="Phar">
+        <file role="php" name="PHPArchive.php"/>
        </dir>
-       <dir name="PackageFile">
-        <dir name="PEAR2SVN">
-         <file role="php" name="Filter.php"/>
+       <file role="php" name="Exception.php"/>
+       <file role="php" name="Phar.php"/>
+       <file role="php" name="Tar.php"/>
+       <file role="php" name="Xml.php"/>
+       <file role="php" name="Zip.php"/>
+      </dir>
+      <dir name="PackageFile">
+       <dir name="Commands">
+        <dir name="templates">
+         <file role="php" name="extrasetup.php.tpl"/>
+         <file role="php" name="Main.php.tpl"/>
+         <file role="php" name="packagexmlsetup.php.tpl"/>
+         <file role="php" name="stub.php.tpl"/>
         </dir>
-        <dir name="PECL">
-         <file role="php" name="Filter.php"/>
-        </dir>
-        <file role="php" name="Commands.php"/>
-        <file role="php" name="PEAR2SVN.php"/>
-        <file role="php" name="PECL.php"/>
-        <file role="php" name="v2.php"/>
+        <file role="php" name="PEAR2Skeleton.php"/>
        </dir>
-       <dir name="Runphpt">
-        <file role="php" name="Exception.php"/>
-        <file role="php" name="Runner.php"/>
+       <dir name="PEAR2SVN">
+        <file role="php" name="Filter.php"/>
+       </dir>
+       <dir name="PECL">
+        <file role="php" name="Filter.php"/>
+       </dir>
+       <file role="php" name="Commands.php"/>
+       <file role="php" name="PEAR2SVN.php"/>
+       <file role="php" name="PECL.php"/>
+       <file role="php" name="v2.php"/>
+      </dir>
+      <dir name="Runphpt">
+       <file role="php" name="Exception.php"/>
+       <file role="php" name="Runner.php"/>
+      </dir>
+     </dir>
+    </dir>
+   </dir>
+   <dir name="tests" baseinstalldir="/">
+    <dir name="Pyrus">
+     <dir name="Developer">
+      <dir name="PackageFile">
+       <dir name="Commands">
+        <file role="test" name="PEAR2SkeletonTestCase.php"/>
        </dir>
       </dir>
      </dir>
