@@ -77,7 +77,7 @@ and for a standard directory layout of
 src/             PHP files
 data/            Data files
 tests/           Test files
-doc/             Documentation files
+docs/            Documentation files
 examples/        Example files (documentation)
 scripts/         Executable files, scripts
 www/             Web files

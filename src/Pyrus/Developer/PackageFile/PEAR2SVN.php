@@ -8,7 +8,7 @@
  *     <pre>
  *     PackageName/src           [role="php"]
  *                /examples      [role="doc"]
- *                /doc           [role="doc"]
+ *                /docs          [role="doc"]
  *                /data          [role="data"]
  *                /customrole    [role="customrole"]
  *                /customtask    [role="customtask"]
