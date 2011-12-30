@@ -18,14 +18,27 @@ class Filter extends \FilterIterator
         if ($this->getInnerIterator()->isDot()) {
             return false;
         }
-    
+
         $path = str_replace('\\', '/', $this->path);
         $path = str_replace($path, '', $this->getInnerIterator()->current()->getPathName());
         if ($path && $path[0] === DIRECTORY_SEPARATOR) {
             $path = substr($path, 1);
         }
-        
-        if (preg_match('@/?\.svn/@', $path)) {
+
+        // Ignore CVS folders.
+        if (preg_match('@(?:^|/)CVS/@', $path)) {
+            return false;
+        }
+
+        // Exclude modern VCS folders (eg. ".svn", ".hg", ".bzr", ".git")
+        // and VCS files (eg. ".gitignore" & ".gitmodules").
+        if (preg_match('@(?:^|/)\..*@', $path)) {
+            return false;
+        }
+
+        // Ignore some common backup files:
+        // "anything.bak" & "anything~".
+        if (preg_match('@(?:\.bak|~)$@', $path)) {
             return false;
         }
 
