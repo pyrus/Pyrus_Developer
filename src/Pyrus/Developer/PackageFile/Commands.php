@@ -37,8 +37,7 @@ class Commands
         }
         if (!isset($args['channel'])) {
             $args['channel'] = 'pear2.php.net';
-        }
-        else {
+        } else {
             $args['channel'] = \Pyrus\Config::current()->channelregistry->channelFromAlias($args['channel']);
         }
         if (!isset($options['scanoptions'])
@@ -118,8 +117,7 @@ class Commands
         }
         if (!isset($args['channel'])) {
             $args['channel'] = 'pecl.php.net';
-        }
-        else {
+        } else {
             $args['channel'] = \Pyrus\Config::current()->channelregistry->channelFromAlias($args['channel']);
         }
         echo "Creating package.xml...";
@@ -465,8 +463,7 @@ dorender:
     {
         if (!isset($args['channel'])) {
             $args['channel'] = 'pear2.php.net';
-        }
-        else {
+        } else {
             $args['channel'] = \Pyrus\Config::current()->channelregistry->channelFromAlias($args['channel']);
         }
 
