@@ -150,8 +150,13 @@ class Commands
         $phar['package.xml'] = (string) $package;
         foreach ($package->files as $file) {
             // do automatic package-time version replacement
-            $phar[$file['attribs']['name']] = str_replace('@PACKAGE_VERSION@', $package->version['release'],
-                                                          file_get_contents($dir . '/' . $file['attribs']['name']));
+            $phar[$file['attribs']['name']] = strtr(
+                file_get_contents($dir . '/' . $file['attribs']['name']),
+                array(
+                    '@PACKAGE_VERSION' . '@' => $package->version['release'],
+                    '@PACKAGE_NAME' . '@' => $package->name,
+                )
+            );
         }
         echo "done\n";
     }
@@ -298,7 +303,13 @@ class Commands
             } elseif ($options['stub'] && file_exists($options['stub'])) {
                 $stub = file_get_contents($options['stub']);
             }
-            $stub = str_replace('@PACKAGE_VERSION' . '@', $package->version['release'], $stub);
+            $stub = strtr(
+                $stub,
+                array(
+                    '@PACKAGE_VERSION' . '@' => $package->version['release'],
+                    '@PACKAGE_NAME' . '@' => $package->name,
+                )
+            );
         }
         if ($options['zip']) {
             if (isset($mainfile)) {
