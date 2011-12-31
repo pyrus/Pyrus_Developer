@@ -37,6 +37,8 @@ class Commands
         }
         if (!isset($args['channel'])) {
             $args['channel'] = 'pear2.php.net';
+        } else {
+            $args['channel'] = \Pyrus\Config::current()->channelregistry->channelFromAlias($args['channel']);
         }
         if (!isset($options['scanoptions'])
             && file_exists($dir . '/scanoptions.php')) {
@@ -115,6 +117,8 @@ class Commands
         }
         if (!isset($args['channel'])) {
             $args['channel'] = 'pecl.php.net';
+        } else {
+            $args['channel'] = \Pyrus\Config::current()->channelregistry->channelFromAlias($args['channel']);
         }
         echo "Creating package.xml...";
         $package = new PECL($dir, $args['packagename'], $args['channel'], $sourceextensions);
@@ -144,8 +148,13 @@ class Commands
         $phar['package.xml'] = (string) $package;
         foreach ($package->files as $file) {
             // do automatic package-time version replacement
-            $phar[$file['attribs']['name']] = str_replace('@PACKAGE_VERSION@', $package->version['release'],
-                                                          file_get_contents($dir . '/' . $file['attribs']['name']));
+            $phar[$file['attribs']['name']] = strtr(
+                file_get_contents($dir . '/' . $file['attribs']['name']),
+                array(
+                    '@PACKAGE_VERSION' . '@' => $package->version['release'],
+                    '@PACKAGE_NAME' . '@' => $package->name,
+                )
+            );
         }
         echo "done\n";
     }
@@ -292,7 +301,13 @@ class Commands
             } elseif ($options['stub'] && file_exists($options['stub'])) {
                 $stub = file_get_contents($options['stub']);
             }
-            $stub = str_replace('@PACKAGE_VERSION' . '@', $package->version['release'], $stub);
+            $stub = strtr(
+                $stub,
+                array(
+                    '@PACKAGE_VERSION' . '@' => $package->version['release'],
+                    '@PACKAGE_NAME' . '@' => $package->name,
+                )
+            );
         }
         if ($options['zip']) {
             if (isset($mainfile)) {
@@ -448,6 +463,8 @@ dorender:
     {
         if (!isset($args['channel'])) {
             $args['channel'] = 'pear2.php.net';
+        } else {
+            $args['channel'] = \Pyrus\Config::current()->channelregistry->channelFromAlias($args['channel']);
         }
 
         $info = $this->parsePackageName($args['package'], $args['channel']);
