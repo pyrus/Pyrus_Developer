@@ -38,6 +38,9 @@ class Commands
         if (!isset($args['channel'])) {
             $args['channel'] = 'pear2.php.net';
         }
+        else {
+            $args['channel'] = \Pyrus\Config::current()->channelregistry->channelFromAlias($args['channel']);
+        }
         if (!isset($options['scanoptions'])
             && file_exists($dir . '/scanoptions.php')) {
             $options['scanoptions'] = 'scanoptions.php';
@@ -115,6 +118,9 @@ class Commands
         }
         if (!isset($args['channel'])) {
             $args['channel'] = 'pecl.php.net';
+        }
+        else {
+            $args['channel'] = \Pyrus\Config::current()->channelregistry->channelFromAlias($args['channel']);
         }
         echo "Creating package.xml...";
         $package = new PECL($dir, $args['packagename'], $args['channel'], $sourceextensions);
@@ -448,6 +454,9 @@ dorender:
     {
         if (!isset($args['channel'])) {
             $args['channel'] = 'pear2.php.net';
+        }
+        else {
+            $args['channel'] = \Pyrus\Config::current()->channelregistry->channelFromAlias($args['channel']);
         }
 
         $info = $this->parsePackageName($args['package'], $args['channel']);
