@@ -27,7 +27,7 @@ try {
 }
 function __PACKAGE___autoload($class)
 {
-    $class = str_replace(array('_', '\\\'), '/', $class);
+    $class = str_replace(array('_', '\\'), '/', $class);
     if (file_exists('phar://' . __FILE__ . '/__PACKAGE__-@PACKAGE_VERSION@/php/' . $class . '.php')) {
         return include 'phar://' . __FILE__ . '/__PACKAGE__-@PACKAGE_VERSION@/php/' . $class . '.php';
     }

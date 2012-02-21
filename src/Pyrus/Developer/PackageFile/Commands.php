@@ -421,19 +421,19 @@ class Commands
                 if ($options['modified']) {
                     echo "Tests failed - not regenerating coverage data\n";
                 }
-                return;
+                return false;
             }
         } catch (\Exception $e) {
             // tests failed
             if ($options['modified']) {
                 echo "Tests failed - not regenerating coverage data\n";
-                return;
+                return false;
             } else {
                 throw $e;
             }
         }
         if (!$options['modified']) {
-            return;
+            return true;
         }
 dorender:
         $a = new Coverage\Aggregator($testpath,
