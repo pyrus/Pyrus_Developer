@@ -1,6 +1,15 @@
 Features:
 
+ - Simplify package skeleton generator, #5 [till]
+ - Automatically exclude files ignored by version control, #12 [fpoirotte]
+ - Allow channel aliases in several commands, #7, #13 [fpoirotte]
+ - Substitute @PACKAGE_NAME@ with the package's name, #11 [fpoirotte]
+
 Bug Fixes/Refactoring:
 
  - Removed the PEAR2 namespace and made Pyrus the top level namespace.
    This means all includes and classes need to drop the PEAR2 portion [helgi]
+ - Rename package from PEAR2_Pyrus_Developer to Pyrus_Developer [saltybeagle]
+ - Remove Subversion references [saltybeagle]
+ - Backslash escaped incorrectly in package skeleton stub, #15 [sasezaki]
+ - Return proper values when tests pass/fail, #16 [saltybeagle]
