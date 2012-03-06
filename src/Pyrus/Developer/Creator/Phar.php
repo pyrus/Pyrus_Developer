@@ -81,7 +81,7 @@ class Phar implements \Pyrus\Package\CreatorInterface
                     'releasing maintainer\'s certificate does not contain' .
                     ' an alternate name corresponding to the releaser\'s email address');
             }
-            
+
             if ($info['subject']['emailAddress'] != $new->maintainer[$releaser]->email) {
                 throw new \Pyrus\Developer\Creator\Exception(
                     'releasing maintainer\'s certificate ' .
@@ -126,16 +126,7 @@ class Phar implements \Pyrus\Package\CreatorInterface
             if (file_exists($this->path)) {
                 @unlink($this->path);
             }
-            $ext = strstr(strrchr($this->path, '-'), '.');
-            if (!$ext) {
-                $ext = strstr(strrchr($this->path, '/'), '.');
-                if (!$ext) {
-                    $ext = strstr(strrchr($this->path, '\\'), '.');
-                }
-            }
-            if (!$ext) {
-                $ext = strstr($this->path, '.');
-            }
+            $ext = (string) strstr(basename($this->path), '.');
             $a = $this->_classname;
             $this->phar = new $a($this->path);
             if ($this->phar instanceof \Phar) {
@@ -185,9 +176,7 @@ class Phar implements \Pyrus\Package\CreatorInterface
         }
 
         $this->phar->stopBuffering();
-        $ext = str_replace(array('.tar', '.zip', '.tgz', '.phar'), array('', '', '', ''),
-                           basename($this->path)) . '.';
-        $ext = substr($ext, strpos($ext, '.'));
+        $ext = (string) strstr(basename($this->path), '.');
         $newphar = $this->phar;
         if (count($this->others)) {
             foreach ($this->others as $pathinfo) {
