@@ -262,7 +262,7 @@ class Commands
                     . 'It is best to install the latest versions of these locally.');
             }
         } else {
-            $exceptionpath = $autoloadpath = $multierrorspath = dirname($sourcepath) .
+            $exceptionpath = $autoloadpath = $multierrorspath = $sourcepath .
                 '/PEAR2';
         }
         $extras = array();
