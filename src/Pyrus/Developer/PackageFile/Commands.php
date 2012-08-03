@@ -214,11 +214,6 @@ class Commands
             if ($options['zip'] || $options['phar']) {
                 echo "Zip and Phar archives can only be created for PEAR2 packages, ignoring\n";
             }
-            if (extension_loaded('zlib')) {
-                $options['tgz'] = true;
-            } else {
-                $options['tar'] = true;
-            }
         }
 
         // get openssl cert if set, and password
