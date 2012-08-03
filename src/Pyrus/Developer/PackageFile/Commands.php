@@ -322,7 +322,6 @@ class Commands
         }
         echo "Creating ", $mainfile, "\n";
         if (null == $cert) {
-            $cloner = new \Pyrus\Package\Cloner($mainfile);
             $clone = $extras;
             $extras = array();
         } else {
@@ -382,6 +381,7 @@ class Commands
         }
         $creator->render($package, $extrafiles);
         if (count($clone)) {
+            $cloner = new \Pyrus\Package\Cloner($mainfile);
             foreach ($clone as $extra) {
                 echo "Creating ", $package->name, '-', $package->version['release'], '.', $extra[0], "\n";
                 $cloner->{'to' . $extra[0]}();
