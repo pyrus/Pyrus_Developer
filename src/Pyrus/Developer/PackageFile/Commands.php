@@ -267,22 +267,6 @@ class Commands
         }
         $extras = array();
         $stub = false;
-        if ($options['tgz'] && extension_loaded('zlib')) {
-            $mainfile = $package->name . '-' . $package->version['release'] . '.tgz';
-            $mainformat = \Phar::TAR;
-            $maincompress = \Phar::GZ;
-        } elseif ($options['tgz']) {
-            $options['tar'] = true;
-        }
-        if ($options['tar']) {
-            if (isset($mainfile)) {
-                $extras[] = array('tar', \Phar::TAR, \Phar::NONE);
-            } else {
-                $mainfile = $package->name . '-' . $package->version['release'] . '.tar';
-                $mainformat = \Phar::TAR;
-                $maincompress = \Phar::NONE;
-            }
-        }
         if ($options['phar']) {
             if (isset($mainfile)) {
                 $extras[] = array('phar', \Phar::PHAR, \Phar::GZ);
@@ -303,6 +287,26 @@ class Commands
                     '@PACKAGE_NAME' . '@' => $package->name,
                 )
             );
+        }
+        if ($options['tar']) {
+            if (isset($mainfile)) {
+                $extras[] = array('tar', \Phar::TAR, \Phar::NONE);
+            } else {
+                $mainfile = $package->name . '-' . $package->version['release'] . '.tar';
+                $mainformat = \Phar::TAR;
+                $maincompress = \Phar::NONE;
+            }
+        }
+        if ($options['tgz'] && extension_loaded('zlib')) {
+            if (isset($mainfile)) {
+                $extras[] = array('tgz', \Phar::TAR, \Phar::GZ);
+            } else {
+                $mainfile = $package->name . '-' . $package->version['release'] . '.tgz';
+                $mainformat = \Phar::TAR;
+                $maincompress = \Phar::GZ;
+            }
+        } elseif ($options['tgz']) {
+            $options['tar'] = true;
         }
         if ($options['zip']) {
             if (isset($mainfile)) {
