@@ -214,11 +214,6 @@ class Commands
             if ($options['zip'] || $options['phar']) {
                 echo "Zip and Phar archives can only be created for PEAR2 packages, ignoring\n";
             }
-            if (extension_loaded('zlib')) {
-                $options['tgz'] = true;
-            } else {
-                $options['tar'] = true;
-            }
         }
 
         // get openssl cert if set, and password
@@ -267,27 +262,11 @@ class Commands
                     . 'It is best to install the latest versions of these locally.');
             }
         } else {
-            $exceptionpath = $autoloadpath = $multierrorspath = dirname($sourcepath) .
+            $exceptionpath = $autoloadpath = $multierrorspath = $sourcepath .
                 '/PEAR2';
         }
         $extras = array();
         $stub = false;
-        if ($options['tgz'] && extension_loaded('zlib')) {
-            $mainfile = $package->name . '-' . $package->version['release'] . '.tgz';
-            $mainformat = \Phar::TAR;
-            $maincompress = \Phar::GZ;
-        } elseif ($options['tgz']) {
-            $options['tar'] = true;
-        }
-        if ($options['tar']) {
-            if (isset($mainfile)) {
-                $extras[] = array('tar', \Phar::TAR, \Phar::NONE);
-            } else {
-                $mainfile = $package->name . '-' . $package->version['release'] . '.tar';
-                $mainformat = \Phar::TAR;
-                $maincompress = \Phar::NONE;
-            }
-        }
         if ($options['phar']) {
             if (isset($mainfile)) {
                 $extras[] = array('phar', \Phar::PHAR, \Phar::GZ);
@@ -309,6 +288,26 @@ class Commands
                 )
             );
         }
+        if ($options['tar']) {
+            if (isset($mainfile)) {
+                $extras[] = array('tar', \Phar::TAR, \Phar::NONE);
+            } else {
+                $mainfile = $package->name . '-' . $package->version['release'] . '.tar';
+                $mainformat = \Phar::TAR;
+                $maincompress = \Phar::NONE;
+            }
+        }
+        if ($options['tgz'] && extension_loaded('zlib')) {
+            if (isset($mainfile)) {
+                $extras[] = array('tgz', \Phar::TAR, \Phar::GZ);
+            } else {
+                $mainfile = $package->name . '-' . $package->version['release'] . '.tgz';
+                $mainformat = \Phar::TAR;
+                $maincompress = \Phar::GZ;
+            }
+        } elseif ($options['tgz']) {
+            $options['tar'] = true;
+        }
         if ($options['zip']) {
             if (isset($mainfile)) {
                 $extras[] = array('zip', \Phar::ZIP, \Phar::NONE);
@@ -323,7 +322,6 @@ class Commands
         }
         echo "Creating ", $mainfile, "\n";
         if (null == $cert) {
-            $cloner = new \Pyrus\Package\Cloner($mainfile);
             $clone = $extras;
             $extras = array();
         } else {
@@ -383,6 +381,7 @@ class Commands
         }
         $creator->render($package, $extrafiles);
         if (count($clone)) {
+            $cloner = new \Pyrus\Package\Cloner($mainfile);
             foreach ($clone as $extra) {
                 echo "Creating ", $package->name, '-', $package->version['release'], '.', $extra[0], "\n";
                 $cloner->{'to' . $extra[0]}();
