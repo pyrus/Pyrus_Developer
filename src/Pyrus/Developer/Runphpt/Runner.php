@@ -3,21 +3,16 @@
 namespace Pyrus\Developer\Runphpt;
 class Runner
 {
-    var $_headers = array();
-    var $windows = false;
-    var $_logger;
-    var $_options;
-    var $_php;
-    var $tests_count;
-    var $xdebug_loaded;
-    /**
-     * Saved value of php executable, used to reset $_php when we
-     * have a test that uses cgi
-     *
-     * @var unknown_type
-     */
-    var $_savephp;
-    var $ini_overwrites = array(
+    private $_headers = array();
+    public $windows = false;
+    private $_logger;
+    private $_options;
+    private $_php;
+    private $_php_cgi;
+    
+    public $tests_count;
+    public $xdebug_loaded;
+    public $ini_overwrites = array(
         'output_handler=',
         'open_basedir=',
         'safe_mode=0',
@@ -51,6 +46,7 @@ class Runner
 
         $this->windows = substr(PHP_OS, 0, 3) == 'WIN';
         $this->_php = \Pyrus\Config::current()->php_bin;
+        $this->_php_cgi = \Pyrus\Config::current()->php_cgi_bin;
         $this->xdebug_loaded = extension_loaded('xdebug');
     }
 
@@ -221,9 +217,14 @@ class Runner
     function runTests($tests)
     {
         if (empty($this->_php)) {
-            echo "Unable to run phpt no php_bin option found. (pyrus set php_bin <directory>)\n";
+            echo "Unable to run phpt no php_bin option found. (pyrus set php_bin <file>)\n";
             return false;
         }
+        if (empty($this->_php_cgi)) {
+            echo "Unable to run phpt no php_cgi_bin option found. (pyrus set php_cgi_bin <file>)\n";
+            return false;
+        }
+
         if (!count($tests)) {
             $tests = array('.');
         }
@@ -309,17 +310,6 @@ class Runner
      */
     function run($file, $ini_settings = array(), $test_number = 1)
     {
-        if (isset($this->_savephp)) {
-            $this->_php = $this->_savephp;
-            unset($this->_savephp);
-        }
-        if (empty($this->_options['cgi'])) {
-            // try to see if php-cgi is in the path
-            $res = $this->system_with_timeout('php-cgi -v');
-            if (false !== $res && !(is_array($res) && $res === array(127, ''))) {
-                $this->_options['cgi'] = 'php-cgi';
-            }
-        }
         if (1 < $len = strlen($this->tests_count)) {
             $test_number = str_pad($test_number, $len, ' ', STR_PAD_LEFT);
             $test_nr = "[$test_number/$this->tests_count] ";
@@ -329,6 +319,7 @@ class Runner
 
         $file = realpath($file);
         $section_text = $this->_readFile($file);
+        $phpBin = isset($section_text['CGI']) ? $this->_php_cgi : $this->_php;
 
         if (isset($section_text['POST_RAW']) && isset($section_text['UPLOAD'])) {
             throw new \Pyrus\Developer\Runphpt\Exception("Cannot contain both POST_RAW and UPLOAD in test file: $file");
@@ -359,20 +350,21 @@ class Runner
         $tested = trim($section_text['TEST']);
         $tested.= !isset($this->_options['simple']) ? "[$shortname]" : ' ';
 
-        if (!empty($section_text['POST']) || !empty($section_text['POST_RAW']) ||
-              !empty($section_text['UPLOAD']) || !empty($section_text['GET']) ||
-              !empty($section_text['COOKIE']) || !empty($section_text['EXPECTHEADERS'])) {
-            if (empty($this->_options['cgi'])) {
-                if (!isset($this->_options['quiet'])) {
-                    \Pyrus\Logger::log(0, "SKIP $test_nr$tested (reason: --cgi option needed for this test, type 'pear help run-tests')");
-                }
-                if (isset($this->_options['tapoutput'])) {
-                    return array('ok', ' # skip --cgi option needed for this test, "pear help run-tests" for info');
-                }
-                return 'SKIPPED';
+        if ((!empty($section_text['POST'])
+            || !empty($section_text['POST_RAW'])
+            || !empty($section_text['UPLOAD'])
+            || !empty($section_text['GET'])
+            ||!empty($section_text['COOKIE'])
+            || !empty($section_text['EXPECTHEADERS']))
+            && !isset($section_text['CGI'])
+        ) {
+            if (!isset($this->_options['quiet'])) {
+                \Pyrus\Logger::log(0, "SKIP $test_nr$tested (reason: --CGI-- option needed for this test, type 'pear help run-phpt')");
             }
-            $this->_savephp = $this->_php;
-            $this->_php = $this->_options['cgi'];
+            if (isset($this->_options['tapoutput'])) {
+                return array('ok', ' # skip --CGI-- option needed for this test, "pear help run-phpt" for info');
+            }
+            return 'SKIPPED';
         }
 
         $temp_dir = realpath(dirname($file));
@@ -391,7 +383,13 @@ class Runner
         $this->_cleanupOldFiles($file);
 
         // Check if test should be skipped.
-        $res  = $this->_runSkipIf($section_text, $temp_skipif, $tested, $ini_settings);
+        $res = $this->_runSkipIf(
+            $phpBin,
+            $section_text,
+            $temp_skipif,
+            $tested,
+            $ini_settings
+        );
         if (count($res) != 2) {
             if (isset($this->_options['coverage']) && $this->xdebug_loaded) {
                 $xdebug_file = $temp_dir . DIRECTORY_SEPARATOR . $main_file_name . 'xdebug';
@@ -404,6 +402,25 @@ class Runner
         }
         $info = $res['info'];
         $warn = $res['warn'];
+        
+        if (!isset($section_text['FILE'])) {
+            if (isset($section_text['FILEEOF'])) {
+                $section_text['FILE'] = rtrim($section_text['FILEEOF']);
+            } elseif (isset($section_text['FILE_EXTERNAL'])) {
+                chdir($temp_dir);
+                $temp_file_path = realpath(trim($section_text['FILE_EXTERNAL']));
+                chdir($cwd);
+                if (false === $temp_file_path) {
+                    return array('ok', ' # skip The file in --FILE_EXTERNAL-- was not found.');
+                } elseif (strpos($temp_file_path, $temp_dir) === 0) {
+                    $section_text['FILE'] = file_get_contents($temp_file_path);
+                } else {
+                    return array('ok', ' # skip The file in --FILE_EXTERNAL-- must be in the same folder as the test, or within a subfolder.');
+                }
+            } else {
+                return array('ok', ' # skip No --FILE--, --FILEEOF-- or --FILE_EXTERNAL-- found.');
+            }
+        }
 
         // We've satisfied the preconditions - run the test!
         if (isset($this->_options['coverage']) && $this->xdebug_loaded) {
@@ -431,7 +448,7 @@ class Runner
         }
 
         $args = $section_text['ARGS'] ? ' -- '.$section_text['ARGS'] : '';
-        $cmd = $this->_preparePhpBin($this->_php, $temp_file, $ini_settings);
+        $cmd = $this->_preparePhpBin($phpBin, $temp_file, $ini_settings);
         $cmd.= "$args 2>&1";
         if (isset($this->_logger)) {
             \Pyrus\Logger::log(2, 'Running command "' . $cmd . '"');
@@ -465,7 +482,7 @@ class Runner
             $env['REQUEST_METHOD'] = 'POST';
 
             $this->save_text($tmp_post, $request);
-            $cmd = "$this->_php$pass_options$ini_settings \"$temp_file\" 2>&1 < $tmp_post";
+            $cmd = "{$phpBin}{$pass_options}{$ini_settings} \"{$temp_file}\" 2>&1 < {$tmp_post}";
         } elseif (array_key_exists('POST', $section_text) && !empty($section_text['POST'])) {
             $post = trim($section_text['POST']);
             $this->save_text($tmp_post, $post);
@@ -475,7 +492,7 @@ class Runner
             $env['CONTENT_TYPE']   = 'application/x-www-form-urlencoded';
             $env['CONTENT_LENGTH'] = $content_length;
 
-            $cmd = "$this->_php$pass_options$ini_settings \"$temp_file\" 2>&1 < $tmp_post";
+            $cmd = "{$phpBin}{$pass_options}{$ini_settings} \"{$temp_file}\" 2>&1 < {$tmp_post}";
         } else {
             $env['REQUEST_METHOD'] = 'GET';
             $env['CONTENT_TYPE']   = '';
@@ -507,7 +524,9 @@ class Runner
         $this->_testCleanup($section_text, $temp_clean);
 
         /* when using CGI, strip the headers from the output */
-        $output = $this->_stripHeadersCGI($output);
+        if (isset($section_text['CGI'])) {
+            $output = $this->_stripHeadersCGI($output);
+        }
 
         if (isset($section_text['EXPECTHEADERS'])) {
             $testheaders = $this->_processHeaders($section_text['EXPECTHEADERS']);
@@ -730,13 +749,13 @@ $return_value
         @unlink($temp_clean);
     }
 
-    function _runSkipIf($section_text, $temp_skipif, $tested, $ini_settings)
+    function _runSkipIf($phpBin, $section_text, $temp_skipif, $tested, $ini_settings)
     {
         $info = '';
         $warn = false;
         if (array_key_exists('SKIPIF', $section_text) && trim($section_text['SKIPIF'])) {
             $this->save_text($temp_skipif, $section_text['SKIPIF']);
-            $output = $this->system_with_timeout("$this->_php$ini_settings -f \"$temp_skipif\"");
+            $output = $this->system_with_timeout("{$phpBin}{$ini_settings} -f \"{$temp_skipif}\"");
             $output = $output[1];
             $loutput = ltrim($output);
             unlink($temp_skipif);
@@ -772,9 +791,7 @@ $return_value
     function _stripHeadersCGI($output)
     {
         $this->headers = array();
-        if (!empty($this->_options['cgi']) &&
-              $this->_php == $this->_options['cgi'] &&
-              preg_match("/^(.*?)(?:\n\n(.*)|\\z)/s", $output, $match)) {
+        if (preg_match("/^(.*?)(?:\n\n(.*)|\\z)/s", $output, $match)) {
             $output = isset($match[2]) ? trim($match[2]) : '';
             $this->_headers = $this->_processHeaders($match[1]);
         }
@@ -943,11 +960,7 @@ $return_value
         if ($section_text['CLEAN']) {
             // perform test cleanup
             $this->save_text($temp_clean, $section_text['CLEAN']);
-            if (isset($this->_savephp)) {
-                $output = $this->system_with_timeout("$this->_savephp $temp_clean  2>&1");
-            } else {
-                $output = $this->system_with_timeout("$this->_php $temp_clean  2>&1");
-            }
+            $output = $this->system_with_timeout("$this->_php $temp_clean  2>&1");
             if (strlen($output[1])) {
                 echo "BORKED --CLEAN-- section! output:\n", $output[1];
             }
