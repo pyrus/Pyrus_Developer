@@ -1,6 +1,27 @@
 <?php
+
+/**
+ * ~~summary~~
+ *
+ * ~~description~~
+ *
+ * PHP version 5.3
+ *
+ * @category Pyrus
+ * @package  Pyrus_Developer
+ * @author   Greg Beaver <greg@chiaraquartet.net>
+ * @license  http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * @version  GIT: $Id$
+ * @link     https://github.com/pyrus/Pyrus_Developer
+ */
+
 namespace Pyrus\Developer\Creator;
-class Tar implements \Pyrus\Package\CreatorInterface
+
+use Pyrus\Package\CreatorInterface;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+
+class Tar implements CreatorInterface
 {
     /**
      * Path to archive file
@@ -16,16 +37,19 @@ class Tar implements \Pyrus\Package\CreatorInterface
     protected $tmp;
     protected $path;
     protected $compress;
-    function __construct($path, $compress = 'zlib')
+
+    public function __construct($path, $compress = 'zlib')
     {
         $this->compress = $compress;
         if ($compress === 'bz2' && !function_exists('bzopen')) {
-            throw new \Pyrus\Developer\Creator\Exception(
-                'bzip2 extension not available');
+            throw new Exception(
+                'bzip2 extension not available'
+            );
         }
         if ($compress === 'zlib' && !function_exists('gzopen')) {
-            throw new \Pyrus\Developer\Creator\Exception(
-                'zlib extension not available');
+            throw new Exception(
+                'zlib extension not available'
+            );
         }
         $this->path = $path;
     }
@@ -35,10 +59,13 @@ class Tar implements \Pyrus\Package\CreatorInterface
      * 
      * This code is modified from Vincent Lascaux's File_Archive
      * package, which is licensed under the LGPL license.
-     * @param string relative path within the package
-     * @param string|resource file contents or open file handle
+     * 
+     * @param string          $path         relative path within the package
+     * @param string|resource $fileOrStream file contents or open file handle
+     * 
+     * @return void
      */
-    function addFile($path, $fileOrStream)
+    public function addFile($path, $fileOrStream)
     {
         clearstatcache();
         if (is_resource($fileOrStream)) {
@@ -56,9 +83,9 @@ class Tar implements \Pyrus\Package\CreatorInterface
         $link = null;
         if ($stat['mode'] & 0x4000) {
             $type = 5;        // Directory
-        } else if ($stat['mode'] & 0x8000) {
+        } elseif ($stat['mode'] & 0x8000) {
             $type = 0;        // Regular
-        } else if ($stat['mode'] & 0xA000) {
+        } elseif ($stat['mode'] & 0xA000) {
             $type = 1;        // Link
             $link = @readlink($current);
         } else {
@@ -67,7 +94,7 @@ class Tar implements \Pyrus\Package\CreatorInterface
 
         $filePrefix = '';
         if (strlen($path) > 255) {
-            throw new \Pyrus\Developer\Creator\Exception(
+            throw new Exception(
                 "$path is too long, must be 255 characters or less"
             );
         } else if (strlen($path) > 100) {
@@ -75,16 +102,18 @@ class Tar implements \Pyrus\Package\CreatorInterface
             $path = substr($path, -100);
         }
 
-        $block = pack('a100a8a8a8a12A12',
-                $path,
-                decoct($stat['mode']),
-                sprintf('%6s ',decoct($stat['uid'])),
-                sprintf('%6s ',decoct($stat['gid'])),
-                sprintf('%11s ',decoct($stat['size'])),
-                sprintf('%11s ',decoct($stat['mtime']))
-            );
+        $block = pack(
+            'a100a8a8a8a12A12',
+            $path,
+            decoct($stat['mode']),
+            sprintf('%6s ', decoct($stat['uid'])),
+            sprintf('%6s ', decoct($stat['gid'])),
+            sprintf('%11s ', decoct($stat['size'])),
+            sprintf('%11s ', decoct($stat['mtime']))
+        );
 
-        $blockend = pack('a1a100a6a2a32a32a8a8a155a12',
+        $blockend = pack(
+            'a1a100a6a2a32a32a8a8a155a12',
             $type,
             $link,
             'ustar',
@@ -94,11 +123,15 @@ class Tar implements \Pyrus\Package\CreatorInterface
             '',
             '',
             $filePrefix,
-            '');
+            ''
+        );
 
         $checkheader = array_merge(str_split($block), str_split($blockend));
         if (!function_exists('_pear2tarchecksum')) {
-            function _pear2tarchecksum($a, $b) {return $a + ord($b);}
+            function _pear2tarchecksum($a, $b)
+            {
+                return $a + ord($b);
+            }
         }
         $checksum = 256; // 8 * ord(' ');
         $checksum += array_reduce($checkheader, '_pear2tarchecksum');
@@ -114,15 +147,23 @@ class Tar implements \Pyrus\Package\CreatorInterface
         } else {
             fwrite($this->tmp, $fileOrStream);
             if (strlen($fileOrStream) % 512) {
-                fwrite($this->tmp, str_repeat("\0", 512 - strlen($fileOrStream) % 512));
+                fwrite(
+                    $this->tmp,
+                    str_repeat("\0", 512 - strlen($fileOrStream) % 512)
+                );
             }
         }
     }
 
-    function addDir($path)
+    public function addDir($path)
     {
-        foreach (new \RecursiveIteratorIterator(
-                    new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS)) as $file) {
+        foreach (new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(
+                $path,
+                RecursiveDirectoryIterator::SKIP_DOTS
+            )
+        ) as $file
+        ) {
             $contents = file_get_contents((string)$file);
             $relpath = str_replace($path . DIRECTORY_SEPARATOR, '', $file);
             $this->addFile($relpath, $contents);
@@ -131,22 +172,25 @@ class Tar implements \Pyrus\Package\CreatorInterface
 
     /**
      * Initialize the package creator
+     * 
+     * @return void
      */
-    function init()
+    public function init()
     {
         switch ($this->compress) {
-            case 'zlib' :
-                $this->tmp = gzopen($this->path, 'wb');
-                break;
-            case 'bz2' :
-                $this->tmp = bzopen($this->path, 'wb');
-                break;
-            case 'none' :
-                $this->tmp = fopen($this->path, 'wb');
-                break;
-            default :
-                throw new \Pyrus\Developer\Creator\Exception(
-                    'unknown compression type ' . $this->compress);
+        case 'zlib':
+            $this->tmp = gzopen($this->path, 'wb');
+            break;
+        case 'bz2':
+            $this->tmp = bzopen($this->path, 'wb');
+            break;
+        case 'none':
+            $this->tmp = fopen($this->path, 'wb');
+            break;
+        default:
+            throw new Exception(
+                'unknown compression type ' . $this->compress
+            );
         }
     }
 
@@ -154,16 +198,21 @@ class Tar implements \Pyrus\Package\CreatorInterface
      * Create an internal directory, creating parent directories as needed
      * 
      * This is a no-op for the tar creator
+     * 
      * @param string $dir
+     * 
+     * @return void
      */
-    function mkdir($dir)
+    public function mkdir($dir)
     {
     }
 
     /**
      * Finish saving the package
+     * 
+     * @return void
      */
-    function close()
+    public function close()
     {
         fwrite($this->tmp, pack('a1024', ''));
         fclose($this->tmp);

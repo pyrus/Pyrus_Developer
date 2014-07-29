@@ -1,19 +1,32 @@
 <?php
 namespace Pyrus\Developer\PackageFile;
 
+use PharData;
+use Pyrus\Config;
 use Pyrus\Developer\CoverageAnalyzer as Coverage;
+use Pyrus\Developer\PackageFile\Commands\PEAR2Skeleton;
+use Pyrus\Developer\Runphpt\Runner;
+use Pyrus\Main;
+use Pyrus\Package;
+use Pyrus\Package\Cloner;
+use Pyrus\Package\Creator;
+use Pyrus\PackageFileInterface;
+use Pyrus\PackageInterface;
+
 class Commands
 {
     protected $header;
     protected $footer;
     protected $skeleton;
 
-    function getDirectory($args)
+    public function getDirectory($args)
     {
         if (isset($args['dir'])) {
             $dir = $args['dir'];
             if (!file_exists($dir)) {
-                throw new Exception('Invalid directory: ' . $dir . ' does not exist');
+                throw new Exception(
+                    'Invalid directory: ' . $dir . ' does not exist'
+                );
             }
         } else {
             $dir = getcwd();
@@ -21,34 +34,40 @@ class Commands
         return $dir;
     }
 
-    function makePackageXml($frontend, $args, $options)
+    public function makePackageXml($frontend, $args, $options)
     {
         $dir = $this->getDirectory($args);
-        if (!isset($args['packagename']) && file_exists($dir . '/package.xml')) {
+        if (!isset($args['packagename'])
+            && file_exists($dir . '/package.xml')
+        ) {
             try {
-                $testpackage = new \Pyrus\Package($dir . '/package.xml');
+                $testpackage = new Package($dir . '/package.xml');
                 $args['packagename'] = $testpackage->name;
                 // if packagename isn't set, channel can't be set
                 $args['channel'] = $testpackage->channel;
             } catch (\Exception $e) {
                 // won't work, user has to be explicit
-                throw new \Pyrus\Developer\Creator\Exception('missing first argument: PackageName');
+                throw new \Pyrus\Developer\Creator\Exception(
+                    'missing first argument: PackageName'
+                );
             }
         }
         if (!isset($args['channel'])) {
             $args['channel'] = 'pear2.php.net';
         } else {
-            $args['channel'] = \Pyrus\Config::current()->channelregistry->channelFromAlias($args['channel']);
+            $args['channel'] = Config::current()->channelregistry
+                ->channelFromAlias($args['channel']);
         }
         if (!isset($options['scanoptions'])
-            && file_exists($dir . '/scanoptions.php')) {
+            && file_exists($dir . '/scanoptions.php')
+        ) {
             $options['scanoptions'] = 'scanoptions.php';
         }
         $scanoptions = array();
         if (isset($options['scanoptions'])) {
             $file = $options['scanoptions'];
             $path = $dir;
-            $getscanoptions = function() use ($path, $file) {
+            $getscanoptions = function () use ($path, $file) {
                 $scanoptions = array();
                 include $path . '/' . $file;
                 return $scanoptions;
@@ -56,9 +75,18 @@ class Commands
             $scanoptions = $getscanoptions();
         }
         echo "Creating package.xml...";
-        $pear2svn = new PEAR2SVN($dir, $args['packagename'], $args['channel'],
-                                 false, true, !$options['nocompatible'], $scanoptions);
-        if (!$options['packagexmlsetup'] && file_exists($pear2svn->path . '/packagexmlsetup.php')) {
+        $pear2svn = new PEAR2SVN(
+            $dir,
+            $args['packagename'],
+            $args['channel'],
+            false,
+            true,
+            !$options['nocompatible'],
+            $scanoptions
+        );
+        if (!$options['packagexmlsetup']
+            && file_exists($pear2svn->path . '/packagexmlsetup.php')
+        ) {
             $options['packagexmlsetup'] = 'packagexmlsetup.php';
         }
         if ($options['packagexmlsetup']) {
@@ -69,9 +97,11 @@ class Commands
             $path = $pear2svn->path;
             if (!file_exists($path . '/' . $file)) {
                 throw new \Pyrus\Developer\Creator\Exception(
-                                    'packagexmlsetup file must be in a subdirectory of the package.xml');
+                    'packagexmlsetup file must be in a subdirectory ' .
+                    'of the package.xml'
+                );
             }
-            $getinfo = function() use ($file, $path, $package, $compatible) {
+            $getinfo = function () use ($file, $path, $package, $compatible) {
                 include $path . '/' . $file;
             };
             $getinfo();
@@ -84,7 +114,12 @@ class Commands
             $formats = array_flip($formats);
             $formats[$first] = 1;
 
-            $opts = array('phar' => false, 'tgz' => false, 'tar' => false, 'zip' => false);
+            $opts = array(
+                'phar' => false,
+                'tgz' => false,
+                'tar' => false,
+                'zip' => false
+            );
             $opts = array_merge($opts, $formats);
             $opts['stub'] = $options['stub'];
             $opts['extrasetup'] = $options['extrasetup'];
@@ -97,52 +132,96 @@ class Commands
         }
     }
 
-    function makePECLPackage($frontend, $args, $options)
+    public function makePECLPackage($frontend, $args, $options)
     {
         $dir = $this->getDirectory($args);
-        $sourceextensions = array('c', 'cc', 'h', 'm4', 'w32', 're', 'y', 'l', 'frag');
+        $sourceextensions = array(
+            'c',
+            'cc',
+            'h',
+            'm4',
+            'w32',
+            're',
+            'y',
+            'l',
+            'frag'
+        );
         if (isset($args['extension'])) {
             $sourceextensions = array_merge($sourceextensions, $args['extension']);
         }
         if (!isset($args['packagename']) && file_exists($dir . '/package.xml')) {
             try {
-                $testpackage = new \Pyrus\Package($dir . '/package.xml');
+                $testpackage = new Package($dir . '/package.xml');
                 $args['packagename'] = $testpackage->name;
                 // if packagename isn't set, channel can't be set
                 $args['channel'] = $testpackage->channel;
             } catch (\Exception $e) {
                 // won't work, user has to be explicit
-                throw new \Pyrus\Developer\Creator\Exception('missing first argument: PackageName');
+                throw new \Pyrus\Developer\Creator\Exception(
+                    'missing first argument: PackageName'
+                );
             }
         }
         if (!isset($args['channel'])) {
             $args['channel'] = 'pecl.php.net';
         } else {
-            $args['channel'] = \Pyrus\Config::current()->channelregistry->channelFromAlias($args['channel']);
+            $args['channel'] = Config::current()->channelregistry
+                ->channelFromAlias($args['channel']);
         }
         echo "Creating package.xml...";
-        $package = new PECL($dir, $args['packagename'], $args['channel'], $sourceextensions);
+        $package = new PECL(
+            $dir,
+            $args['packagename'],
+            $args['channel'],
+            $sourceextensions
+        );
         echo "done\n";
         if ($options['donotpackage']) {
             return;
         }
         if (extension_loaded('zlib')) {
-            echo "Creating ", $package->name . '-' . $package->version['release'] . '.tgz ...';
-            if (file_exists($dir . '/' . $package->name . '-' . $package->version['release'] . '.tgz')) {
-                unlink($dir . '/' . $package->name . '-' . $package->version['release'] . '.tgz');
+            echo "Creating ",
+                $package->name . '-' . $package->version['release'] .
+                '.tgz ...';
+            if (file_exists(
+                $dir . '/' . $package->name . '-' . $package->version['release']
+                . '.tgz'
+            )
+            ) {
+                unlink(
+                    $dir . '/' . $package->name . '-' .
+                    $package->version['release'] . '.tgz'
+                );
             }
-            $phar = new \PharData($dir . '/' . $package->name . '-' . $package->version['release'] . '.tgz');
+            $phar = new PharData(
+                $dir . '/' . $package->name . '-' . $package->version['release']
+                . '.tgz'
+            );
         } else {
-            echo "Creating ", $package->name . '-' . $package->version['release'] . '.tar ...';
-            if (file_exists($dir . '/' . $package->name . '-' . $package->version['release'] . '.tar')) {
-                unlink($dir . '/' . $package->name . '-' . $package->version['release'] . '.tar');
+            echo "Creating ",
+                $package->name . '-' . $package->version['release'] .
+                '.tar ...';
+            if (file_exists(
+                $dir . '/' . $package->name . '-' . $package->version['release']
+                . '.tar'
+            )
+            ) {
+                unlink(
+                    $dir . '/' . $package->name . '-' .
+                    $package->version['release'] . '.tar'
+                );
             }
-            $phar = new \PharData($dir . '/' . $package->name . '-' . $package->version['release'] . '.tar');
+            $phar = new PharData(
+                $dir . '/' . $package->name . '-' . $package->version['release']
+                . '.tar'
+            );
         }
         // add md5sum
         foreach ($package->files as $path => $file) {
             $stuff = $file->getArrayCopy();
-            $stuff['attribs']['md5sum'] = md5_file($dir . '/' . $file['attribs']['name']);
+            $stuff['attribs']['md5sum'] = md5_file(
+                $dir . '/' . $file['attribs']['name']
+            );
             $package->files[$path] = $stuff;
         }
         $phar['package.xml'] = (string) $package;
@@ -160,23 +239,28 @@ class Commands
     }
 
     /** @todo Consider simply injecting the Package object as appropriate */
-    function package($frontend, $args, $options)
+    public function package($frontend, $args, $options)
     {
         $path = getcwd() . DIRECTORY_SEPARATOR;
-        $package = new \Pyrus\Package(null);
+        $package = new Package(null);
 
 
-        if (!isset($args['packagexml']) && !file_exists($path . 'package.xml') && !file_exists($path . 'package2.xml')) {
-            throw new \Pyrus\PackageFile\Exception("No package.xml or package2.xml found in " . $path);
+        if (!isset($args['packagexml'])
+            && !file_exists($path . 'package.xml')
+            && !file_exists($path . 'package2.xml')
+        ) {
+            throw new \Pyrus\PackageFile\Exception(
+                "No package.xml or package2.xml found in " . $path
+            );
         }
 
         if (isset($args['packagexml'])) {
-            $package = new \Pyrus\Package($args['packagexml']);
+            $package = new Package($args['packagexml']);
         } else {
             // first try ./package.xml
             if (file_exists($path . 'package.xml')) {
                 try {
-                    $package = new \Pyrus\Package($path . 'package.xml');
+                    $package = new Package($path . 'package.xml');
                 } catch (\Pyrus\PackageFile\Exception $e) {
                     if ($e->getCode() != -3) {
                         throw $e;
@@ -186,20 +270,27 @@ class Commands
                         throw $e;
                     }
 
-                    $package = new \Pyrus\Package($path . 'package2.xml');
-                    // now the creator knows to do the magic of package2.xml/package.xml
+                    $package = new Package($path . 'package2.xml');
+                    // now the creator knows to do the magic of
+                    // package2.xml/package.xml
                     $package->thisIsOldAndCrustyCompatible();
                 }
             }
 
             // Alternatively; there's only a package2.xml
-            if (file_exists($path . 'package2.xml') && !file_exists($path . 'package.xml')) {
-                $package = new \Pyrus\Package($path . 'package2.xml');
+            if (file_exists($path . 'package2.xml')
+                && !file_exists($path . 'package.xml')
+            ) {
+                $package = new Package($path . 'package2.xml');
             }
         }
 
         if ($package->isNewPackage()) {
-            if (!$options['phar'] && !$options['zip'] && !$options['tar'] && !$options['tgz']) {
+            if (!$options['phar']
+                && !$options['zip']
+                && !$options['tar']
+                && !$options['tgz']
+            ) {
                 // try tgz first
                 if (extension_loaded('zlib')) {
                     $options['tgz'] = true;
@@ -208,36 +299,57 @@ class Commands
                 }
             }
             if ($options['phar'] && ini_get('phar.readonly')) {
-                throw new \Pyrus\Developer\Creator\Exception("Cannot create phar archive, pass -dphar.readonly=0");
+                throw new \Pyrus\Developer\Creator\Exception(
+                    "Cannot create phar archive, pass -dphar.readonly=0"
+                );
             }
         } else {
-            if ($options['zip'] || $options['phar']) {
-                echo "Zip and Phar archives can only be created for PEAR2 packages, ignoring\n";
+            if ($options['zip']
+                || $options['phar']
+            ) {
+                echo "Zip and Phar archives can only be created " .
+                    "for PEAR2 packages, ignoring\n";
             }
         }
 
         // get openssl cert if set, and password
-        if (\Pyrus\Config::current()->openssl_cert) {
-            if ('yes' == $frontend->ask('Sign package?', array('yes', 'no'), 'yes')) {
-                $cert = \Pyrus\Config::current()->openssl_cert;
+        if (Config::current()->openssl_cert) {
+            if ('yes' == $frontend->ask(
+                'Sign package?',
+                array('yes', 'no'),
+                'yes'
+            )
+            ) {
+                $cert = Config::current()->openssl_cert;
                 if (!file_exists($cert)) {
-                    throw new \Pyrus\Developer\Creator\Exception('OpenSSL certificate ' .
-                        $cert . ' does not exist');
+                    throw new \Pyrus\Developer\Creator\Exception(
+                        'OpenSSL certificate ' . $cert . ' does not exist'
+                    );
                 }
-                $releaser = \Pyrus\Config::current()->handle;
+                $releaser = Config::current()->handle;
                 $maintainers = array();
                 foreach ($package->maintainer as $maintainer) {
                     $maintainers[] = $maintainer->user;
                 }
                 if (!strlen($releaser)) {
-                    throw new \Pyrus\Developer\Creator\Exception('handle configuration variable must be from ' .
-                            'package.xml (one of ' . implode(', ', $maintainers) . ')');
+                    throw new \Pyrus\Developer\Creator\Exception(
+                        'handle configuration variable must be from ' .
+                        'package.xml (one of ' .
+                        implode(', ', $maintainers) .
+                        ')'
+                    );
                 }
                 if (!in_array($releaser, $maintainers)) {
-                    throw new \Pyrus\Developer\Creator\Exception('handle configuration variable must be from ' .
-                            'package.xml (one of ' . implode(', ', $maintainers) . ')');
+                    throw new \Pyrus\Developer\Creator\Exception(
+                        'handle configuration variable must be from ' .
+                        'package.xml (one of ' .
+                        implode(', ', $maintainers) .
+                        ')'
+                    );
                 }
-                $passphrase = $frontend->ask('passphrase for OpenSSL PKCS#12 certificate?');
+                $passphrase = $frontend->ask(
+                    'passphrase for OpenSSL PKCS#12 certificate?'
+                );
                 if (!$passphrase) {
                     $passphrase = '';
                 }
@@ -250,16 +362,20 @@ class Commands
             $passphrase = '';
         }
 
-        $sourcepath = \Pyrus\Main::getSourcePath();
+        $sourcepath = Main::getSourcePath();
         if (0 !== strpos($sourcepath, 'phar://')) {
-            // running from svn, assume we're in a standard package layout with a vendor dir
-            // TODO: Improve this to automatically find latest releases from pear2.php.net
-            $exceptionpath = $autoloadpath = $multierrorspath = realpath($sourcepath . '/../vendor/php') .
-                '/PEAR2';
+            // running from svn, assume we're in a standard package layout
+            // with a vendor dir
+            // TODO: Improve this to automatically find latest releases
+            // from pear2.php.net
+            $exceptionpath = $autoloadpath = $multierrorspath = realpath(
+                $sourcepath . '/../vendor/php'
+            ) . '/PEAR2';
             if (!file_exists($exceptionpath . '/Exception.php')) {
                 throw new \Pyrus\Developer\Creator\Exception(
                     'Cannot locate PEAR2/Exception in a local vendor/ dir. '
-                    . 'It is best to install the latest versions of these locally.');
+                    . 'It is best to install the latest versions of these locally.'
+                );
             }
         } else {
             $exceptionpath = $autoloadpath = $multierrorspath = $sourcepath .
@@ -271,13 +387,20 @@ class Commands
             if (isset($mainfile)) {
                 $extras[] = array('phar', \Phar::PHAR, \Phar::GZ);
             } else {
-                $mainfile = $package->name . '-' . $package->version['release'] . '.phar';
+                $mainfile = $package->name . '-' . $package->version['release']
+                    . '.phar';
                 $mainformat = \Phar::PHAR;
                 $maincompress = \Phar::NONE;
             }
-            if (!$options['stub'] && file_exists(dirname($package->archivefile) . '/stub.php')) {
-                $stub = file_get_contents(dirname($package->archivefile) . '/stub.php');
-            } elseif ($options['stub'] && file_exists($options['stub'])) {
+            if (!$options['stub']
+                && file_exists(dirname($package->archivefile) . '/stub.php')
+            ) {
+                $stub = file_get_contents(
+                    dirname($package->archivefile) . '/stub.php'
+                );
+            } elseif ($options['stub']
+                && file_exists($options['stub'])
+            ) {
                 $stub = file_get_contents($options['stub']);
             }
             $stub = strtr(
@@ -292,7 +415,8 @@ class Commands
             if (isset($mainfile)) {
                 $extras[] = array('tar', \Phar::TAR, \Phar::NONE);
             } else {
-                $mainfile = $package->name . '-' . $package->version['release'] . '.tar';
+                $mainfile = $package->name . '-' . $package->version['release']
+                    . '.tar';
                 $mainformat = \Phar::TAR;
                 $maincompress = \Phar::NONE;
             }
@@ -301,7 +425,8 @@ class Commands
             if (isset($mainfile)) {
                 $extras[] = array('tgz', \Phar::TAR, \Phar::GZ);
             } else {
-                $mainfile = $package->name . '-' . $package->version['release'] . '.tgz';
+                $mainfile = $package->name . '-' . $package->version['release']
+                    . '.tgz';
                 $mainformat = \Phar::TAR;
                 $maincompress = \Phar::GZ;
             }
@@ -312,7 +437,8 @@ class Commands
             if (isset($mainfile)) {
                 $extras[] = array('zip', \Phar::ZIP, \Phar::NONE);
             } else {
-                $mainfile = $package->name . '-' . $package->version['release'] . '.zip';
+                $mainfile = $package->name . '-' . $package->version['release']
+                    . '.zip';
                 $mainformat = \Phar::ZIP;
                 $maincompress = \Phar::NONE;
             }
@@ -326,51 +452,86 @@ class Commands
             $extras = array();
         } else {
             foreach ($extras as $stuff) {
-                echo "Creating ", $package->name, '-', $package->version['release'], '.', $stuff[0], "\n";
+                echo "Creating ",
+                    $package->name,
+                    '-',
+                    $package->version['release'],
+                    '.',
+                    $stuff[0],
+                    "\n";
             }
             $clone = array();
         }
-        $creator = new \Pyrus\Package\Creator(array(
-                    new \Pyrus\Developer\Creator\Phar($mainfile, $stub, $mainformat, $maincompress,
-                                                           $extras, $releaser, $package, $cert, $passphrase)),
-                                                   $exceptionpath, $autoloadpath, $multierrorspath);
-        if (!$options['extrasetup'] && file_exists(dirname($package->archivefile) . '/extrasetup.php')) {
+        $creator = new Creator(
+            array(
+                new \Pyrus\Developer\Creator\Phar(
+                    $mainfile,
+                    $stub,
+                    $mainformat,
+                    $maincompress,
+                    $extras,
+                    $releaser,
+                    $package,
+                    $cert,
+                    $passphrase
+                )
+            ),
+            $exceptionpath,
+            $autoloadpath,
+            $multierrorspath
+        );
+        if (!$options['extrasetup']
+            && file_exists(dirname($package->archivefile) . '/extrasetup.php')
+        ) {
             $options['extrasetup'] = 'extrasetup.php';
         }
         if ($options['extrasetup']) {
-            // encapsulate the extrafiles inside a closure so there is no access to the variables in this function
-            $getinfo = function() use ($options, $package) {
+            // encapsulate the extrafiles inside a closure
+            // so there is no access to the variables in this function
+            $getinfo = function () use ($options, $package) {
                 $file = $options['extrasetup'];
                 if (!file_exists(dirname($package->archivefile) . '/' . $file)) {
                     throw new \Pyrus\Developer\Creator\Exception(
-                                        'extrasetup file must be in the same directory as package.xml');
+                        'extrasetup file must be in the same directory ' .
+                        'as package.xml'
+                    );
                 }
                 include dirname($package->archivefile) . '/' . $file;
                 if (!isset($extrafiles)) {
                     throw new \Pyrus\Developer\Creator\Exception(
-                                        'extrasetup file must set $extrafiles variable to an array of files');
+                        'extrasetup file must set $extrafiles variable ' .
+                        'to an array of files'
+                    );
                 }
                 if (!is_array($extrafiles)) {
                     throw new \Pyrus\Developer\Creator\Exception(
-                                        'extrasetup file must set $extrafiles variable to an array of files');
+                        'extrasetup file must set $extrafiles variable ' .
+                        'to an array of files'
+                    );
                 }
                 foreach ($extrafiles as $path => $file) {
                     if (is_object($file)) {
-                        if ($file instanceof \Pyrus\PackageInterface
-                            || $file instanceof \Pyrus\PackageFileInterface) {
+                        if ($file instanceof PackageInterface
+                            || $file instanceof PackageFileInterface
+                        ) {
                             continue;
                         }
                         throw new \Pyrus\Developer\Creator\Exception(
-                                            'extrasetup file object must implement \Pyrus\PackageInterface or \Pyrus\PackageFileInterface');
+                            'extrasetup file object must implement ' .
+                            '\Pyrus\PackageInterface' .
+                            ' or \Pyrus\PackageFileInterface'
+                        );
                     }
                     if (!file_exists($file)) {
                         throw new \Pyrus\Developer\Creator\Exception(
-                                            'extrasetup file ' . $file . ' does not exist');
+                            'extrasetup file ' . $file . ' does not exist'
+                        );
                     }
                     if (!is_string($path)) {
                         throw new \Pyrus\Developer\Creator\Exception(
-                                            'extrasetup file ' . $file . ' index should be the path to save in the' .
-                                            ' release');
+                            'extrasetup file ' . $file .
+                            ' index should be the path to save in the release'
+                        );
                     }
                 }
                 return $extrafiles;
@@ -381,16 +542,22 @@ class Commands
         }
         $creator->render($package, $extrafiles);
         if (count($clone)) {
-            $cloner = new \Pyrus\Package\Cloner($mainfile);
+            $cloner = new Cloner($mainfile);
             foreach ($clone as $extra) {
-                echo "Creating ", $package->name, '-', $package->version['release'], '.', $extra[0], "\n";
+                echo "Creating ",
+                    $package->name,
+                    '-',
+                    $package->version['release'],
+                    '.',
+                    $extra[0],
+                    "\n";
                 $cloner->{'to' . $extra[0]}();
             }
         }
         echo "done\n";
     }
 
-    function runTests($frontend, $args, $options)
+    public function runTests($frontend, $args, $options)
     {
         if ($options['modified']) {
             if (!isset($args['path']) || !count($args['path'])) {
@@ -400,7 +567,11 @@ class Commands
                 $testpath = realpath($args['path'][0]);
                 $codepath = realpath($args['path'][1]);
             }
-            $sqlite = new Coverage\Sqlite($testpath . '/pear2coverage.db', $codepath, $testpath);
+            $sqlite = new Coverage\Sqlite(
+                $testpath . '/pear2coverage.db',
+                $codepath,
+                $testpath
+            );
             $modified = $sqlite->getModifiedTests();
             if (!count($modified)) {
                 goto dorender;
@@ -413,7 +584,7 @@ class Commands
         } else {
             $modified = $args['path'];
         }
-        $runner = new \Pyrus\Developer\Runphpt\Runner($options['coverage'], $options['recursive']);
+        $runner = new Runner($options['coverage'], $options['recursive']);
 
         try {
             if (!$runner->runTests($modified)) {
@@ -435,12 +606,16 @@ class Commands
             return true;
         }
 dorender:
-        $a = new Coverage\Aggregator($testpath,
-                            $codepath,
-                            $testpath . '/pear2coverage.db');
+        $a = new Coverage\Aggregator(
+            $testpath,
+            $codepath,
+            $testpath . '/pear2coverage.db'
+        );
         $coverage = $a->retrieveProjectCoverage();
         if ($coverage[1]) {
-            echo "Project coverage: ", (($coverage[0] / $coverage[1]) * 100), "%\n";
+            echo "Project coverage: ",
+                (($coverage[0] / $coverage[1]) * 100),
+                "%\n";
         } else {
             echo "Unknown coverage.\n";
         }
@@ -463,12 +638,13 @@ dorender:
         if (!isset($args['channel'])) {
             $args['channel'] = 'pear2.php.net';
         } else {
-            $args['channel'] = \Pyrus\Config::current()->channelregistry->channelFromAlias($args['channel']);
+            $args['channel'] = Config::current()->channelregistry
+                ->channelFromAlias($args['channel']);
         }
 
         $info = $this->parsePackageName($args['package'], $args['channel']);
 
-        $skeleton = new Commands\PEAR2Skeleton($info);
+        $skeleton = new PEAR2Skeleton($info);
         $skeleton->generate();
         
         $options['stub']            = $skeleton->getStub();
@@ -519,7 +695,8 @@ dorender:
             $ret['mainNamespace'] = implode('\\', $package);
             $ret['mainClass']     = implode('\\', $package) . '\\Main';
             $ret['mainPath']      = implode('/', $path);
-            $ret['svn']           = 'http://svn.php.net/repository/pear2/' . $ret['package'];
+            $ret['svn']           = 'http://svn.php.net/repository/pear2/' .
+                $ret['package'];
         } else {
             $ret['path']          = implode('_', $package);
             $ret['package']       = implode('_', $package);
@@ -531,11 +708,12 @@ dorender:
         return $ret;
     }
 
-    function extSkeleton($frontend, $args, $options)
+    public function extSkeleton($frontend, $args, $options)
     {
         if (file_exists($args['extension'])) {
-            throw new \Pyrus\Developer\Creator\Exception('Extension ' . $args['extension'] .
-                                                               ' directory already exists');
+            throw new \Pyrus\Developer\Creator\Exception(
+                'Extension ' . $args['extension'] . ' directory already exists'
+            );
         }
         $protos = array();
         if ($options['proto']) {
@@ -546,7 +724,10 @@ dorender:
         mkdir($ext);
         mkdir($ext . '/tests');
 
-        $this->skeleton = realpath(__DIR__ . '/../../../../data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton');
+        $this->skeleton = realpath(
+            __DIR__ .
+            '/../../../../data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton'
+        );
         $this->footer = "\n" .
         "/*\n" .
         " * Local variables:\n" .
@@ -557,11 +738,14 @@ dorender:
         " * vim<600: noet sw=4 ts=4\n" .
         " */";
 
-        $this->header = str_replace("\r\n", "\n", "/*
+        $this->header = str_replace(
+            "\r\n",
+            "\n",
+            "/*
   +----------------------------------------------------------------------+
   | PHP Version 6                                                        |
   +----------------------------------------------------------------------+
-  | Copyright (c) 1997-" . date('Y') . " The PHP Group                                |
+  | Copyright (c) 1997-" . date('Y') . " The PHP Group               |
   +----------------------------------------------------------------------+
   | This source file is subject to version 3.01 of the PHP license,      |
   | that is bundled with this package in the file LICENSE, and is        |
@@ -576,25 +760,51 @@ dorender:
 */
 
 /* \$Id: header 263616 2008-07-26 22:21:12Z jani $ */
-");
+"
+        );
         $this->saveConfigM4($ext);
         $this->saveConfigW32($ext);
 
         $replace = $this->postProcessProtos($options, $ext, $protos);
-        foreach (array('skeleton.c', 'skeleton.php', 'php_skeleton.h', 'CREDITS',
-                       'EXPERIMENTAL', 'tests/001.phpt') as $file) {
+        foreach (array(
+            'skeleton.c',
+            'skeleton.php',
+            'php_skeleton.h',
+            'CREDITS',
+            'EXPERIMENTAL',
+            'tests/001.phpt'
+        ) as $file
+        ) {
             $dest = str_replace('skeleton', $ext, $file);
             $this->processFile($ext, $file, $dest, $replace);
         }
-        file_put_contents($ext . '/README', 'Extension package ' . $ext . " summary\n\n" .
-                          'Detailed description (edit README to change this)');
-        file_put_contents($ext . '/CREDITS', ";; put your info here\n" .
-                          'Your Name [handle] <handle@php.net> (lead)');
-        file_put_contents($ext . '/RELEASE-0.1.0', 'Package ' . $ext . " release notes for version 0.1.0.");
-        file_put_contents($ext . '/API-0.1.0', 'Package ' . $ext . " API release notes for version 0.1.0.");
-        $this->makePECLPackage($frontend, array('packagename' => $ext,
-                                                'channel' => 'pecl.php.net',
-                                                'dir' => realpath($ext)), array('donotpackage' => true));
+        file_put_contents(
+            $ext . '/README',
+            'Extension package ' . $ext . " summary\n\n" .
+            'Detailed description (edit README to change this)'
+        );
+        file_put_contents(
+            $ext . '/CREDITS',
+            ";; put your info here\n" .
+            'Your Name [handle] <handle@php.net> (lead)'
+        );
+        file_put_contents(
+            $ext . '/RELEASE-0.1.0',
+            'Package ' . $ext . " release notes for version 0.1.0."
+        );
+        file_put_contents(
+            $ext . '/API-0.1.0',
+            'Package ' . $ext . " API release notes for version 0.1.0."
+        );
+        $this->makePECLPackage(
+            $frontend,
+            array(
+                'packagename' => $ext,
+                'channel' => 'pecl.php.net',
+                'dir' => realpath($ext)
+            ),
+            array('donotpackage' => true)
+        );
         echo <<<eof
 
 To use your new PECL extension, you will have to execute the following steps:
@@ -635,7 +845,7 @@ eof;
 
     }
 
-    function postProcessProtos($options, $ext, $protos)
+    public function postProcessProtos($options, $ext, $protos)
     {
         if (!count($protos)) {
             return array(
@@ -645,14 +855,21 @@ eof;
                     'EXTNAME'                              => strtoupper($ext),
                    );
         }
-        $funcdefs = $methoddefs = $arginfo = $functions = $methods = $classdef =
-        $globals = $funcdecl = '';
+        $funcdefs = $methoddefs = $arginfo = $functions = $methods = $classdef
+            = $globals = $funcdecl = '';
         $funcinfo = $classinfo = array();
 
         foreach ($protos as $proto) {
-            list($funcinfo, $classinfo) = $this->getFunctionFromProto($ext, $options, $proto, $funcinfo, $classinfo);
+            list($funcinfo, $classinfo) = $this->getFunctionFromProto(
+                $ext,
+                $options,
+                $proto,
+                $funcinfo,
+                $classinfo
+            );
         }
-        list($header, $globals, $classdef, $methoddefs, $methoddecls) = $this->getClassDefinition($classinfo, $ext);
+        list($header, $globals, $classdef, $methoddefs, $methoddecls)
+            = $this->getClassDefinition($classinfo, $ext);
         foreach ($funcinfo as $function) {
             $funcdecl .= $function['headerdeclare'];
             $functions .= $function['definition'];
@@ -668,15 +885,16 @@ eof;
         }
 
         return array("\t/* __function_entries_here__ */\n" => $funcdefs,
-                     "/* {{{ extname_module_entry\n"       => $methods . $methoddefs .
-                                                              "/* {{{ extname_module_entry\n",
+                     "/* {{{ extname_module_entry\n"
+                        => $methods . $methoddefs .
+                            "/* {{{ extname_module_entry\n",
                     "/* __function_stubs_here__ */\n"      => $functions,
-                    "PHP_MINIT_FUNCTION(extname)\n{\n"     => "PHP_MINIT_FUNCTION(extname)\n{\n" .
-                                                              $classdef,
+                    "PHP_MINIT_FUNCTION(extname)\n{\n"
+                        => "PHP_MINIT_FUNCTION(extname)\n{\n" . $classdef,
                     "/* True global resources - no need for thread safety here */\n"
-                                                           => "/* True global resources - no " .
-                                                              "need for thread safety here */\n" .
-                                                              $arginfo . $globals,
+                        => "/* True global resources - no " .
+                            "need for thread safety here */\n" .
+                            $arginfo . $globals,
                     "/* __function_declarations_here__ */" => $header . $funcdecl,
                     '/* __header_here__ */'                => $this->header,
                     '/* __footer_here__ */'                => $this->footer,
@@ -685,7 +903,7 @@ eof;
                );
     }
 
-    function processFile($ext, $source, $dest, $replace)
+    public function processFile($ext, $source, $dest, $replace)
     {
         $filename = $this->skeleton . '/' . $source;
         if (!file_exists($filename)) {
@@ -693,10 +911,13 @@ eof;
         }
 
         $s = file_get_contents($filename);
-        file_put_contents($ext . '/' . $dest, str_replace(array_keys($replace), array_values($replace), $s));
+        file_put_contents(
+            $ext . '/' . $dest,
+            str_replace(array_keys($replace), array_values($replace), $s)
+        );
     }
 
-    function saveConfigM4($ext)
+    public function saveConfigM4($ext)
     {
         $filename = dirname($this->skeleton) . '/config.m4';
         if (!file_exists($filename)) {
@@ -704,11 +925,17 @@ eof;
         }
 
         $m4 = file_get_contents($filename);
-        file_put_contents($ext . '/config.m4', str_replace(array('@EXTNAME@', '@extname@'),
-                                                           array(strtoupper($ext), $ext), $m4));
+        file_put_contents(
+            $ext . '/config.m4',
+            str_replace(
+                array('@EXTNAME@', '@extname@'),
+                array(strtoupper($ext), $ext),
+                $m4
+            )
+        );
     }
 
-    function saveConfigW32($ext)
+    public function saveConfigW32($ext)
     {
         $filename = dirname($this->skeleton) . '/config.w32';
         if (!file_exists($filename)) {
@@ -716,24 +943,34 @@ eof;
         }
 
         $w32 = file_get_contents($filename);
-        file_put_contents($ext . '/config.w32', str_replace(array('@EXTNAME@', '@extname@'),
-                                                            array(strtoupper($ext), $ext), $w32));
+        file_put_contents(
+            $ext . '/config.w32',
+            str_replace(
+                array('@EXTNAME@', '@extname@'),
+                array(strtoupper($ext), $ext),
+                $w32
+            )
+        );
     }
 
-    function getClassDefinition($classinfo, $extension)
+    public function getClassDefinition($classinfo, $extension)
     {
         $decl = "\tzend_class_entry ce;\n";
         $methoddecls = $methoddefs = $globals = $header = '';
         foreach ($classinfo as $class => $methods) {
             $lowerclass = strtolower($class);
-            $header .= 'typedef struct _' . $extension . '_' . $lowerclass . " {\n} " .
-                       $extension . '_' . $lowerclass . ";\n";
+            $header .= 'typedef struct _' .
+                $extension . '_' . $lowerclass . " {\n} " .
+                $extension . '_' . $lowerclass . ";\n";
             $globals .= "PHP_" . strtoupper($extension) . "_API zend_class_entry *" .
                         $extension . "_ce_" . $class . ";\n";
-            $decl .= "\tINIT_CLASS_ENTRY(ce, \"" . $class . "\", " . $lowerclass . "_methods);\n\t" .
-                $extension . "_ce_" . $class . " = zend_register_internal_class_ex(&ce, " .
+            $decl .= "\tINIT_CLASS_ENTRY(ce, \"" .
+                $class . "\", " . $lowerclass . "_methods);\n\t" .
+                $extension . "_ce_" . $class .
+                " = zend_register_internal_class_ex(&ce, " .
                 "\n\t\t\tNULL, /* change this to the zend_class_entry * for the parent class, if any */\n\t\t\tNULL  TSRMLS_CC);\n";
-            $methoddefs .= "\nzend_function_entry " . $lowerclass . "_methods[] = {\n";
+            $methoddefs .= "\nzend_function_entry " .
+                $lowerclass . "_methods[] = {\n";
             foreach ($methods as $method) {
                 $methoddecls .= $method['forwarddecl'];
                 $methoddefs .= $method['declaration'];
@@ -744,18 +981,24 @@ eof;
         return array($header, $globals, $decl, $methoddefs, $methoddecls);
     }
 
-    function getFunctionFromProto($ext, $options, $proto, $funcinfo = array(), $classinfo = array())
-    {
+    public function getFunctionFromProto(
+        $ext,
+        $options,
+        $proto,
+        $funcinfo = array(),
+        $classinfo = array()
+    ) {
         $types = $resources = '';
         $argshort = '';
         $arglong = '';
         $hadoptional = false;
 
         if ($proto['class']) {
-            $arginfo = 'ZEND_BEGIN_ARG_INFO_EX(arginfo_' . $proto['class'] . '_' .
-                       $proto['function'] . ', 0, 0, ';
+            $arginfo = 'ZEND_BEGIN_ARG_INFO_EX(arginfo_' .
+                $proto['class'] . '_' . $proto['function'] . ', 0, 0, ';
         } else {
-            $arginfo = 'ZEND_BEGIN_ARG_INFO_EX(arginfo_' . $proto['function']. ', 0, 0, ';
+            $arginfo = 'ZEND_BEGIN_ARG_INFO_EX(arginfo_' .
+                $proto['function']. ', 0, 0, ';
         }
         $required = 0;
         $argopts = '';
@@ -777,94 +1020,111 @@ eof;
 
             if ($arg['type'] == "int" || $arg['type'] == "long") {
                 $types .= "\tlong " . $arg['name'] . ";\n";
-            } else if ($arg['type'] == "bool" || $arg['type'] == "boolean") {
+            } elseif ($arg['type'] == "bool" || $arg['type'] == "boolean") {
                 $types .= "\tzend_bool " . $arg['name'] . ";\n";
-            } else if ($arg['type'] == "double" || $arg['type'] == "float") {
+            } elseif ($arg['type'] == "double" || $arg['type'] == "float") {
                 $types .= "\tdouble " . $arg['name'] . ";\n";
-            } else if ($arg['type'] == "callback") {
+            } elseif ($arg['type'] == "callback") {
                 $types .= "\tzend_fcall_info " . $arg['name'] . ";\n";
-                $types .= "\tzend_fcall_info_cache " . $arg['name'] . "_cache;\n";
+                $types .= "\tzend_fcall_info_cache " .
+                    $arg['name'] . "_cache;\n";
                 $arglong .= ', &' . $arg['name'] . '_cache';
-            } else if ($arg['type'] == "class") {
+            } elseif ($arg['type'] == "class") {
                 $types .= "\tzend_class_entry *" . $arg['name'] . ";\n";
-            } else if ($arg['type'] == "string") {
+            } elseif ($arg['type'] == "string") {
                 $types .= "\tchar *" . $arg['name'] . " = NULL;\n";
                 $types .= "\tint " . $arg['name'] . "_len;\n";
                 $arglong .= ', &' . $arg['name'] . '_len';
-            } else if ($arg['type'] == "unicode") {
+            } elseif ($arg['type'] == "unicode") {
                 $types .= "\tUChar *" . $arg['name'] . " = NULL;\n";
                 $types .= "\tint " . $arg['name'] . "_len;\n";
                 $arglong .= ', &' . $arg['name'] . '_len';
-            } else if ($arg['type'] == "text") {
+            } elseif ($arg['type'] == "text") {
                 $types .= "\tzstr " . $arg['name'] . " = NULL;\n";
                 $types .= "\tint " . $arg['name'] . "_len;\n";
                 $types .= "\tzend_uchar " . $arg['name'] . "_type;\n";
                 $arglong .= ', &' . $arg['name'] . '_len';
                 $arglong .= ', &' . $arg['name'] . '_type';
-            } else if ($arg['type'] == "array" || $arg['type'] == "object" || $arg['type'] == "mixed" ||
-                       $arg['type'] == "array|object") {
+            } elseif ($arg['type'] == "array"
+                || $arg['type'] == "object"
+                || $arg['type'] == "mixed"
+                || $arg['type'] == "array|object"
+            ) {
                 $types .= "\tzval *" . $arg['name'] . " = NULL;\n";
-            } else if ($arg['type'] == "...") {
+            } elseif ($arg['type'] == "...") {
                 $types .= "\tzval ***" . $arg['name'] . " = NULL;\n";
                 $types .= "\tint " . $arg['name'] . "_num;\n";
                 $arglong .= ', &' . $arg['name'] . '_num';
-            } else if ($arg['type'] == "resource" || $arg['type'] == "handle") {
+            } elseif ($arg['type'] == "resource" || $arg['type'] == "handle") {
                 $types .= "\tzval *" . $arg['name'] . " = NULL;\n";
                 $resources .= "\tif (" . $arg['name'] . ") {\n" .
                     "\t\tZEND_FETCH_RESOURCE(???, ???, " .
-                    $arg['name'] . ", " . $arg['name'] . "_id, \"???\", ???_rsrc_id);\n\t}\n";
+                    $arg['name'] . ", " . $arg['name'] .
+                    "_id, \"???\", ???_rsrc_id);\n\t}\n";
                 $types .= "\tint " . $arg['name'] . "_id = -1;\n";
             }
         }
 
         if ($proto['class']) {
-            $types .= "\t" . $ext . '_' . strtolower($proto['class']) . " *" . $proto['class'] .
-                   "_obj = (" . $ext . '_' . strtolower($proto['class']) .
-                   "*)zend_object_store_get_object(getThis() TSRMLS_CC);\n";
+            $types .= "\t" . $ext . '_' . strtolower($proto['class']) . " *" .
+                $proto['class'] .
+                "_obj = (" . $ext . '_' . strtolower($proto['class']) .
+                "*)zend_object_store_get_object(getThis() TSRMLS_CC);\n";
         }
 
         $ret = array();
 
         $required = (string) $required;
-        $ret['arginfo'] = $arginfo . $required . ")\n" . $argopts . "ZEND_END_ARG_INFO()\n";
+        $ret['arginfo'] = $arginfo . $required . ")\n" .
+            $argopts . "ZEND_END_ARG_INFO()\n";
 
         if ($proto['class']) {
-            $vmap = array('public' => 'ZEND_ACC_PUBLIC',
-                          'protected' => 'ZEND_ACC_PROTECTED',
-                          'private' => 'ZEND_ACC_PRIVATE');
+            $vmap = array(
+                'public' => 'ZEND_ACC_PUBLIC',
+                'protected' => 'ZEND_ACC_PROTECTED',
+                'private' => 'ZEND_ACC_PRIVATE'
+            );
             $visibility = $vmap[$proto['visibility']];
             if ($proto['static']) {
                 $visibility .= '|ZEND_ACC_STATIC';
             }
             $ret['definition'] = '/* {{{ proto ' . $proto['proto'] . "*/\n" .
-                                 'PHP_METHOD(' . $proto['class'] . ', ' . $proto['function'] . ")\n{\n";
-            $ret['declaration'] = "\tPHP_ME(" . $proto['class'] . ', ' . $proto['function'] .
-                                  ",\targinfo_" . $proto['class'] . '_' . $proto['function'] .
-                                  ",\t" . $visibility . ")\n";
-            $ret['forwarddecl'] = 'PHP_METHOD(' . $proto['class'] . ', ' . $proto['function'] . ");\n";
+                'PHP_METHOD(' .
+                $proto['class'] . ', ' . $proto['function'] . ")\n{\n";
+            $ret['declaration'] = "\tPHP_ME(" .
+                $proto['class'] . ', ' . $proto['function'] .
+                ",\targinfo_" . $proto['class'] . '_' . $proto['function'] .
+                ",\t" . $visibility . ")\n";
+            $ret['forwarddecl'] = 'PHP_METHOD(' .
+                $proto['class'] . ', ' . $proto['function'] . ");\n";
 
         } else {
             $ret['definition'] = '/* {{{ proto ' . $proto['proto'] . "*/\n" .
-                                 'PHP_FUNCTION(' . $proto['function'] . ")\n{\n";
-            $ret['declaration'] = "\tPHP_FE(" . $proto['function'] . ",\targinfo_" . $proto['function'] . ")\n";
+                'PHP_FUNCTION(' . $proto['function'] . ")\n{\n";
+            $ret['declaration'] = "\tPHP_FE(" .
+                $proto['function'] . ",\targinfo_" . $proto['function'] . ")\n";
             $ret['headerdeclare'] = 'PHP_FUNCTION(' . $proto['function'] . ");\n";
         }
 
         if (!count($proto['args'])) {
-            $ret['definition'] .= "\tif (zend_parse_parameters_none() == FAILURE) {\n\t\treturn;\n\t}\n";
+            $ret['definition']
+                .= "\tif (zend_parse_parameters_none() == FAILURE) {\n\t\treturn;\n\t}\n";
         } else {
             $ret['definition'] .= $types;
-            $ret['definition'] .= "\tif (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, \"" .
-                                  $argshort . '"' . $arglong . ") == FAILURE) {\n\t\tRETURN_NULL();\n\t}\n" . $resources;
+            $ret['definition']
+                .= "\tif (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, \"" .
+                $argshort . '"' . $arglong .
+                ") == FAILURE) {\n\t\tRETURN_NULL();\n\t}\n" . $resources;
         }
         if (!$options['nohelp']) {
             if ($proto['class']) {
-                $ret['definition'] .= "\tphp_error(E_WARNING, \"" . $proto['class'] . '::' .
-                                      $proto['function'] .
-                                      ": not yet implemented\");\n";
+                $ret['definition'] .= "\tphp_error(E_WARNING, \"" .
+                    $proto['class'] . '::' . $proto['function'] .
+                    ": not yet implemented\");\n";
             } else {
-                $ret['definition'] .= "\tphp_error(E_WARNING, \"" . $proto['function'] .
-                                      ": not yet implemented\");\n";
+                $ret['definition'] .= "\tphp_error(E_WARNING, \"" .
+                    $proto['function'] .
+                    ": not yet implemented\");\n";
             }
         }
         $ret['definition'] .= "}\n/* }}} */\n\n";
@@ -877,7 +1137,7 @@ eof;
         return array($funcinfo, $classinfo);
     }
 
-    function parseProtos($protofile)
+    public function parseProtos($protofile)
     {
         $file = file($protofile);
         $protos = array();
@@ -890,7 +1150,7 @@ eof;
         return $protos;
     }
 
-    static function parseProto($proto)
+    public static function parseProto($proto)
     {
         static $map = array(
             'array' => 'a',
@@ -930,8 +1190,9 @@ eof;
                 }
             }
             if ($tried > 2) {
-                throw new \Pyrus\Developer\Creator\Exception('Invalid proto ' .
-                                                                   $proto);
+                throw new \Pyrus\Developer\Creator\Exception(
+                    'Invalid proto ' . $proto
+                );
             }
             $ret['returns'] = $info[0];
             $ret['function'] = $info[1];
@@ -944,7 +1205,10 @@ eof;
         $ret['proto'] = $proto;
         // parse arguments
         $len = strlen($proto);
-        $args = explode(',', substr(str_replace(array(']',')'), '', trim($proto)), $pos + 1));
+        $args = explode(
+            ',',
+            substr(str_replace(array(']',')'), '', trim($proto)), $pos + 1)
+        );
         $ret['args'] = array();
         foreach ($args as $index => $arg) {
             if (!trim($arg)) {
@@ -960,12 +1224,15 @@ eof;
             if ($index == 0) {
                 $ret['args'][$index]['optional'] = $arg[0][0] == '[';
             } else {
-                $ret['args'][$index]['optional'] = (strpos('[', $lastarg[1]) !== false) || isset($lastarg[2]);
+                $ret['args'][$index]['optional']
+                    = (strpos('[', $lastarg[1]) !== false) || isset($lastarg[2]);
             }
             $lastarg = $arg;
 
             $ret['args'][$index]['code'] = $map[$ret['args'][$index]['type']];
-            if ($ret['args'][$index]['code'] == '*' && !$ret['args'][$index]['optional']) {
+            if ($ret['args'][$index]['code'] == '*'
+                && !$ret['args'][$index]['optional']
+            ) {
                 $ret['args'][$index]['code'] = '+';
             }
         }

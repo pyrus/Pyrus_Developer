@@ -1,11 +1,28 @@
 <?php
+
+/**
+ * ~~summary~~
+ *
+ * ~~description~~
+ *
+ * PHP version 5.3
+ *
+ * @category Pyrus
+ * @package  Pyrus_Developer
+ * @author   Greg Beaver <greg@chiaraquartet.net>
+ * @license  http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * @version  GIT: $Id$
+ * @link     https://github.com/pyrus/Pyrus_Developer
+ */
+
 namespace Pyrus\Developer\PackageFile\PEAR2SVN;
+
 class Filter extends \FilterIterator
 {
     protected $ignore;
     protected $path;
     protected $role;
-    function __construct(array $ignore, $path, $it, $role)
+    public function __construct(array $ignore, $path, $it, $role)
     {
         $this->ignore = $ignore;
         $this->path = $path;
@@ -59,7 +76,7 @@ class Filter extends \FilterIterator
         return true;
     }
     
-    function filterTestsDir()
+    public function filterTestsDir()
     {
         if ($this->getInnerIterator()->current()->getBasename() == 'pear2coverage.db') {
             return false;

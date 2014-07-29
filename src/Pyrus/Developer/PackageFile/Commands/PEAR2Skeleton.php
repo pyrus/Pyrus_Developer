@@ -1,13 +1,29 @@
 <?php
+
+/**
+ * ~~summary~~
+ *
+ * ~~description~~
+ *
+ * PHP version 5.3
+ *
+ * @category Pyrus
+ * @package  Pyrus_Developer
+ * @author   Greg Beaver <greg@chiaraquartet.net>
+ * @license  http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * @version  GIT: $Id$
+ * @link     https://github.com/pyrus/Pyrus_Developer
+ */
+
 namespace Pyrus\Developer\PackageFile\Commands;
 
 /**
  * This class creates the package skeleton.
  *
- * @author Greg Beaver
- * @author Brett Bieber
- * @author Helgi
- * @author Till Klampaeckel
+ * @author Greg Beaver <greg@chiaraquartet.net>
+ * @author Brett Bieber <brett.bieber@gmail.com>
+ * @author Helgi <helgi@php.net>
+ * @author Till Klampaeckel <till@php.net>
  *
  * @see \Pyrus\Developer\PackageFile\Commands
  */
@@ -31,10 +47,14 @@ class PEAR2Skeleton
      * @see self::createReleaseFiles()
      */
     protected $releaseFiles = array(
-        'README'        => 'Package __PACKAGE__ summary.\n\n" . "Package detailed description here (found in README)',
-        'CREDITS'       => ";; put your info here\nYour Name [handle] <handle@php.net> (lead)",
-        'RELEASE-0.1.0' => 'Package  __PACKAGE__ release notes for version 0.1.0.',
-        'API-0.1.0'     => 'Package __PACKAGE__ API release notes for version 0.1.0.',
+        'README'
+            => 'Package __PACKAGE__ summary.\n\n" . "Package detailed description here (found in README)',
+        'CREDITS'
+            => ";; put your info here\nYour Name [handle] <handle@php.net> (lead)",
+        'RELEASE-0.1.0'
+            => 'Package  __PACKAGE__ release notes for version 0.1.0.',
+        'API-0.1.0'
+            => 'Package __PACKAGE__ API release notes for version 0.1.0.',
     );
 
     /**
@@ -53,9 +73,8 @@ class PEAR2Skeleton
      * @param array  $info
      * @param string $format
      *
-     * @return $this
-     * @throws \Pyrus\Developer\Creator\Exception When the path of the package does
-     *                                            not exist.
+     * @throws \Pyrus\Developer\Creator\Exception When the path of the package
+     *     does not exist.
      */
     public function __construct(array $info, $format = 'simple')
     {
@@ -95,7 +114,9 @@ class PEAR2Skeleton
         $extraSetup = file_get_contents($this->templatePath . '/extrasetup.php.tpl');
         file_put_contents($this->getExtraSetup(), $extraSetup);
 
-        $packageXmlSetup = file_get_contents($this->templatePath . '/packagexmlsetup.php.tpl');
+        $packageXmlSetup = file_get_contents(
+            $this->templatePath . '/packagexmlsetup.php.tpl'
+        );
         file_put_contents($this->getPackageXmlSetup(), $packageXmlSetup);
 
         $this->createStub();
@@ -142,15 +163,38 @@ class PEAR2Skeleton
     protected function createMainClass()
     {
         $mainClass = file($this->templatePath . '/Main.php.tpl');
-        $mainClass = str_replace('__MAIN_CLASS__', $this->info['mainClass'], $mainClass);
-        $mainClass = str_replace('__PACKAGE__', $this->info['package'], $mainClass);
-        $mainClass = str_replace('__YEAR__', date('Y'), $mainClass);
-        $mainClass = str_replace('__VCS__', $this->info['svn'], $mainClass);
-        $mainClass = str_replace('__MAIN_NAMESPACE__', $this->info['mainNamespace'], $mainClass);
+        $mainClass = str_replace(
+            '__MAIN_CLASS__',
+            $this->info['mainClass'],
+            $mainClass
+        );
+        $mainClass = str_replace(
+            '__PACKAGE__',
+            $this->info['package'],
+            $mainClass
+        );
+        $mainClass = str_replace(
+            '__YEAR__',
+            date('Y'),
+            $mainClass
+        );
+        $mainClass = str_replace(
+            '__VCS__',
+            $this->info['svn'],
+            $mainClass
+        );
+        $mainClass = str_replace(
+            '__MAIN_NAMESPACE__',
+            $this->info['mainNamespace'],
+            $mainClass
+        );
 
         mkdir('src/' . $this->info['mainPath'], 0777, true);
 
-        file_put_contents('src/' . $this->info['mainPath'] . '/Main.php', $mainClass);
+        file_put_contents(
+            'src/' . $this->info['mainPath'] . '/Main.php',
+            $mainClass
+        );
     }
 
     protected function createDirectories()
@@ -175,7 +219,11 @@ class PEAR2Skeleton
     protected function createReleaseFiles($packageName)
     {
         foreach ($this->releaseFiles as $fileName => $fileContent) {
-            $fileContent = str_replace('__PACKAGE__', $packageName, $fileContent);
+            $fileContent = str_replace(
+                '__PACKAGE__',
+                $packageName,
+                $fileContent
+            );
             $status = @file_put_contents($fileName, $fileContent);
             if ($status === false) {
                 throw new \Pyrus\Developer\Creator\Exception(
@@ -208,10 +256,14 @@ class PEAR2Skeleton
      */
     protected function isInfoValid($info)
     {
-        if (!isset($info['mainClass']) || empty($info['mainClass'])) {
+        if (!isset($info['mainClass'])
+            || empty($info['mainClass'])
+        ) {
             return false;
         }
-        if (!isset($info['package']) || empty($info['package'])) {
+        if (!isset($info['package'])
+            || empty($info['package'])
+        ) {
             return false;
         }
         if (!isset($info['svn'])) {
@@ -220,7 +272,9 @@ class PEAR2Skeleton
         if (!isset($info['mainPath'])) {
             return false;
         }
-        if (!isset($info['mainNamespace']) || empty($info['mainNamespace'])) {
+        if (!isset($info['mainNamespace'])
+            || empty($info['mainNamespace'])
+        ) {
             return false;
         }
         return true;

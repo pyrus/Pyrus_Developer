@@ -1,21 +1,39 @@
 <?php
+
+/**
+ * ~~summary~~
+ *
+ * ~~description~~
+ *
+ * PHP version 5.3
+ *
+ * @category Pyrus
+ * @package  Pyrus_Developer
+ * @author   Greg Beaver <greg@chiaraquartet.net>
+ * @license  http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * @version  GIT: $Id$
+ * @link     https://github.com/pyrus/Pyrus_Developer
+ */
+
 namespace Pyrus\Developer\CoverageAnalyzer\Web;
+
 use Pyrus\Developer\CoverageAnalyzer\SourceFile;
 
-class Controller {
+class Controller
+{
     protected $view;
     protected $sqlite;
     public $actionable;
     public static $rooturl;
     public $options = array('view' => 'toc');
 
-    function __construct($options = array())
+    public function __construct($options = array())
     {
         $this->options    = $options + $this->options;
         $this->actionable = $this->route();
     }
 
-    function route()
+    public function route()
     {
         if (isset($this->options['restart'])) {
             unset($_SESSION['fullpath']);
@@ -23,7 +41,8 @@ class Controller {
         }
 
         if (!isset($this->options['setdatabase'])
-            && !isset($_SESSION['fullpath'])) {
+            && !isset($_SESSION['fullpath'])
+        ) {
             return new SelectDatabase;
         }
 
@@ -41,13 +60,28 @@ class Controller {
 
         if (isset($this->options['file'])) {
             if (isset($this->options['test'])) {
-                $source = new SourceFile\PerTest($this->options['file'], $this->sqlite, $this->sqlite->testpath, $this->sqlite->codepath, $this->options['test']);
+                $source = new SourceFile\PerTest(
+                    $this->options['file'],
+                    $this->sqlite,
+                    $this->sqlite->testpath,
+                    $this->sqlite->codepath,
+                    $this->options['test']
+                );
             } else {
-                $source = new SourceFile($this->options['file'], $this->sqlite, $this->sqlite->testpath, $this->sqlite->codepath);
+                $source = new SourceFile(
+                    $this->options['file'],
+                    $this->sqlite,
+                    $this->sqlite->testpath,
+                    $this->sqlite->codepath
+                );
             }
 
             if (isset($this->options['line'])) {
-                return new LineSummary($source, $this->options['line'], $this->sqlite->testpath);
+                return new LineSummary(
+                    $source,
+                    $this->options['line'],
+                    $this->sqlite->testpath
+                );
             }
 
             return $source;
@@ -62,7 +96,11 @@ class Controller {
 
         if (isset($this->options['file'])) {
             if (isset($this->options['line'])) {
-                return $this->view->fileLineTOC($this->sqlite, $this->options['file'], $this->options['line']);
+                return $this->view->fileLineTOC(
+                    $this->sqlite,
+                    $this->options['file'],
+                    $this->options['line']
+                );
             }
             return $this->view->fileCoverage($this->sqlite, $this->options['file']);
         }
@@ -70,12 +108,12 @@ class Controller {
         return new Summary($this->sqlite);
     }
 
-    function getRootLink()
+    public function getRootLink()
     {
         return self::$rooturl;
     }
 
-    function getFileLink($file, $test = null, $line = null)
+    public function getFileLink($file, $test = null, $line = null)
     {
         if ($line) {
             return self::$rooturl . '?file=' . urlencode($file) . '&line=' . $line;
@@ -86,7 +124,7 @@ class Controller {
         return self::$rooturl . '?file=' . urlencode($file);
     }
 
-    function getTOCLink($test = false)
+    public function getTOCLink($test = false)
     {
         if ($test === true) {
             return self::$rooturl . '?test=TOC';
@@ -97,14 +135,13 @@ class Controller {
         return self::$rooturl;
     }
 
-    function getLogoutLink()
+    public function getLogoutLink()
     {
         return $this->rooturl . '?restart=1';
     }
 
-    function getDatabase()
+    public function getDatabase()
     {
         $this->sqlite = $this->view->getDatabase();
     }
 }
-

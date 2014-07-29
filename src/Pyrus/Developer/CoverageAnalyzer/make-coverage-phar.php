@@ -4,7 +4,8 @@ if (!Phar::canWrite()) {
 }
 
 $phar = new Phar(__DIR__ . '/pear2coverage.phar.php');
-$phar->setStub('<?php
+$phar->setStub(
+    '<?php
 function __autoload($class)
 {
     $class = str_replace("Pyrus\\Developer\\CoverageAnalyzer\\\", "", $class);
@@ -14,11 +15,14 @@ function __autoload($class)
 Phar::webPhar("pear2coverage.phar.php");
 echo "This phar is a web application, run within your web browser to use\n";
 exit -1;
-__HALT_COMPILER();');
+__HALT_COMPILER();'
+);
 
 $path = __DIR__ . '/../../../../../../pear2/PEAR2_Templates_Savant/src/';
-$iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path),
-    \RecursiveIteratorIterator::SELF_FIRST);
+$iterator = new RecursiveIteratorIterator(
+    new RecursiveDirectoryIterator($path),
+    RecursiveIteratorIterator::SELF_FIRST
+);
 while ($iterator->valid()) {
     if ($iterator->isDot()) {
         $iterator->next();
@@ -44,9 +48,13 @@ $phar['SourceFile.php']         = file_get_contents(__DIR__ . '/SourceFile.php')
 $phar['Aggregator.php']         = file_get_contents(__DIR__ . '/Aggregator.php');
 $phar['Exception.php']          = file_get_contents(__DIR__ . '/Exception.php');
 $phar['Sqlite.php']             = file_get_contents(__DIR__ . '/Sqlite.php');
-$phar['SourceFile/PerTest.php'] = file_get_contents(__DIR__ . '/SourceFile/PerTest.php');
+$phar['SourceFile/PerTest.php'] = file_get_contents(
+    __DIR__ . '/SourceFile/PerTest.php'
+);
 
-$phar['cover.css'] = file_get_contents(__DIR__ . '/../../../../www/CoverageAnalyzer/cover.css');
+$phar['cover.css'] = file_get_contents(
+    __DIR__ . '/../../../../www/CoverageAnalyzer/cover.css'
+);
 $phar['index.php'] = '<?php
 namespace Pyrus\Developer\CoverageAnalyzer {
     ini_set("display_errors", true);
@@ -60,8 +68,9 @@ namespace Pyrus\Developer\CoverageAnalyzer {
 
     $savant = new \PEAR2\Templates\Savant\Main();
     $savant->setClassToTemplateMapper(new Web\ClassToTemplateMapper);
-    $savant->setTemplatePath(__DIR__ . "/../../../../www/CoverageAnalyzer/templates");
+    $savant->setTemplatePath(
+        __DIR__ . "/../../../../www/CoverageAnalyzer/templates"
+    );
     $savant->setEscape("htmlentities");
     echo $savant->render($controller);
 }';
-?>

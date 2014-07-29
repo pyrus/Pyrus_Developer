@@ -1,5 +1,22 @@
 <?php
+
+/**
+ * ~~summary~~
+ *
+ * ~~description~~
+ *
+ * PHP version 5.3
+ *
+ * @category Pyrus
+ * @package  Pyrus_Developer
+ * @author   Greg Beaver <greg@chiaraquartet.net>
+ * @license  http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * @version  GIT: $Id$
+ * @link     https://github.com/pyrus/Pyrus_Developer
+ */
+
 namespace Pyrus\Developer\CoverageAnalyzer;
+
 class SourceFile
 {
     protected $source;
@@ -10,8 +27,13 @@ class SourceFile
     protected $testpath;
     protected $linelinks;
 
-    function __construct($path, Aggregator $agg, $testpath, $sourcepath, $coverage = true)
-    {
+    public function __construct(
+        $path,
+        Aggregator $agg,
+        $testpath,
+        $sourcepath,
+        $coverage = true
+    ) {
         $this->source = file($path);
         $this->path = $path;
         $this->sourcepath = $sourcepath;
@@ -26,22 +48,22 @@ class SourceFile
         }
     }
 
-    function setCoverage()
+    public function setCoverage()
     {
         $this->coverage = $this->aggregator->retrieveCoverage($this->path);
     }
 
-    function aggregator()
+    public function aggregator()
     {
         return $this->aggregator;
     }
 
-    function testpath()
+    public function testpath()
     {
         return $this->testpath;
     }
 
-    function render(AbstractSourceDecorator $decorator = null)
+    public function render(AbstractSourceDecorator $decorator = null)
     {
         if ($decorator === null) {
             $decorator = new DefaultSourceDecorator('.');
@@ -49,7 +71,7 @@ class SourceFile
         return $decorator->render($this);
     }
 
-    function coverage($line = null)
+    public function coverage($line = null)
     {
         if ($line === null) {
             return $this->coverage;
@@ -62,7 +84,7 @@ class SourceFile
         return $this->coverage[$line];
     }
 
-    function coveragePercentage()
+    public function coveragePercentage()
     {
         return $this->aggregator->coveragePercentage($this->path);
     }
@@ -72,22 +94,22 @@ class SourceFile
      *
      * @return array(covered, total, dead)
      */
-    function coverageInfo()
+    public function coverageInfo()
     {
         return $this->aggregator->coverageInfo($this->path);
     }
 
-    function name()
+    public function name()
     {
         return $this->path;
     }
 
-    function shortName()
+    public function shortName()
     {
         return str_replace($this->sourcepath . DIRECTORY_SEPARATOR, '', $this->path);
     }
 
-    function source()
+    public function source()
     {
         $cov = $this->coverage();
         if (empty($cov)) {
@@ -102,7 +124,11 @@ class SourceFile
         if (count($this->source) < $endLine) {
             // Add extra new line if required since we use <pre> to format
             $secondLast = $endLine - 1;
-            $this->source[$secondLast] = str_replace("\r", '', $this->source[$secondLast]);
+            $this->source[$secondLast] = str_replace(
+                "\r",
+                '',
+                $this->source[$secondLast]
+            );
             $len = strlen($this->source[$secondLast]) - 1;
             if (substr($this->source[$secondLast], $len) != "\n") {
                 $this->source[$secondLast] .= "\n";
@@ -114,13 +140,13 @@ class SourceFile
         return $this->source;
     }
 
-    function coveredLines()
+    public function coveredLines()
     {
         $info = $this->aggregator->coverageInfo($this->path);
         return $info[0];
     }
 
-    function getLineLinks($line)
+    public function getLineLinks($line)
     {
         if (!isset($this->linelinks)) {
             $this->linelinks = $this->aggregator->retrieveLineLinks($this->path);

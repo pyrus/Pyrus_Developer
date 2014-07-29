@@ -1,5 +1,25 @@
 <?php
-namespace Pyrus\Developer\CoverageAnalyzer {
+
+/**
+ * ~~summary~~
+ *
+ * ~~description~~
+ *
+ * PHP version 5.3
+ *
+ * @category Pyrus
+ * @package  Pyrus_Developer
+ * @author   Greg Beaver <greg@chiaraquartet.net>
+ * @license  http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * @version  GIT: $Id$
+ * @link     https://github.com/pyrus/Pyrus_Developer
+ */
+
+namespace Pyrus\Developer\CoverageAnalyzer;
+
+use Pyrus\Developer\CoverageAnalyzer\SourceFile\PerTest;
+use XMLWriter;
+
 /**
  * Takes a source file and outputs HTML source highlighting showing the
  * number of hits on each line, highlights un-executed lines in red
@@ -11,7 +31,7 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
     protected $sourcePath;
     protected $source;
 
-    function __construct($savePath, $testPath, $sourcePath)
+    public function __construct($savePath, $testPath, $sourcePath)
     {
         if (!$savePath || !file_exists($savePath) || !is_dir($savePath)) {
             throw new Exception('Invalid save path for default renderer');
@@ -19,106 +39,157 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
         $this->testPath = $testPath;
         $this->sourcePath = $sourcePath;
         $this->savePath = realpath($savePath);
-        file_put_contents($this->savePath . '/cover.css', '.ln {background-color:yellow;}
+        file_put_contents(
+            $this->savePath . '/cover.css',
+            '.ln {background-color:yellow;}
 .cv {background-color:#CAD7FE;}
 .nc {background-color:red;}
 .bad {background-color:red;white-space:pre;font-family:courier;}
 .ok {background-color:yellow;white-space:pre;font-family:courier;}
 .good {background-color:green;white-space:pre;font-family:courier;}
-.dead {background-color:orange;white-space:pre;font-family:courier;}');
+.dead {background-color:orange;white-space:pre;font-family:courier;}'
+        );
     }
 
-    function manglePath($path, $istest = false)
+    public function manglePath($path, $istest = false)
     {
         return $this->savePath . '/' . $this->mangleFile($path, $istest);
     }
 
-    function mangleFile($path, $istest = false)
+    public function mangleFile($path, $istest = false)
     {
         $path = substr($path, strlen($this->sourcePath) + 1);
         if ($istest) {
-            $istest = str_replace($this->testPath . DIRECTORY_SEPARATOR, '', $istest);
-            return 'cov-test-' . str_replace(array('/', '\\'), array('@','@'), $istest) . '-' .
-                    str_replace(array('/', '\\'), array('@','@'), $path) . '.html';
+            $istest = str_replace(
+                $this->testPath . DIRECTORY_SEPARATOR,
+                '',
+                $istest
+            );
+            return 'cov-test-' .
+                str_replace(array('/', '\\'), array('@','@'), $istest) . '-' .
+                str_replace(array('/', '\\'), array('@','@'), $path) . '.html';
         }
-        return 'cov-' . str_replace(array('/', '\\'), array('@','@'), $path) . '.html';
+        return 'cov-' .
+            str_replace(array('/', '\\'), array('@','@'), $path) .
+            '.html';
     }
 
-    function getLinePath($name, $line)
+    public function getLinePath($name, $line)
     {
         return $this->savePath . '/' . $this->getLineLink($name, $line);
     }
 
-    function mangleTestFile($path)
+    public function mangleTestFile($path)
     {
         $path = substr($path, strlen($this->testPath));
-        return 'test-' . str_replace(array('/', '\\'), array('@','@'), $path) . '.html';
+        return 'test-' .
+            str_replace(array('/', '\\'), array('@','@'), $path) .
+            '.html';
     }
 
-    function mangleTestPath($path)
+    public function mangleTestPath($path)
     {
         return $this->savePath . '/' . $this->mangleTestFile($path);
     }
 
-    function getLineLink($name, $line)
+    public function getLineLink($name, $line)
     {
         return 'line-' . $line . '-' . $this->mangleFile($name);
     }
 
-    function renderLineSummary($name, $line, $testpath, $tests)
+    public function renderLineSummary($name, $line, $testpath, $tests)
     {
-        $output = new \XMLWriter;
+        $output = new XMLWriter;
         if (!$output->openUri($this->getLinePath($name, $line))) {
-            throw new Exception('Cannot render ' . $name . ' line ' . $line . ', opening XML failed');
+            throw new Exception(
+                'Cannot render ' . $name .
+                ' line ' . $line . ', opening XML failed'
+            );
         }
         $output->setIndentString(' ');
         $output->setIndent(true);
         $output->startElement('html');
-        $output->startElement('head');
-        $output->writeElement('title', 'Tests covering line ' . $line . ' of ' . $name);
-        $output->startElement('link');
-        $output->writeAttribute('href', 'cover.css');
-        $output->writeAttribute('rel', 'stylesheet');
-        $output->writeAttribute('type', 'text/css');
-        $output->endElement();
-        $output->endElement();
-        $output->startElement('body');
-        $output->writeElement('h2', 'Tests covering line ' . $line . ' of ' . $name);
-        $output->startElement('p');
-        $output->startElement('a');
-        $output->writeAttribute('href', 'index.html');
-        $output->text('Aggregate Code Coverage for all tests');
-        $output->endElement();
-        $output->endElement();
-        $output->startElement('p');
-        $output->startElement('a');
-        $output->writeAttribute('href', $this->mangleFile($name));
-        $output->text('File ' . $name . ' code coverage');
-        $output->endElement();
-        $output->endElement();
-        $output->startElement('ul');
-        foreach ($tests as $testfile) {
-            $output->startElement('li');
-            $output->startElement('a');
-            $output->writeAttribute('href', $this->mangleTestFile($testfile));
-            $output->text(str_replace($testpath . '/', '', $testfile));
+        {
+            $output->startElement('head');
+            {
+                $output->writeElement(
+                    'title',
+                    'Tests covering line ' . $line . ' of ' . $name
+                );
+                $output->startElement('link');
+                $output->writeAttribute('href', 'cover.css');
+                $output->writeAttribute('rel', 'stylesheet');
+                $output->writeAttribute('type', 'text/css');
+                $output->endElement();
+            }
             $output->endElement();
+            $output->startElement('body');
+            {
+                $output->writeElement(
+                    'h2',
+                    'Tests covering line ' . $line . ' of ' . $name
+                );
+                $output->startElement('p');
+                {
+                    $output->startElement('a');
+                    $output->writeAttribute('href', 'index.html');
+                    {
+                        $output->text('Aggregate Code Coverage for all tests');
+                    }
+                    $output->endElement();
+                }
+                $output->endElement();
+
+                $output->startElement('p');
+                {
+                    $output->startElement('a');
+                    $output->writeAttribute('href', $this->mangleFile($name));
+                    {
+                        $output->text('File ' . $name . ' code coverage');
+                    }
+                    $output->endElement();
+                }
+                $output->endElement();
+
+                $output->startElement('ul');
+        foreach ($tests as $testfile) {
+                    $output->startElement('li');
+                    {
+                        $output->startElement('a');
+                        $output->writeAttribute(
+                            'href',
+                            $this->mangleTestFile($testfile)
+                        );
+                        {
+                            $output->text(
+                                str_replace($testpath . '/', '', $testfile)
+                            );
+                        }
+                        $output->endElement();
+                    }
+                    $output->endElement();
+        }
+                $output->endElement();
+            }
             $output->endElement();
         }
-        $output->endElement();
-        $output->endElement();
         $output->endDocument();
     }
 
     /**
-     * @param Pyrus\Developer\CodeCoverage\SourceFile $source
-     * @param string $istest path to test file this is covering, or false for aggregate
+     * @param SourceFile $source 
+     * @param string     $istest path to test file this is covering,
+     *     or false for aggregate
+     * 
+     * @return void
      */
-    function render(SourceFile $source, $istest = false)
+    public function render(SourceFile $source, $istest = false)
     {
-        $output = new \XMLWriter;
+        $output = new XMLWriter;
         if (!$output->openUri($this->manglePath($source->name(), $istest))) {
-            throw new Exception('Cannot render ' . $source->name() . ', opening XML failed');
+            throw new Exception(
+                'Cannot render ' . $source->name() . ', opening XML failed'
+            );
         }
         $output->setIndent(false);
         $output->startElement('html');
@@ -126,9 +197,15 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
         $output->startElement('head');
         $output->text("\n  ");
         if ($istest) {
-            $output->writeElement('title', 'Code Coverage for ' . $source->shortName() . ' in ' . $istest);
+            $output->writeElement(
+                'title',
+                'Code Coverage for ' . $source->shortName() . ' in ' . $istest
+            );
         } else {
-            $output->writeElement('title', 'Code Coverage for ' . $source->shortName());
+            $output->writeElement(
+                'title',
+                'Code Coverage for ' . $source->shortName()
+            );
         }
         $output->text("\n  ");
         $output->startElement('link');
@@ -142,12 +219,21 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
         $output->startElement('body');
         $output->text("\n ");
         if ($istest) {
-            $output->writeElement('h2', 'Code Coverage for ' . $source->shortName() . ' in ' . $istest);
+            $output->writeElement(
+                'h2',
+                'Code Coverage for ' . $source->shortName() . ' in ' . $istest
+            );
         } else {
-            $output->writeElement('h2', 'Code Coverage for ' . $source->shortName());
+            $output->writeElement(
+                'h2',
+                'Code Coverage for ' . $source->shortName()
+            );
         }
         $output->text("\n ");
-        $output->writeElement('h3', 'Coverage: ' . $source->coveragePercentage() . '%');
+        $output->writeElement(
+            'h3',
+            'Coverage: ' . $source->coveragePercentage() . '%'
+        );
         $output->text("\n ");
         $output->startElement('p');
         $output->startElement('a');
@@ -177,13 +263,20 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
                 $output->writeAttribute('class', 'cv');
                 if (!$istest) {
                     $output->startElement('a');
-                    $output->writeAttribute('href', $this->getLineLink($source->name(), $num));
+                    $output->writeAttribute(
+                        'href',
+                        $this->getLineLink($source->name(), $num)
+                    );
                 }
                 $output->text(str_pad($coverage, 10, ' ', STR_PAD_LEFT) . ' ');
                 if (!$istest) {
                     $output->endElement();
-                    $this->renderLineSummary($source->name(), $num, $source->testpath(),
-                                             $source->getLineLinks($num));
+                    $this->renderLineSummary(
+                        $source->name(),
+                        $num,
+                        $source->testpath(),
+                        $source->getLineLinks($num)
+                    );
                 }
             }
 
@@ -198,16 +291,33 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
         $output->endDocument();
     }
 
-    function renderSummary(Aggregator $agg, array $results, $basePath, $istest = false, $total = 1, $covered = 1, $dead = 1)
-    {
-        $output = new \XMLWriter;
+    public function renderSummary(
+        Aggregator $agg,
+        array $results,
+        $basePath,
+        $istest = false,
+        $total = 1,
+        $covered = 1,
+        $dead = 1
+    ) {
+        $output = new XMLWriter;
         if ($istest) {
-            if (!$output->openUri($this->savePath . '/index-' . str_replace($istest, '/', '@') . '.html')) {
-                throw new Exception('Cannot render test  ' . $istest . ' summary, opening XML failed');
+            if (!$output->openUri(
+                $this->savePath .
+                '/index-' . str_replace($istest, '/', '@') . '.html'
+            )
+            ) {
+                throw new Exception(
+                    'Cannot render test  ' .
+                    $istest .
+                    ' summary, opening XML failed'
+                );
             }
         } else {
             if (!$output->openUri($this->savePath . '/index.html')) {
-                throw new Exception('Cannot render test summary, opening XML failed');
+                throw new Exception(
+                    'Cannot render test summary, opening XML failed'
+                );
             }
         }
         $output->setIndentString(' ');
@@ -215,7 +325,10 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
         $output->startElement('html');
         $output->startElement('head');
         if ($istest) {
-            $output->writeElement('title', 'Code Coverage Summary [' . $istest . ']');
+            $output->writeElement(
+                'title',
+                'Code Coverage Summary [' . $istest . ']'
+            );
         } else {
             $output->writeElement('title', 'Code Coverage Summary');
         }
@@ -227,10 +340,18 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
         $output->endElement();
         $output->startElement('body');
         if ($istest) {
-            $output->writeElement('h2', 'Code Coverage Files for test ' . $istest);
+            $output->writeElement(
+                'h2',
+                'Code Coverage Files for test ' . $istest
+            );
         } else {
             $output->writeElement('h2', 'Code Coverage Files for ' . $basePath);
-            $output->writeElement('h3', 'Total lines: ' . $total . ', covered lines: ' . $covered . ', dead lines: ' . $dead);
+            $output->writeElement(
+                'h3',
+                'Total lines: ' . $total .
+                ', covered lines: ' . $covered .
+                ', dead lines: ' . $dead
+            );
             $percent = 0;
             if ($total > 0) {
                 $percent = round(($covered / $total) * 100);
@@ -256,7 +377,12 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
         echo "[Step 1 of 2] Rendering files\n";
         foreach ($results as $i => $name) {
             echo '(' . ($i+1) . ' of ' . count($results) . ') ' . $name . "\n";
-            $source = new SourceFile($name, $agg, $this->testPath, $this->sourcePath);
+            $source = new SourceFile(
+                $name,
+                $agg,
+                $this->testPath,
+                $this->sourcePath
+            );
             $output->startElement('li');
             $percent = $source->coveragePercentage();
             $output->startElement('div');
@@ -267,7 +393,9 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
             } else {
                 $output->writeAttribute('class', 'good');
             }
-            $output->text(' Coverage: ' . str_pad($percent . '%', 4, ' ', STR_PAD_LEFT));
+            $output->text(
+                ' Coverage: ' . str_pad($percent . '%', 4, ' ', STR_PAD_LEFT)
+            );
             $output->endElement();
             $output->startElement('a');
             $output->writeAttribute('href', $this->mangleFile($name, $istest));
@@ -282,11 +410,13 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
         $output->endDocument();
     }
 
-    function renderTestSummary(Aggregator $agg, $testpath)
+    public function renderTestSummary(Aggregator $agg, $testpath)
     {
-        $output = new \XMLWriter;
+        $output = new XMLWriter;
         if (!$output->openUri($this->savePath . '/index-test.html')) {
-                throw new Exception('Cannot render tests summary, opening XML failed');
+                throw new Exception(
+                    'Cannot render tests summary, opening XML failed'
+                );
         }
         $output->setIndentString(' ');
         $output->setIndent(true);
@@ -300,7 +430,10 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
         $output->endElement();
         $output->endElement();
         $output->startElement('body');
-        $output->writeElement('h2', 'Tests Executed, click for code coverage summary');
+        $output->writeElement(
+            'h2',
+            'Tests Executed, click for code coverage summary'
+        );
         $output->startElement('p');
         $output->startElement('a');
         $output->writeAttribute('href', 'index.html');
@@ -321,7 +454,7 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
         $output->endDocument();
     }
 
-    function renderTestCoverage(Aggregator $agg, $testpath, $basePath)
+    public function renderTestCoverage(Aggregator $agg, $testpath, $basePath)
     {
         $this->renderTestSummary($agg, $testpath);
         $testpaths = $agg->retrieveTestPaths();
@@ -329,15 +462,22 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
         foreach ($testpaths as $i => $test) {
             echo '(', $i+1, ' of ', count($testpaths) . ') ', $test;
             $reltest = str_replace($testpath . '/', '', $test);
-            $output = new \XMLWriter;
+            $output = new XMLWriter;
             if (!$output->openUri($this->mangleTestPath($test))) {
-                throw new Exception('Cannot render test ' . $reltest . ' coverage, opening XML failed');
+                throw new Exception(
+                    'Cannot render test ' .
+                    $reltest .
+                    ' coverage, opening XML failed'
+                );
             }
             $output->setIndentString(' ');
             $output->setIndent(true);
             $output->startElement('html');
             $output->startElement('head');
-            $output->writeElement('title', 'Code Coverage Summary for test ' . $reltest);
+            $output->writeElement(
+                'title',
+                'Code Coverage Summary for test ' . $reltest
+            );
             $output->startElement('link');
             $output->writeAttribute('href', 'cover.css');
             $output->writeAttribute('rel', 'stylesheet');
@@ -350,7 +490,7 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
             $paths = $agg->retrievePathsForTest($test);
             foreach ($paths as $name) {
                 echo '.';
-                $source = new SourceFile\PerTest($name, $agg, $testpath, $basePath, $test);
+                $source = new PerTest($name, $agg, $testpath, $basePath, $test);
                 $this->render($source, $reltest);
                 $output->startElement('li');
                 $percent = $source->coveragePercentage();
@@ -362,10 +502,21 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
                 } else {
                     $output->writeAttribute('class', 'good');
                 }
-                $output->text(' Coverage: ' . str_pad($source->coveragePercentage() . '%', 4, ' ', STR_PAD_LEFT));
+                $output->text(
+                    ' Coverage: ' .
+                    str_pad(
+                        $source->coveragePercentage() . '%',
+                        4,
+                        ' ',
+                        STR_PAD_LEFT
+                    )
+                );
                 $output->endElement();
                 $output->startElement('a');
-                $output->writeAttribute('href', $this->mangleFile($name, $reltest));
+                $output->writeAttribute(
+                    'href',
+                    $this->mangleFile($name, $reltest)
+                );
                 $output->text($source->shortName());
                 $output->endElement();
                 $output->endElement();
@@ -378,5 +529,3 @@ class DefaultSourceDecorator extends AbstractSourceDecorator
         echo "done\n";
     }
 }
-}
-?>
