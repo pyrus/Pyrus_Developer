@@ -1,6 +1,24 @@
 <?php
-namespace Pyrus\Developer\CoverageAnalyzer\Web {
+
+/**
+ * ~~summary~~
+ *
+ * ~~description~~
+ *
+ * PHP version 5.3
+ *
+ * @category Pyrus
+ * @package  Pyrus_Developer
+ * @author   Greg Beaver <greg@chiaraquartet.net>
+ * @license  http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * @version  GIT: $Id$
+ * @link     https://github.com/pyrus/Pyrus_Developer
+ */
+
+namespace Pyrus\Developer\CoverageAnalyzer\Web;
+
 use Pyrus\Developer\CoverageAnalyzer;
+
 class Aggregator extends CoverageAnalyzer\Aggregator
 {
     public $codepath;
@@ -13,62 +31,60 @@ class Aggregator extends CoverageAnalyzer\Aggregator
      * @var string $testpath Location of .phpt files
      * @var string $codepath Location of code whose coverage we are testing
      */
-    function __construct($db = ':memory:')
+    public function __construct($db = ':memory:')
     {
         $this->sqlite = new CoverageAnalyzer\Sqlite($db);
         $this->codepath = $this->sqlite->codepath;
         $this->testpath = $this->sqlite->testpath;
     }
 
-    function retrieveLineLinks($file)
+    public function retrieveLineLinks($file)
     {
         return $this->sqlite->retrieveLineLinks($file);
     }
 
-    function retrievePaths()
+    public function retrievePaths()
     {
         return $this->sqlite->retrievePaths();
     }
 
-    function retrievePathsForTest($test)
+    public function retrievePathsForTest($test)
     {
         return $this->sqlite->retrievePathsForTest($test);
     }
 
-    function retrieveTestPaths()
+    public function retrieveTestPaths()
     {
         return $this->sqlite->retrieveTestPaths();
     }
 
-    function coveragePercentage($sourcefile, $testfile = null)
+    public function coveragePercentage($sourcefile, $testfile = null)
     {
         return $this->sqlite->coveragePercentage($sourcefile, $testfile);
     }
 
-    function coverageInfo($path)
+    public function coverageInfo($path)
     {
         return $this->sqlite->retrievePathCoverage($path);
     }
 
-    function coverageInfoByTest($path, $test)
+    public function coverageInfoByTest($path, $test)
     {
         return $this->sqlite->retrievePathCoverageByTest($path, $test);
     }
 
-    function retrieveCoverage($path)
+    public function retrieveCoverage($path)
     {
         return $this->sqlite->retrieveCoverage($path);
     }
 
-    function retrieveProjectCoverage()
+    public function retrieveProjectCoverage()
     {
         return $this->sqlite->retrieveProjectCoverage();
     }
 
-    function retrieveCoverageByTest($path, $test)
+    public function retrieveCoverageByTest($path, $test)
     {
         return $this->sqlite->retrieveCoverageByTest($path, $test);
     }
 }
-}
-?>

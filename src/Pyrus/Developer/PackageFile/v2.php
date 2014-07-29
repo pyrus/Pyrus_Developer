@@ -1,25 +1,46 @@
 <?php
+
+/**
+ * ~~summary~~
+ *
+ * ~~description~~
+ *
+ * PHP version 5.3
+ *
+ * @category Pyrus
+ * @package  Pyrus_Developer
+ * @author   Greg Beaver <greg@chiaraquartet.net>
+ * @license  http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * @version  GIT: $Id$
+ * @link     https://github.com/pyrus/Pyrus_Developer
+ */
+
 namespace Pyrus\Developer\PackageFile;
+
 class v2 extends \Pyrus\PackageFile\v2
 {
-    function toArray($forpackaging = false)
+    public function toArray($forpackaging = false)
     {
         if ($forpackaging) {
             return parent::toArray($forpackaging);
         }
         $a = parent::toArray();
         if (isset($a['package']['contents']['dir'])) {
-            $a['package']['contents']['dir'] =
-                $this->_recursiveXmlFilelist();
+            $a['package']['contents']['dir'] = $this->_recursiveXmlFilelist();
         }
         return $a;
     }
 
-    function _recursiveXmlFilelist()
+    private function _recursiveXmlFilelist()
     {
         $dirs = array();
         foreach ($this->filelist as $file => $attribs) {
-            $dirs = $this->_addDir($dirs, explode('/', dirname($file)), $file, $attribs);
+            $dirs = $this->_addDir(
+                $dirs,
+                explode('/', dirname($file)),
+                $file,
+                $attribs
+            );
         }
         $dirs = $this->_formatDir($dirs);
         $dirs = $this->_deFormat($dirs);
@@ -36,7 +57,7 @@ class v2 extends \Pyrus\PackageFile\v2
         return $dirs;
     }
 
-    function _addDir($dirs, $dir, $file = null, $attributes = null)
+    private function _addDir($dirs, $dir, $file = null, $attributes = null)
     {
         if ($dir == array() || $dir == array('.')) {
             $attributes['attribs']['name'] = basename($file);
@@ -47,11 +68,16 @@ class v2 extends \Pyrus\PackageFile\v2
         if (!isset($dirs['dir'][$curdir])) {
             $dirs['dir'][$curdir] = array();
         }
-        $dirs['dir'][$curdir] = $this->_addDir($dirs['dir'][$curdir], $dir, $file, $attributes);
+        $dirs['dir'][$curdir] = $this->_addDir(
+            $dirs['dir'][$curdir],
+            $dir,
+            $file,
+            $attributes
+        );
         return $dirs;
     }
 
-    function _formatDir($dirs)
+    private function _formatDir($dirs)
     {
         if (!count($dirs)) {
             return array();
@@ -79,7 +105,7 @@ class v2 extends \Pyrus\PackageFile\v2
         return $dirs;
     }
 
-    function _deFormat($dirs)
+    private function _deFormat($dirs)
     {
         if (!count($dirs)) {
             return array();
@@ -93,7 +119,8 @@ class v2 extends \Pyrus\PackageFile\v2
                 $newdir = array();
                 $newdir['attribs']['name'] = $dir;
                 if (isset($this->baseinstalldirs[$dir])) {
-                    $newdir['attribs']['baseinstalldir'] = $this->baseinstalldirs[$dir];
+                    $newdir['attribs']['baseinstalldir']
+                        = $this->baseinstalldirs[$dir];
                 }
                 $contents = $this->_deFormat($contents);
                 foreach ($contents as $tag => $val) {

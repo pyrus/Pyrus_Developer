@@ -1,10 +1,31 @@
 <?php
+
+/**
+ * ~~summary~~
+ *
+ * ~~description~~
+ *
+ * PHP version 5.3
+ *
+ * @category Pyrus
+ * @package  Pyrus_Developer
+ * @author   Greg Beaver <greg@chiaraquartet.net>
+ * @license  http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * @version  GIT: $Id$
+ * @link     https://github.com/pyrus/Pyrus_Developer
+ */
+
 namespace Pyrus\Developer\PackageFile\PECL;
-class Filter extends \FilterIterator
+
+use FilterIterator;
+use SplFileObject;
+
+class Filter extends FilterIterator
 {
     protected $path;
     protected $role;
-    function __construct($path, $it)
+
+    public function __construct($path, $it)
     {
         $this->path = $path;
         parent::__construct($it);
@@ -12,42 +33,48 @@ class Filter extends \FilterIterator
 
     public function accept()
     {
-    	if ($this->getInnerIterator()->isDot()) {
-    	    return false;
-    	}
-    
-    	$path = str_replace('\\', '/', $this->path);
-        $path = str_replace($path, '', $this->getInnerIterator()->current()->getPathName());
+        if ($this->getInnerIterator()->isDot()) {
+            return false;
+        }
+
+        $path = str_replace('\\', '/', $this->path);
+        $path = str_replace(
+            $path,
+            '',
+            $this->getInnerIterator()->current()->getPathName()
+        );
         if ($path && $path[0] === DIRECTORY_SEPARATOR) {
             $path = substr($path, 1);
         }
 
         if (preg_match('@/?\.svn/@', $path)) {
-        	return false;
+            return false;
         }
         if (preg_match('@/?\.cvsignore/@', $path)) {
-        	return false;
+            return false;
         }
         if (preg_match('@/?CVS/@', $path)) {
-        	return false;
+            return false;
         }
         if (preg_match('@\.tgz/@', $path)) {
-        	return false;
+            return false;
         }
         if (preg_match('@\.tar/@', $path)) {
-        	return false;
+            return false;
         }
-        
+
         if (!$this->filterTestsDir()) {
             return false;
         }
         return $this->filterByCvsIgnore();
     }
 
-    function filterByCvsIgnore()
+    public function filterByCvsIgnore()
     {
         static $cvsignorematches = array();
-        $cvsignore = dirname($this->getInnerIterator()->current()->getPathName()) . '/.cvsignore';
+        $cvsignore = dirname(
+            $this->getInnerIterator()->current()->getPathName()
+        ) . '/.cvsignore';
         if (!file_exists($cvsignore)) {
             return true;
         }
@@ -55,7 +82,7 @@ class Filter extends \FilterIterator
             $tests = $cvsignorematches[$cvsignore];
         } else {
             $tests = array();
-            foreach (new \SplFileObject($cvsignore) as $line) {
+            foreach (new SplFileObject($cvsignore) as $line) {
                 if (!$line) {
                     continue;
                 }
@@ -72,16 +99,16 @@ class Filter extends \FilterIterator
         return true;
     }
 
-    function filterTestsDir()
+    public function filterTestsDir()
     {
-	if ($this->getInnerIterator()->current()->getBasename() == 'pear2coverage.db') {
-	    return false;
-	}
-    	$invalid_extensions = array('diff','exp','log','out', 'xdebug');
-	$info = pathinfo($this->getInnerIterator()->current()->getPathName());
-	if (!isset($info['extension'])) {
-	    return true;
-	}
-	return !in_array($info['extension'], $invalid_extensions);
+        if ($this->getInnerIterator()->current()->getBasename() == 'pear2coverage.db') {
+            return false;
+        }
+        $invalid_extensions = array('diff','exp','log','out', 'xdebug');
+        $info = pathinfo($this->getInnerIterator()->current()->getPathName());
+        if (!isset($info['extension'])) {
+            return true;
+        }
+        return !in_array($info['extension'], $invalid_extensions);
     }
 }

@@ -1,4 +1,36 @@
 <?php
+
+/**
+ * ~~summary~~
+ *
+ * ~~description~~
+ *
+ * PHP version 5.3
+ *
+ * @category Pyrus
+ * @package  Pyrus_Developer
+ * @author   Greg Beaver <greg@chiaraquartet.net>
+ * @license  http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * @version  GIT: $Id$
+ * @link     https://github.com/pyrus/Pyrus_Developer
+ */
+
+namespace Pyrus\Developer\PackageFile;
+
+use DirectoryIterator;
+use Pyrus\Developer\Creator\Exception;
+use Pyrus\Developer\PackageFile\PEAR2SVN\Filter;
+use Pyrus\Installer\Role;
+use Pyrus\Package;
+use Pyrus\Package\Xml;
+use Pyrus\PackageFile;
+use Pyrus\XMLWriter;
+use Pyrus\XMLWriter\Exception as XMLWriterException;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RegexIterator;
+use SplFileInfo;
+
 /**
  * Create a brand new package.xml from the subversion layout of a PEAR2 package
  *
@@ -19,12 +51,12 @@
  *     </pre>
  *  2. if file PackageName/README exists, it contains the summary as the first line,
  *     and the description as the rest of the file
- *  3. if file PackageName/CREDITS exists, it contains the maintainers in this format:
+ *  3. if file PackageName/CREDITS exists, it contains the maintainers
+ *     in this format:
  *     ; comment ignored
  *     Name [handle] <email> (role)
  *     Name2 [handle2] <email> (role/inactive)
  */
-namespace Pyrus\Developer\PackageFile;
 class PEAR2SVN
 {
     protected $path;
@@ -38,41 +70,49 @@ class PEAR2SVN
     /**
      * Create or update a package.xml from CVS
      *
-     * @param string $path full path to the SVN checkout
-     * @param string $packagename Package name (PEAR2_Pyrus, for example)
-     * @param string $channel Channel (pear2.php.net)
-     * @param bool $return if true, creation is not attempted in the constructor,
-     *                     otherwise, the constructor writes package.xml to disk
-     *                     if possible
-     * @param bool $fullpathsused if true, for package PEAR2_Package_Name it is
-     *                            assumed that src/PEAR2/Package/ exists in SVN,
-     *                            otherwise, we assume src/ is used and baseinstalldir
-     *                            should be PEAR2/Package for "/" directory
+     * @param string $path          full path to the SVN checkout
+     * @param string $packagename   Package name (PEAR2_Pyrus, for example)
+     * @param string $channel       Channel (pear2.php.net)
+     * @param bool   $return        if true, creation is not attempted
+     *     in the constructor, otherwise, the constructor writes package.xml
+     *     to disk if possible
+     * @param bool   $fullpathsused if true, for package PEAR2_Package_Name
+     *     it is assumed that src/PEAR2/Package/ exists in SVN,
+     *     otherwise, we assume src/ is used and baseinstalldir
+     *     should be PEAR2/Package for "/" directory
+     * @param bool   $doCompatible  
+     * @param array  $scanoptions   
      */
-    function __construct($path, $packagename = '##set me##', $channel = 'pear2.php.net',
-                         $return = false, $fullpathsused = true, $doCompatible = true,
-                         $scanoptions = array())
-    {
+    public function __construct(
+        $path,
+        $packagename = '##set me##',
+        $channel = 'pear2.php.net',
+        $return = false,
+        $fullpathsused = true,
+        $doCompatible = true,
+        $scanoptions = array()
+    ) {
         $this->doCompatible = $doCompatible;
         if (file_exists($path . DIRECTORY_SEPARATOR . 'package.xml')) {
             try {
-                $this->pxml = new \Pyrus\PackageFile(
+                $this->pxml = new PackageFile(
                     $path . DIRECTORY_SEPARATOR . 'package.xml',
-                    'Pyrus\Developer\PackageFile\v2');
+                    'Pyrus\Developer\PackageFile\v2'
+                );
                 $this->pxml = $this->pxml->info;
                 $this->pxml->setFilelist(array());
-            } catch (Exception $e) {
-                $this->pxml = new \Pyrus\Developer\PackageFile\v2;
+            } catch (XMLWriterException $e) {
+                $this->pxml = new v2;
                 $this->pxml->name = $packagename;
                 $this->pxml->channel = $channel;
             }
         } else {
-            $this->pxml = new \Pyrus\Developer\PackageFile\v2;
+            $this->pxml = new v2;
             $this->pxml->name = $packagename;
             $this->pxml->channel = $channel;
         }
         if ($doCompatible) {
-            $this->pxml_compatible = new \Pyrus\Developer\PackageFile\v2;
+            $this->pxml_compatible = new v2;
             $this->pxml_compatible->name = $packagename;
             $this->pxml_compatible->channel = $channel;
         }
@@ -87,7 +127,8 @@ class PEAR2SVN
 
         if ($fullpathsused) {
             if ($this->pxml->channel == 'pear2.php.net'
-                && !is_dir($path . '/src/PEAR2')) {
+                && !is_dir($path . '/src/PEAR2')
+            ) {
                 $packagepath = array('PEAR2');
             } else {
                 $packagepath = array('/');
@@ -103,10 +144,10 @@ class PEAR2SVN
             if (!$return) {
                 $this->save();
             }
-        } catch (Exception $e) {
+        } catch (XMLWriterException $e) {
             // ignore - we'll let the user do this business
-            echo 'WARNING: validation failed in constructor, you must fix the package.xml ' .
-                'manually:', $e;
+            echo 'WARNING: validation failed in constructor, ' .
+                'you must fix the package.xml manually:', $e;
         }
     }
     
@@ -114,8 +155,11 @@ class PEAR2SVN
      * Scan the directories top populate the package file contents.
      *
      * @param string $packagepath
+     * @param array  $scanoptions
+     * 
+     * @return void
      */
-    function scanFiles($packagepath, $scanoptions)
+    public function scanFiles($packagepath, $scanoptions)
     {
         $base_install_dirs = array(
             'src'           => implode('/', $packagepath),
@@ -130,11 +174,14 @@ class PEAR2SVN
         );
         if (isset($scanoptions['baseinstalldirs'])) {
             if (!is_array($scanoptions['baseinstalldirs'])) {
-                throw new \Pyrus\Developer\Creator\Exception('invalid scan options,' .
-                                                                   'baseinstalldirs must ' .
-                                                                   'be an array');
+                throw new Exception(
+                    'invalid scan options, baseinstalldirs must be an array'
+                );
             }
-            $base_install_dirs = array_merge($base_install_dirs, $scanoptions['baseinstalldirs']);
+            $base_install_dirs = array_merge(
+                $base_install_dirs,
+                $scanoptions['baseinstalldirs']
+            );
         }
 
         $this->setBaseInstallDirs($base_install_dirs);
@@ -152,9 +199,9 @@ class PEAR2SVN
             'www'           => 'www',);
         if (isset($scanoptions['rolemap'])) {
             if (!is_array($scanoptions['rolemap'])) {
-                throw new \Pyrus\Developer\Creator\Exception('invalid scan options,' .
-                                                                   'rolemap must ' .
-                                                                   'be an array');
+                throw new Exception(
+                    'invalid scan options, rolemap must be an array'
+                );
             }
             $rolemap = array_merge($rolemap, $scanoptions['rolemap']);
         }
@@ -162,31 +209,31 @@ class PEAR2SVN
         if (!isset($scanoptions['mappath'])) {
             $scanoptions['mappath'] = array();
         } elseif (!is_array($scanoptions['mappath'])) {
-            throw new \Pyrus\Developer\Creator\Exception('invalid scan options,' .
-                                                               'mappath must ' .
-                                                               'be an array');
+            throw new Exception(
+                'invalid scan options, mappath must be an array'
+            );
         }
 
         if (!isset($scanoptions['ignore'])) {
             $scanoptions['ignore'] = array();
         } else {
             if (!is_array($scanoptions['ignore'])) {
-                throw new \Pyrus\Developer\Creator\Exception('invalid scan options,' .
-                                                                   'ignore must ' .
-                                                                   'be an array');
+                throw new Exception(
+                    'invalid scan options, ignore must be an array'
+                );
             }
             foreach ($scanoptions['ignore'] as $path => $type) {
                 if (!is_string($path)) {
-                    throw new \Pyrus\Developer\Creator\Exception('invalid scan options,' .
-                                                                   'ignore must ' .
-                                                                   'be an associative array ' .
-                                                                   'mapping path to type of ignore');
+                    throw new Exception(
+                        'invalid scan options, ignore must be ' .
+                        'an associative array mapping path to type of ignore'
+                    );
                 }
                 if ($type !== 'file' && $type !== 'dir') {
-                    throw new \Pyrus\Developer\Creator\Exception('invalid scan options,' .
-                                                                   'ignore of ' . $path .
-                                                                   ' must be either file or dir, but was ' .
-                                                                   $type);
+                    throw new Exception(
+                        'invalid scan options, ignore of ' . $path .
+                        ' must be either file or dir, but was ' . $type
+                    );
                 }
             }
         }
@@ -194,70 +241,99 @@ class PEAR2SVN
         foreach ($rolemap as $dir => $role) {
             if (file_exists($this->path . DIRECTORY_SEPARATOR . $dir)) {
                 $basepath = ($dir === 'examples') ? 'examples' : '';
-                foreach (new \Pyrus\Developer\PackageFile\PEAR2SVN\Filter($scanoptions['ignore'],
-                            $this->path . DIRECTORY_SEPARATOR . $dir,
-                         new \RecursiveIteratorIterator(
-                         new \RecursiveDirectoryIterator($this->path . DIRECTORY_SEPARATOR . $dir),
-                         \RecursiveIteratorIterator::LEAVES_ONLY), $role) as $file) {
-                    $curpath = str_replace($this->path . DIRECTORY_SEPARATOR . $dir, '',
-                        $file->getPathName());
+                foreach (new Filter(
+                    $scanoptions['ignore'],
+                    $this->path . DIRECTORY_SEPARATOR . $dir,
+                    new RecursiveIteratorIterator(
+                        new RecursiveDirectoryIterator(
+                            $this->path . DIRECTORY_SEPARATOR . $dir
+                        ),
+                        RecursiveIteratorIterator::LEAVES_ONLY
+                    ),
+                    $role
+                ) as $file
+                ) {
+                    $curpath = str_replace(
+                        $this->path . DIRECTORY_SEPARATOR . $dir,
+                        '',
+                        $file->getPathName()
+                    );
                     if ($curpath && $curpath[0] === DIRECTORY_SEPARATOR) {
                         $curpath = substr($curpath, 1);
                     }
 
                     if (isset($scanoptions['mappath'][$dir])) {
-                        $curpath = $scanoptions['mappath'][$dir] . '/' . $curpath;
+                        $curpath = $scanoptions['mappath'][$dir] . '/' .
+                            $curpath;
                     } else {
                         $curpath = $dir . '/' . $curpath;
                     }
                     $curpath = str_replace(array('\\', '//'), '/', $curpath);
 
-                    $this->pxml->files[$curpath] =
-                        array(
-                            'attribs' => array('role' => $role)
-                        );
+                    $this->pxml->files[$curpath] = array(
+                        'attribs' => array('role' => $role)
+                    );
 
                     if ($this->doCompatible) {
-                        $roleobject = \Pyrus\Installer\Role::factory($this->pxml->type, $role);
-                        if ($role == 'customcommand' || $role == 'customrole' || $role == 'customtask') {
+                        $roleobject = Role::factory($this->pxml->type, $role);
+                        if ($role == 'customcommand'
+                            || $role == 'customrole'
+                            || $role == 'customtask'
+                        ) {
                             $compatiblerole = 'data';
                         } else {
                             $compatiblerole = $role;
                         }
     
-                        $attribs = array('name' => $curpath, 'role' => $compatiblerole);
-                        $baseinstalldir = $this->pxml_compatible->getBaseinstallDir($curpath);
+                        $attribs = array(
+                            'name' => $curpath,
+                            'role' => $compatiblerole
+                        );
+                        $baseinstalldir
+                            = $this->pxml_compatible->getBaseinstallDir(
+                                $curpath
+                            );
                         if ($baseinstalldir && $baseinstalldir != '/') {
                             $attribs['baseinstalldir'] = $baseinstalldir;
                         }
     
-                        $curpath = $roleobject->getPackagingLocation($this->pxml_compatible,
-                                                                     $attribs);
-                        $packagepath = $roleobject->getCompatibleInstallAs($this->pxml_compatible,
-                                                                           $attribs);
-                        $this->pxml_compatible->files[$curpath] =
-                            array(
-                                'attribs' => array('role' => $compatiblerole)
-                            );
-                        $this->pxml_compatible->release[0]->installAs($curpath, $packagepath);
+                        $curpath = $roleobject->getPackagingLocation(
+                            $this->pxml_compatible,
+                            $attribs
+                        );
+                        $packagepath = $roleobject->getCompatibleInstallAs(
+                            $this->pxml_compatible,
+                            $attribs
+                        );
+                        $this->pxml_compatible->files[$curpath] = array(
+                            'attribs' => array('role' => $compatiblerole)
+                        );
+                        $this->pxml_compatible->release[0]->installAs(
+                            $curpath,
+                            $packagepath
+                        );
                     }
                 }
             }
         }
         if ($this->doCompatible) {
-            $this->pxml_compatible->dependencies['required']->pearinstaller->min = '1.4.8';
+            $this->pxml_compatible
+                ->dependencies['required']
+                ->pearinstaller
+                ->min = '1.4.8';
         }
     }
     
     /**
      * Parse the README file to populate the package summary and description.
      *
+     * @return void
      */
-    function parseREADME()
+    public function parseREADME()
     {
         $description = '';
         if (file_exists($this->path . DIRECTORY_SEPARATOR . 'README')) {
-            $a = new \SplFileInfo($this->path . DIRECTORY_SEPARATOR . 'README');
+            $a = new SplFileInfo($this->path . DIRECTORY_SEPARATOR . 'README');
             foreach ($a->openFile('r') as $num => $line) {
                 if (!$num) {
                     $this->summary = $line;
@@ -272,16 +348,22 @@ class PEAR2SVN
     /**
      * Parse the CREDITS file to populate the package developers, roles and email.
      *
+     * @return void
      */
-    function parseCREDITS()
+    public function parseCREDITS()
     {
         if (file_exists($this->path . DIRECTORY_SEPARATOR . 'CREDITS')) {
-            $a = new \SplFileInfo($this->path . DIRECTORY_SEPARATOR . 'CREDITS');
+            $a = new SplFileInfo($this->path . DIRECTORY_SEPARATOR . 'CREDITS');
             foreach ($a->openFile('r') as $line) {
                 if ($line && $line[0] === ';') {
                     continue;
                 }
-                if (preg_match('/^(.+) \[(.+)\] \<(.+)\> \((.+?)(\/inactive)?\)/', $line, $match)) {
+                if (preg_match(
+                    '/^(.+) \[(.+)\] \<(.+)\> \((.+?)(\/inactive)?\)/',
+                    $line,
+                    $match
+                )
+                ) {
                     $this->pxml->maintainer[$match[2]]
                         ->role($match[4])
                         ->name($match[1])
@@ -302,13 +384,17 @@ class PEAR2SVN
     /**
      * Parse the RELEASE file to populate the release notes.
      *
+     * @return void
      */
-    function parseRELEASE()
+    public function parseRELEASE()
     {
         $files = array();
-        foreach (new \RegexIterator(
-                                   new \DirectoryIterator($this->path),
-                                   '/^RELEASE\-(.+)$/', \RegexIterator::GET_MATCH) as $file) {
+        foreach (new RegexIterator(
+            new DirectoryIterator($this->path),
+            '/^RELEASE\-(.+)$/',
+            RegexIterator::GET_MATCH
+        ) as $file
+        ) {
             $files[$file[1]] = $file;
         }
         if (count($files)) {
@@ -318,7 +404,9 @@ class PEAR2SVN
 
             $this->version['release']   = $releaseversion;
             $this->stability['release'] = $stability;
-            $this->notes                = file_get_contents($this->path . DIRECTORY_SEPARATOR . $releasenotesfile);
+            $this->notes                = file_get_contents(
+                $this->path . DIRECTORY_SEPARATOR . $releasenotesfile
+            );
 
             $apistability = $stability;
             $apiversion   = $this->version['api'];
@@ -335,10 +423,14 @@ class PEAR2SVN
             
             if ($this->doCompatible) {
                 // __set will not work on arrays so set these manually for compatible
-                $this->pxml_compatible->version['release']   = $this->version['release'];
-                $this->pxml_compatible->version['api']       = $this->version['api'];
-                $this->pxml_compatible->stability['release'] = $this->stability['release'];
-                $this->pxml_compatible->stability['api']     = $this->stability['api'];
+                $this->pxml_compatible->version['release']
+                    = $this->version['release'];
+                $this->pxml_compatible->version['api']
+                    = $this->version['api'];
+                $this->pxml_compatible->stability['release']
+                    = $this->stability['release'];
+                $this->pxml_compatible->stability['api']
+                    = $this->stability['api'];
             }
 
         }
@@ -347,13 +439,17 @@ class PEAR2SVN
     /**
      * Parse the API file to populate the API version (if present).
      *
+     * @return void
      */
-    function parseAPI()
+    public function parseAPI()
     {
         $files = array();
-        foreach (new \RegexIterator(
-                                   new \DirectoryIterator($this->path),
-                                   '/^API\-(.+)$/', \RegexIterator::GET_MATCH) as $file) {
+        foreach (new RegexIterator(
+            new DirectoryIterator($this->path),
+            '/^API\-(.+)$/',
+            RegexIterator::GET_MATCH
+        ) as $file
+        ) {
             $files[$file[1]] = $file;
         }
         if (count($files)) {
@@ -366,17 +462,22 @@ class PEAR2SVN
             
             if ($this->doCompatible) {
                 // __set will not work on arrays so set these manually for compatible
-                $this->pxml_compatible->version['api']       = $this->version['api'];
-                $this->pxml_compatible->stability['api']     = $this->stability['api'];
+                $this->pxml_compatible->version['api']
+                    = $this->version['api'];
+                $this->pxml_compatible->stability['api']
+                    = $this->stability['api'];
             }
 
             $this->notes = $this->notes .
-                "\n\n" . file_get_contents($this->path . DIRECTORY_SEPARATOR . $apinotesfile);
+                "\n\n" .
+                file_get_contents(
+                    $this->path . DIRECTORY_SEPARATOR . $apinotesfile
+                );
 
         }
     }
 
-    function guessStabilityFromVersion($version)
+    public function guessStabilityFromVersion($version)
     {
         if (false !== strpos($version, 'beta')) {
             return 'beta';
@@ -409,34 +510,37 @@ class PEAR2SVN
         return 'stable';
     }
 
-    function validate()
+    public function validate()
     {
-        $package = new \Pyrus\Package(false);
-        $xmlcontainer = new \Pyrus\PackageFile($this->pxml);
-        $xml = new \Pyrus\Package\Xml($this->path . '/package.xml', $package, $xmlcontainer);
+        $package = new Package(false);
+        $xmlcontainer = new PackageFile($this->pxml);
+        $xml = new Xml($this->path . '/package.xml', $package, $xmlcontainer);
         $package->setInternalPackage($xml);
 
         $this->pxml->getValidator()->validate($package);
     }
 
-    function __toString()
+    /**
+     * @return string
+     */
+    public function __toString()
     {
         return (string) $this->pxml;
     }
 
-    function save()
+    public function save()
     {
         file_put_contents($this->path . '/package.xml', $this->pxml);
         if ($this->doCompatible) {
             $this->pxml_compatible->date = date('Y-m-d');
             $this->pxml_compatible->time = date('H:i:s');
             $info = $this->pxml_compatible->toArray(true);
-            $stuff = new \Pyrus\XMLWriter($info);
+            $stuff = new XMLWriter($info);
             file_put_contents($this->path . '/package_compatible.xml', $stuff);
         }
     }
 
-    function __set($var, $value)
+    public function __set($var, $value)
     {
         $this->pxml->$var = $value;
         if ($this->doCompatible) {
@@ -444,7 +548,7 @@ class PEAR2SVN
         }
     }
 
-    function __get($var)
+    public function __get($var)
     {
         if ($this->doCompatible) {
             if ($var == 'compatiblepackagefile') {
@@ -464,7 +568,7 @@ class PEAR2SVN
         return $this->pxml->$var;
     }
 
-    function __call($method, $args)
+    public function __call($method, $args)
     {
         $ret = call_user_func_array(array($this->pxml, $method), $args);
         if ($this->doCompatible) {
