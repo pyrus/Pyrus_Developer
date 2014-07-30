@@ -34,7 +34,7 @@ PackageFileManager::create($package, $compatible)
     ->addReplacement('../src', 'php_dir', 'pear-config')
     ->addReplacement('GIT: $Id$', 'version', 'package-info')
     //... or changing the end of line characters for OS specific files.
-    ->addEolReplacement('*.bat', FileBuilder::EOL_WINDOWS)
-    ->addEolReplacement('*.sh', FileBuilder::EOL_UNIX)
+    ->addEolReplacement('*.bat', PackageFileManager::EOL_WINDOWS)
+    ->addEolReplacement('*.sh', PackageFileManager::EOL_UNIX)
     */
     ->save();
