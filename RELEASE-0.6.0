@@ -1,0 +1,10 @@
+Features:
+
+ - Added support for FILE_EXTERNAL and FILE_EOF in the test runner, #21 [boenrobot]
+ - Added $extrafiles and package.xml utilities, and modified generate-pear2 templates to use them, #24 [boenrobot]
+
+Bug Fixes/Refactoring:
+
+ - Fix filename for packages with a dot in their name, #17 [fpoirotte]
+ - Fix package creation, #18 [boenrobot]
+ - Massive CS fixes, #23 [boenrobot]
