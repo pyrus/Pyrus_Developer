@@ -1,7 +1,7 @@
 <?php
 if (!class_exists('Phar')) {
     if (!class_exists('PHP_Archive')) {
-@PHPARCHIVE@
+//@PHPARCHIVE@
     }
     if (!in_array('phar', stream_get_wrappers(), true)) {
         stream_wrapper_register('phar', 'PHP_Archive');

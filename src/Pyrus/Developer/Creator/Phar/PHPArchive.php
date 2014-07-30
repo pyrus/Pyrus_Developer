@@ -50,15 +50,15 @@ class PHPArchive extends P
         }
         $phparchive = '?>' . $phparchive . '<?php';
         $template = @file_get_contents(
-            dirname(__FILE__) .
-            '/../../../../../data/pear2.php.net/PEAR2_Pyrus_Developer/phartemplate.php'
+            __DIR__ .
+            '/../../../../data/pear2.php.net/PEAR2_Pyrus_Developer/phartemplate.php'
         );
         if (!$template) {
             $template = file_get_contents(
                 __DIR__ . '/../../../../data/phartemplate.php'
             );
         }
-        $this->stub = str_replace('@PHPARCHIVE@', $phparchive, $template);
+        $this->stub = str_replace('//@PHPARCHIVE@', $phparchive, $template);
         if ($startupfile === false) {
             $startupfile = '<?php
 $extract = getcwd();
