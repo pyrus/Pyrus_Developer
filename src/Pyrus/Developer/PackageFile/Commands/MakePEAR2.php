@@ -15,15 +15,16 @@
  * @link     https://github.com/pyrus/Pyrus_Developer
  */
 
-namespace Pyrus\Developer\PackageFile;
+namespace Pyrus\Developer\PackageFile\Commands;
 
 use DirectoryIterator;
 use Pyrus\Developer\Creator\Exception;
-use Pyrus\Developer\PackageFile\PEAR2SVN\Filter;
+use Pyrus\Developer\PackageFile\Commands\MakePEAR2\Filter;
 use Pyrus\Installer\Role;
 use Pyrus\Package;
 use Pyrus\Package\Xml;
 use Pyrus\PackageFile;
+use Pyrus\Developer\PackageFile\v2;
 use Pyrus\XMLWriter;
 use Pyrus\XMLWriter\Exception as XMLWriterException;
 use RecursiveDirectoryIterator;
@@ -57,7 +58,7 @@ use SplFileInfo;
  *     Name [handle] <email> (role)
  *     Name2 [handle2] <email> (role/inactive)
  */
-class PEAR2SVN
+class MakePEAR2
 {
     protected $path;
     protected $package;
@@ -85,7 +86,7 @@ class PEAR2SVN
      */
     public function __construct(
         $path,
-        $packagename = '##set me##',
+        $packagename,
         $channel = 'pear2.php.net',
         $return = false,
         $fullpathsused = true,
@@ -93,6 +94,8 @@ class PEAR2SVN
         $scanoptions = array()
     ) {
         $this->doCompatible = $doCompatible;
+        
+        $makeNewPackageFile = true;
         if (file_exists($path . DIRECTORY_SEPARATOR . 'package.xml')) {
             try {
                 $this->pxml = new PackageFile(
@@ -101,22 +104,33 @@ class PEAR2SVN
                 );
                 $this->pxml = $this->pxml->info;
                 $this->pxml->setFilelist(array());
+
+                $makeNewPackageFile = false;
             } catch (XMLWriterException $e) {
-                $this->pxml = new v2;
-                $this->pxml->name = $packagename;
-                $this->pxml->channel = $channel;
+                //On exception, we'd be regenaring the package.xml file.
             }
-        } else {
+        }
+
+        if ($makeNewPackageFile) {
             $this->pxml = new v2;
             $this->pxml->name = $packagename;
             $this->pxml->channel = $channel;
+            $this->pxml->dependencies['required']->php = '5.3.0';
+            $this->pxml->setPackagefile(
+                $path . DIRECTORY_SEPARATOR . 'package.xml'
+            );
         }
+
+        $this->path = $path;
         if ($doCompatible) {
             $this->pxml_compatible = new v2;
             $this->pxml_compatible->name = $packagename;
             $this->pxml_compatible->channel = $channel;
+            $this->pxml_compatible->dependencies['required']->php = '5.3.0';
+            $this->pxml_compatible->setPackagefile(
+                $path . DIRECTORY_SEPARATOR . 'package_compatible.xml'
+            );
         }
-        $this->path = $path;
         
         $this->parseREADME();
         $this->parseCREDITS();
@@ -331,17 +345,25 @@ class PEAR2SVN
      */
     public function parseREADME()
     {
+        $this->pxml->summary = '';
+        $this->pxml_compatible->summary = '';
         $description = '';
         if (file_exists($this->path . DIRECTORY_SEPARATOR . 'README')) {
             $a = new SplFileInfo($this->path . DIRECTORY_SEPARATOR . 'README');
             foreach ($a->openFile('r') as $num => $line) {
                 if (!$num) {
-                    $this->summary = $line;
+                    $this->pxml->summary = rtrim($line);
+                    if ($this->doCompatible) {
+                        $this->pxml_compatible->summary = rtrim($line);
+                    }
                     continue;
                 }
                 $description .= $line;
             }
-            $this->description = $description;
+        }
+        $this->pxml->description = $description;
+        if ($this->doCompatible) {
+            $this->pxml_compatible->description = $description;
         }
     }
     
@@ -402,14 +424,14 @@ class PEAR2SVN
             list($releasenotesfile, $releaseversion) = array_pop($files);
             $stability = $this->guessStabilityFromVersion($releaseversion);
 
-            $this->version['release']   = $releaseversion;
-            $this->stability['release'] = $stability;
-            $this->notes                = file_get_contents(
+            $this->pxml->version['release']   = $releaseversion;
+            $this->pxml->stability['release'] = $stability;
+            $this->pxml->notes                = file_get_contents(
                 $this->path . DIRECTORY_SEPARATOR . $releasenotesfile
             );
 
             $apistability = $stability;
-            $apiversion   = $this->version['api'];
+            $apiversion   = $this->pxml->version['api'];
 
             if ($stability == 'beta') {
                 if ($apiversion == '0.1.0') {
@@ -418,19 +440,19 @@ class PEAR2SVN
                 $apistability = 'stable';
             }
 
-            $this->version['api']   = $apiversion;
-            $this->stability['api'] = $apistability;
+            $this->pxml->version['api']   = $apiversion;
+            $this->pxml->stability['api'] = $apistability;
             
             if ($this->doCompatible) {
                 // __set will not work on arrays so set these manually for compatible
                 $this->pxml_compatible->version['release']
-                    = $this->version['release'];
+                    = $this->pxml->version['release'];
                 $this->pxml_compatible->version['api']
-                    = $this->version['api'];
+                    = $this->pxml->version['api'];
                 $this->pxml_compatible->stability['release']
-                    = $this->stability['release'];
+                    = $this->pxml->stability['release'];
                 $this->pxml_compatible->stability['api']
-                    = $this->stability['api'];
+                    = $this->pxml->stability['api'];
             }
 
         }
@@ -457,18 +479,18 @@ class PEAR2SVN
             list($apinotesfile, $apiversion) = array_pop($files);
             $stability = $this->guessStabilityFromVersion($apiversion);
 
-            $this->version['api']   = $apiversion;
-            $this->stability['api'] = $stability;
+            $this->pxml->version['api']   = $apiversion;
+            $this->pxml->stability['api'] = $stability;
             
             if ($this->doCompatible) {
                 // __set will not work on arrays so set these manually for compatible
                 $this->pxml_compatible->version['api']
-                    = $this->version['api'];
+                    = $this->pxml->version['api'];
                 $this->pxml_compatible->stability['api']
-                    = $this->stability['api'];
+                    = $this->pxml->stability['api'];
             }
 
-            $this->notes = $this->notes .
+            $this->pxml->notes = $this->pxml->notes .
                 "\n\n" .
                 file_get_contents(
                     $this->path . DIRECTORY_SEPARATOR . $apinotesfile

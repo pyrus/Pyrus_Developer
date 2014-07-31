@@ -15,9 +15,11 @@
  * @link     https://github.com/pyrus/Pyrus_Developer
  */
 
-namespace Pyrus\Developer\PackageFile\PEAR2SVN;
+namespace Pyrus\Developer\PackageFile\Commands\MakePEAR2;
 
-class Filter extends \FilterIterator
+use FilterIterator;
+
+class Filter extends FilterIterator
 {
     protected $ignore;
     protected $path;

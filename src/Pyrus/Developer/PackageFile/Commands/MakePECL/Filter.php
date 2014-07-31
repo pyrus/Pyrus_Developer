@@ -15,7 +15,7 @@
  * @link     https://github.com/pyrus/Pyrus_Developer
  */
 
-namespace Pyrus\Developer\PackageFile\PECL;
+namespace Pyrus\Developer\PackageFile\Commands\MakePECL;
 
 use FilterIterator;
 use SplFileObject;

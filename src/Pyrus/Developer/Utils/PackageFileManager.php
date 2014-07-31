@@ -199,7 +199,7 @@ class PackageFileManager
     public function save()
     {
         $tasksNs = $this->package->getTasksNs();
-        $cTasksNs = $this->compatible ? $compatible->getTasksNs() : '';
+        $cTasksNs = $this->compatible ? $this->compatible->getTasksNs() : '';
         $oldCwd = getcwd();
         chdir($this->package->filepath);
         if ($this->isRebuildInstallEnabled) {
