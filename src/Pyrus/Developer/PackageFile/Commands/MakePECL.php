@@ -15,9 +15,10 @@
  * @link     https://github.com/pyrus/Pyrus_Developer
  */
 
-namespace Pyrus\Developer\PackageFile;
+namespace Pyrus\Developer\PackageFile\Commands;
 
-use Pyrus\Developer\PackageFile\PECL\Filter;
+use Pyrus\Developer\PackageFile\Commands\MakePECL\Filter;
+use Pyrus\Developer\PackageFile\v2;
 use Pyrus\PackageFile;
 use Pyrus\XMLWriter\Exception;
 use RecursiveDirectoryIterator;
@@ -44,7 +45,7 @@ use RecursiveIteratorIterator;
  *     Name [handle] <email> (role)
  *     Name2 [handle2] <email> (role/inactive)
  */
-class PECL extends PEAR2SVN
+class MakePECL extends MakePEAR2
 {
     protected $sourceExtensions;
 
@@ -61,7 +62,7 @@ class PECL extends PEAR2SVN
      */
     public function __construct(
         $path,
-        $packagename = '##set me##',
+        $packagename,
         $channel = 'pecl.php.net',
         $sourceextensions = array('c', 'cc', 'h', 'm4', 'w32', 're', 'y', 'l'),
         $return = false

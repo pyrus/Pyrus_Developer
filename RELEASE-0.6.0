@@ -8,3 +8,4 @@ Bug Fixes/Refactoring:
  - Fix filename for packages with a dot in their name, #17 [fpoirotte]
  - Fix package creation, #18 [boenrobot]
  - Massive CS fixes, #23 [boenrobot]
+ - Rewrote generate-pear2 and "make" with non-existent package.xml files, #27 [boenrobot]

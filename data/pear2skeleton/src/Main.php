@@ -1,16 +1,16 @@
 <?php
 /**
- * __MAIN_CLASS__
+ * File for __MAIN_CLASS__
  *
- * PHP version 5
+ * PHP version 5.3
  *
  * @category  Yourcategory
  * @package   __PACKAGE__
  * @author    Your Name <handle@php.net>
  * @copyright __YEAR__ Your Name
  * @license   http://www.opensource.org/licenses/bsd-license.php New BSD License
- * @version   SVN: $Id$
- * @link      __VCS__
+ * @version   GIT: $Id$
+ * @link      __REPO__
  */
 
 /**
@@ -21,9 +21,10 @@
  * @author    Your Name <handle@php.net>
  * @copyright __YEAR__ Your Name
  * @license   http://www.opensource.org/licenses/bsd-license.php New BSD License
- * @link      __VCS__
+ * @link      __REPO__
  */
 namespace __MAIN_NAMESPACE__;
-class Main
+
+class __MAIN_CLASS__
 {
 }

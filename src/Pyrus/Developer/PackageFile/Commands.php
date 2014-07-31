@@ -4,7 +4,9 @@ namespace Pyrus\Developer\PackageFile;
 use PharData;
 use Pyrus\Config;
 use Pyrus\Developer\CoverageAnalyzer as Coverage;
-use Pyrus\Developer\PackageFile\Commands\PEAR2Skeleton;
+use Pyrus\Developer\PackageFile\Commands\GeneratePEAR2;
+use Pyrus\Developer\PackageFile\Commands\MakePEAR2;
+use Pyrus\Developer\PackageFile\Commands\MakePECL;
 use Pyrus\Developer\Runphpt\Runner;
 use Pyrus\Main;
 use Pyrus\Package;
@@ -75,7 +77,7 @@ class Commands
             $scanoptions = $getscanoptions();
         }
         echo "Creating package.xml...";
-        $pear2svn = new PEAR2SVN(
+        $makePear2 = new MakePEAR2(
             $dir,
             $args['packagename'],
             $args['channel'],
@@ -84,17 +86,17 @@ class Commands
             !$options['nocompatible'],
             $scanoptions
         );
-        if (!$options['packagexmlsetup']
-            && file_exists($pear2svn->path . '/packagexmlsetup.php')
+        if (!isset($options['packagexmlsetup'])
+            && file_exists($makePear2->path . '/packagexmlsetup.php')
         ) {
             $options['packagexmlsetup'] = 'packagexmlsetup.php';
         }
         if ($options['packagexmlsetup']) {
-            $package = $pear2svn->packagefile;
+            $package = $makePear2->packagefile;
             // compatible is null if not specified
-            $compatible = $pear2svn->compatiblepackagefile;
+            $compatible = $makePear2->compatiblepackagefile;
             $file = $options['packagexmlsetup'];
-            $path = $pear2svn->path;
+            $path = $makePear2->path;
             if (!file_exists($path . '/' . $file)) {
                 throw new \Pyrus\Developer\Creator\Exception(
                     'packagexmlsetup file must be in a subdirectory ' .
@@ -105,10 +107,10 @@ class Commands
                 include $path . '/' . $file;
             };
             $getinfo();
-            $pear2svn->save();
+            $makePear2->save();
         }
         echo "done\n";
-        if ($options['package']) {
+        if (isset($options['package']) && $options['package']) {
             $formats = explode(',', $options['package']);
             $first = $formats[0];
             $formats = array_flip($formats);
@@ -169,7 +171,7 @@ class Commands
                 ->channelFromAlias($args['channel']);
         }
         echo "Creating package.xml...";
-        $package = new PECL(
+        $package = new MakePECL(
             $dir,
             $args['packagename'],
             $args['channel'],
@@ -644,37 +646,41 @@ dorender:
 
         $info = $this->parsePackageName($args['package'], $args['channel']);
 
-        $skeleton = new PEAR2Skeleton($info);
+        $skeleton = new GeneratePEAR2($info);
         $skeleton->generate();
-        
-        $options['stub']            = $skeleton->getStub();
-        $options['extrasetup']      = $skeleton->getExtraSetup();
-        $options['packagexmlsetup'] = $skeleton->getPackageXmlSetup();
+
         $options['package']         = false;
         $options['nocompatible']    = false;
         
         $this->makePackageXml(
             $frontend,
-            array('packagename' => $info['package'], 'channel' => $args['channel']),
+            array(
+                'packagename' => $info['__PACKAGE__'],
+                'channel' => $args['channel'],
+                'dir' => getcwd() . DIRECTORY_SEPARATOR . $info['__PACKAGE__']
+            ),
             $options
         );
     }
 
     /**
+     * Parse the package name and channel.
+     * 
      * Returns an array with:
-     * - path
-     * - mainNamespace
-     * - mainClass
-     * - mainPath
-     * - svn
+     * - \_\_MAIN_NAMESPACE\_\_
+     * - \_\_MAIN_CLASS\_\_
+     * - \_\_MAIN_PATH\_\_
+     * - \_\_PACKAGE\_\_
+     * - \_\_PATH\_\_
+     * - \_\_REPO\_\_
      *
      * @param string $package E.g. PEAR2_Foo_Bar
      * @param string $channel E.g. pear2.php.net
      *
      * @return array
-     * @see    \Pyrus\Developer\PackageFile\Commands\PEAR2Skeleton
+     * @see    GeneratePEAR2
      */
-    protected function parsePackageName($package, $channel)
+    public static function parsePackageName($package, $channel)
     {
         $ret = array();
         $package = explode('_', $package);
@@ -685,26 +691,26 @@ dorender:
                 } else {
                     array_unshift($package, 'PEAR2');
                 }
-                $ret['package'] = implode('_', $package);
+                $ret['__PACAKGE__'] = implode('_', $package);
             }
             $package[0] = 'PEAR2';
             $path = $package;
             array_shift($path);
 
-            $ret['path']          = implode('_', $path);
-            $ret['mainNamespace'] = implode('\\', $package);
-            $ret['mainClass']     = implode('\\', $package) . '\\Main';
-            $ret['mainPath']      = implode('/', $path);
-            $ret['svn']           = 'http://svn.php.net/repository/pear2/' .
-                $ret['package'];
+            $ret['__REPO__'] = 'http://github.com/pear2/' .
+                implode('_', $package);
         } else {
-            $ret['path']          = implode('_', $package);
-            $ret['package']       = implode('_', $package);
-            $ret['mainNamespace'] = implode('\\', $package);
-            $ret['mainClass']     = implode('\\', $package) . '\\Main';
-            $ret['mainPath']      = implode('/', $package);
-            $ret['svn']           = 'http://svn.' . $channel . '/???';
+            $ret['__REPO__']           = 'http://' . $channel . '/' .
+                implode('_', $package);
         }
+
+        $ret['__YEAR__']           = date('Y');
+        $ret['__PATH__']           = implode('_', $package);
+        $ret['__PACKAGE__']        = implode('_', $package);
+        $ret['__MAIN_PATH__']      = implode('/', $package);
+        $ret['__MAIN_CLASS__']     = array_pop($package);
+        $ret['__MAIN_NAMESPACE__'] = implode('\\', $package);
+        ksort($ret);
         return $ret;
     }
 
@@ -726,7 +732,7 @@ dorender:
 
         $this->skeleton = realpath(
             __DIR__ .
-            '/../../../../data/PEAR2_Pyrus_Developer/pear2.php.net/skeleton'
+            '/../../../../data/pyrus.net/Pyrus_Developer/extSkeleton'
         );
         $this->footer = "\n" .
         "/*\n" .
@@ -919,7 +925,7 @@ eof;
 
     public function saveConfigM4($ext)
     {
-        $filename = dirname($this->skeleton) . '/config.m4';
+        $filename = $this->skeleton . '/config.m4';
         if (!file_exists($filename)) {
             return false; // FIXME proper handling
         }
@@ -937,7 +943,7 @@ eof;
 
     public function saveConfigW32($ext)
     {
-        $filename = dirname($this->skeleton) . '/config.w32';
+        $filename = $this->skeleton . '/config.w32';
         if (!file_exists($filename)) {
             return false; // FIXME proper handling
         }

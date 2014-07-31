@@ -2,8 +2,7 @@
 <package version="2.1" xmlns="http://pear.php.net/dtd/package-2.1" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0     http://pear.php.net/dtd/tasks-1.0.xsd     http://pear.php.net/dtd/package-2.1     http://pear.php.net/dtd/package-2.1.xsd">
  <name>Pyrus_Developer</name>
  <channel>pyrus.net</channel>
- <summary>Developer tools for the Pyrus installer
-</summary>
+ <summary>Developer tools for the Pyrus installer</summary>
  <description>
 This package contains several custom commands for Pyrus.
 
@@ -48,10 +47,10 @@ For more information, read the [documentation][5].
   <email>saltybeagle@php.net</email>
   <active>yes</active>
  </lead>
- <date>2012-03-03</date>
- <time>09:08:00</time>
+ <date>2014-07-31</date>
+ <time>14:21:10</time>
  <version>
-  <release>0.5.0</release>
+  <release>0.6.0</release>
   <api>0.1.0</api>
  </version>
  <stability>
@@ -61,28 +60,51 @@ For more information, read the [documentation][5].
  <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
  <notes>Features:
 
- - Simplify package skeleton generator, #5 [till]
- - Automatically exclude files ignored by version control, #12 [fpoirotte]
- - Allow channel aliases in several commands, #7, #13 [fpoirotte]
- - Substitute @PACKAGE_NAME@ with the package's name, #11 [fpoirotte]
+ - Added support for FILE_EXTERNAL and FILE_EOF in the test runner, #21 [boenrobot]
+ - Added $extrafiles and package.xml utilities, and modified generate-pear2 templates to use them, #24 [boenrobot]
 
 Bug Fixes/Refactoring:
 
- - Removed the PEAR2 namespace and made Pyrus the top level namespace.
-   This means all includes and classes need to drop the PEAR2 portion [helgi]
- - Rename package from PEAR2_Pyrus_Developer to Pyrus_Developer [saltybeagle]
- - Remove Subversion references [saltybeagle]
- - Backslash escaped incorrectly in package skeleton stub, #15 [sasezaki]
- - Return proper values when tests pass/fail, #16 [saltybeagle]
-</notes>
+ - Fix filename for packages with a dot in their name, #17 [fpoirotte]
+ - Fix package creation, #18 [boenrobot]
+ - Massive CS fixes, #23 [boenrobot]</notes>
  <contents>
   <dir name="/">
    <dir name="customcommand" baseinstalldir="/">
     <file role="customcommand" name="commands.xml"/>
    </dir>
    <dir name="data" baseinstalldir="/">
-    <file role="data" name="config.m4"/>
-    <file role="data" name="config.w32"/>
+    <dir name="extSkeleton">
+     <file role="data" name="config.m4"/>
+     <file role="data" name="config.w32"/>
+    </dir>
+    <dir name="pear2skeleton">
+     <dir name="data" baseinstalldir="/">
+      <file role="data" name=".placeholder"/>
+     </dir>
+     <dir name="docs" baseinstalldir="/">
+      <file role="data" name=".placeholder"/>
+     </dir>
+     <dir name="examples">
+      <file role="data" name=".placeholder"/>
+     </dir>
+     <dir name="src" baseinstalldir="/">
+      <file role="data" name="Main.php"/>
+     </dir>
+     <dir name="tests" baseinstalldir="/">
+      <file role="data" name=".placeholder"/>
+     </dir>
+     <dir name="www" baseinstalldir="/">
+      <file role="data" name=".placeholder"/>
+     </dir>
+     <file role="data" name="API-0.1.0"/>
+     <file role="data" name="CREDITS"/>
+     <file role="data" name="extrasetup.php"/>
+     <file role="data" name="packagexmlsetup.php"/>
+     <file role="data" name="README"/>
+     <file role="data" name="RELEASE-0.1.0"/>
+     <file role="data" name="stub.php"/>
+    </dir>
     <file role="data" name="phartemplate.php"/>
    </dir>
    <dir name="src" baseinstalldir="/">
@@ -128,10 +150,7 @@ Bug Fixes/Refactoring:
       <dir name="PackageFile">
        <dir name="Commands">
         <dir name="templates">
-         <file role="php" name="extrasetup.php.tpl"/>
-         <file role="php" name="Main.php.tpl"/>
          <file role="php" name="packagexmlsetup.php.tpl"/>
-         <file role="php" name="stub.php.tpl"/>
         </dir>
         <file role="php" name="PEAR2Skeleton.php"/>
        </dir>
@@ -150,6 +169,10 @@ Bug Fixes/Refactoring:
        <file role="php" name="Exception.php"/>
        <file role="php" name="Runner.php"/>
       </dir>
+      <dir name="Utils">
+       <file role="php" name="ExtrafilesGenerator.php"/>
+       <file role="php" name="PackageFileManager.php"/>
+      </dir>
      </dir>
     </dir>
    </dir>
@@ -158,11 +181,13 @@ Bug Fixes/Refactoring:
      <dir name="Developer">
       <dir name="PackageFile">
        <dir name="Commands">
-        <file role="test" name="PEAR2SkeletonTestCase.php"/>
+        <file role="test" name="PEAR2SkeletonTest.php"/>
        </dir>
       </dir>
      </dir>
     </dir>
+    <file role="test" name="bootstrap.php"/>
+    <file role="test" name="phpunit.xml"/>
    </dir>
    <dir name="www" baseinstalldir="/">
     <dir name="CoverageAnalyzer">

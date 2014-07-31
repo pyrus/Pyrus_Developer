@@ -2,8 +2,7 @@
 <package version="2.1" xmlns="http://pear.php.net/dtd/package-2.1" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0     http://pear.php.net/dtd/tasks-1.0.xsd     http://pear.php.net/dtd/package-2.1     http://pear.php.net/dtd/package-2.1.xsd">
  <name>Pyrus_Developer</name>
  <channel>pyrus.net</channel>
- <summary>Developer tools for the Pyrus installer
-</summary>
+ <summary>Developer tools for the Pyrus installer</summary>
  <description>
 This package contains several custom commands for Pyrus.
 
@@ -48,10 +47,10 @@ For more information, read the [documentation][5].
   <email>saltybeagle@php.net</email>
   <active>yes</active>
  </lead>
- <date>2012-03-03</date>
- <time>09:08:00</time>
+ <date>2014-07-31</date>
+ <time>14:21:10</time>
  <version>
-  <release>0.5.0</release>
+  <release>0.6.0</release>
   <api>0.1.0</api>
  </version>
  <stability>
@@ -59,22 +58,6 @@ For more information, read the [documentation][5].
   <api>alpha</api>
  </stability>
  <license uri="http://www.opensource.org/licenses/bsd-license.php">New BSD License</license>
- <notes>Features:
-
- - Simplify package skeleton generator, #5 [till]
- - Automatically exclude files ignored by version control, #12 [fpoirotte]
- - Allow channel aliases in several commands, #7, #13 [fpoirotte]
- - Substitute @PACKAGE_NAME@ with the package's name, #11 [fpoirotte]
-
-Bug Fixes/Refactoring:
-
- - Removed the PEAR2 namespace and made Pyrus the top level namespace.
-   This means all includes and classes need to drop the PEAR2 portion [helgi]
- - Rename package from PEAR2_Pyrus_Developer to Pyrus_Developer [saltybeagle]
- - Remove Subversion references [saltybeagle]
- - Backslash escaped incorrectly in package skeleton stub, #15 [sasezaki]
- - Return proper values when tests pass/fail, #16 [saltybeagle]
-</notes>
  <contents>
   <dir name="/">
    <file role="www" name="www/pyrus.net/Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/TestSummary.tpl.php"/>
@@ -86,7 +69,11 @@ Bug Fixes/Refactoring:
    <file role="www" name="www/pyrus.net/Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Controller.tpl.php"/>
    <file role="www" name="www/pyrus.net/Pyrus_Developer/CoverageAnalyzer/CoverageAnalyzer/index.php"/>
    <file role="www" name="www/pyrus.net/Pyrus_Developer/CoverageAnalyzer/CoverageAnalyzer/cover.css"/>
-   <file role="test" name="test/pyrus.net/Pyrus_Developer/Pyrus/Developer/PackageFile/Commands/Pyrus/Developer/PackageFile/Commands/PEAR2SkeletonTestCase.php"/>
+   <file role="test" name="test/pyrus.net/Pyrus_Developer/Pyrus/Developer/PackageFile/Commands/Pyrus/Developer/PackageFile/Commands/PEAR2SkeletonTest.php"/>
+   <file role="test" name="test/pyrus.net/Pyrus_Developer/phpunit.xml"/>
+   <file role="test" name="test/pyrus.net/Pyrus_Developer/bootstrap.php"/>
+   <file role="php" name="php/Pyrus/Developer/Utils/PackageFileManager.php"/>
+   <file role="php" name="php/Pyrus/Developer/Utils/ExtrafilesGenerator.php"/>
    <file role="php" name="php/Pyrus/Developer/Runphpt/Runner.php"/>
    <file role="php" name="php/Pyrus/Developer/Runphpt/Exception.php"/>
    <file role="php" name="php/Pyrus/Developer/PackageFile/v2.php"/>
@@ -94,10 +81,7 @@ Bug Fixes/Refactoring:
    <file role="php" name="php/Pyrus/Developer/PackageFile/PECL.php"/>
    <file role="php" name="php/Pyrus/Developer/PackageFile/PEAR2SVN/Filter.php"/>
    <file role="php" name="php/Pyrus/Developer/PackageFile/PEAR2SVN.php"/>
-   <file role="php" name="php/Pyrus/Developer/PackageFile/Commands/templates/stub.php.tpl"/>
    <file role="php" name="php/Pyrus/Developer/PackageFile/Commands/templates/packagexmlsetup.php.tpl"/>
-   <file role="php" name="php/Pyrus/Developer/PackageFile/Commands/templates/Main.php.tpl"/>
-   <file role="php" name="php/Pyrus/Developer/PackageFile/Commands/templates/extrasetup.php.tpl"/>
    <file role="php" name="php/Pyrus/Developer/PackageFile/Commands/PEAR2Skeleton.php"/>
    <file role="php" name="php/Pyrus/Developer/PackageFile/Commands.php"/>
    <file role="php" name="php/Pyrus/Developer/Creator/Zip.php"/>
@@ -128,8 +112,21 @@ Bug Fixes/Refactoring:
    <file role="php" name="php/Pyrus/Developer/CoverageAnalyzer/Aggregator.php"/>
    <file role="php" name="php/Pyrus/Developer/CoverageAnalyzer/AbstractSourceDecorator.php"/>
    <file role="data" name="data/pyrus.net/Pyrus_Developer/phartemplate.php"/>
-   <file role="data" name="data/pyrus.net/Pyrus_Developer/config.w32"/>
-   <file role="data" name="data/pyrus.net/Pyrus_Developer/config.m4"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/pear2skeleton/www/pear2skeleton/www/.placeholder"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/pear2skeleton/tests/pear2skeleton/tests/.placeholder"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/pear2skeleton/src/pear2skeleton/src/Main.php"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/stub.php"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/RELEASE-0.1.0"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/README"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/packagexmlsetup.php"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/extrasetup.php"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/CREDITS"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/API-0.1.0"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/pear2skeleton/examples/pear2skeleton/examples/.placeholder"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/pear2skeleton/docs/pear2skeleton/docs/.placeholder"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/pear2skeleton/data/pear2skeleton/data/.placeholder"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/extSkeleton/extSkeleton/config.w32"/>
+   <file role="data" name="data/pyrus.net/Pyrus_Developer/extSkeleton/extSkeleton/config.m4"/>
    <file role="data" name="customcommand/pyrus.net/Pyrus_Developer/commands.xml"/>
   </dir>
  </contents>
@@ -146,8 +143,21 @@ Bug Fixes/Refactoring:
  <phprelease>
   <filelist>
    <install name="customcommand/pyrus.net/Pyrus_Developer/commands.xml" as="Pyrus_Developer/commands.xml"/>
-   <install name="data/pyrus.net/Pyrus_Developer/config.m4" as="Pyrus_Developer/config.m4"/>
-   <install name="data/pyrus.net/Pyrus_Developer/config.w32" as="Pyrus_Developer/config.w32"/>
+   <install name="data/pyrus.net/Pyrus_Developer/extSkeleton/extSkeleton/config.m4" as="Pyrus_Developer/extSkeleton/extSkeleton/config.m4"/>
+   <install name="data/pyrus.net/Pyrus_Developer/extSkeleton/extSkeleton/config.w32" as="Pyrus_Developer/extSkeleton/extSkeleton/config.w32"/>
+   <install name="data/pyrus.net/Pyrus_Developer/pear2skeleton/data/pear2skeleton/data/.placeholder" as="Pyrus_Developer/pear2skeleton/data/pear2skeleton/data/.placeholder"/>
+   <install name="data/pyrus.net/Pyrus_Developer/pear2skeleton/docs/pear2skeleton/docs/.placeholder" as="Pyrus_Developer/pear2skeleton/docs/pear2skeleton/docs/.placeholder"/>
+   <install name="data/pyrus.net/Pyrus_Developer/pear2skeleton/examples/pear2skeleton/examples/.placeholder" as="Pyrus_Developer/pear2skeleton/examples/pear2skeleton/examples/.placeholder"/>
+   <install name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/API-0.1.0" as="Pyrus_Developer/pear2skeleton/pear2skeleton/API-0.1.0"/>
+   <install name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/CREDITS" as="Pyrus_Developer/pear2skeleton/pear2skeleton/CREDITS"/>
+   <install name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/extrasetup.php" as="Pyrus_Developer/pear2skeleton/pear2skeleton/extrasetup.php"/>
+   <install name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/packagexmlsetup.php" as="Pyrus_Developer/pear2skeleton/pear2skeleton/packagexmlsetup.php"/>
+   <install name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/README" as="Pyrus_Developer/pear2skeleton/pear2skeleton/README"/>
+   <install name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/RELEASE-0.1.0" as="Pyrus_Developer/pear2skeleton/pear2skeleton/RELEASE-0.1.0"/>
+   <install name="data/pyrus.net/Pyrus_Developer/pear2skeleton/pear2skeleton/stub.php" as="Pyrus_Developer/pear2skeleton/pear2skeleton/stub.php"/>
+   <install name="data/pyrus.net/Pyrus_Developer/pear2skeleton/src/pear2skeleton/src/Main.php" as="Pyrus_Developer/pear2skeleton/src/pear2skeleton/src/Main.php"/>
+   <install name="data/pyrus.net/Pyrus_Developer/pear2skeleton/tests/pear2skeleton/tests/.placeholder" as="Pyrus_Developer/pear2skeleton/tests/pear2skeleton/tests/.placeholder"/>
+   <install name="data/pyrus.net/Pyrus_Developer/pear2skeleton/www/pear2skeleton/www/.placeholder" as="Pyrus_Developer/pear2skeleton/www/pear2skeleton/www/.placeholder"/>
    <install name="data/pyrus.net/Pyrus_Developer/phartemplate.php" as="Pyrus_Developer/phartemplate.php"/>
    <install name="php/Pyrus/Developer/CoverageAnalyzer/AbstractSourceDecorator.php" as="Pyrus/Developer/CoverageAnalyzer/AbstractSourceDecorator.php"/>
    <install name="php/Pyrus/Developer/CoverageAnalyzer/Aggregator.php" as="Pyrus/Developer/CoverageAnalyzer/Aggregator.php"/>
@@ -178,10 +188,7 @@ Bug Fixes/Refactoring:
    <install name="php/Pyrus/Developer/Creator/Zip.php" as="Pyrus/Developer/Creator/Zip.php"/>
    <install name="php/Pyrus/Developer/PackageFile/Commands.php" as="Pyrus/Developer/PackageFile/Commands.php"/>
    <install name="php/Pyrus/Developer/PackageFile/Commands/PEAR2Skeleton.php" as="Pyrus/Developer/PackageFile/Commands/PEAR2Skeleton.php"/>
-   <install name="php/Pyrus/Developer/PackageFile/Commands/templates/extrasetup.php.tpl" as="Pyrus/Developer/PackageFile/Commands/templates/extrasetup.php.tpl"/>
-   <install name="php/Pyrus/Developer/PackageFile/Commands/templates/Main.php.tpl" as="Pyrus/Developer/PackageFile/Commands/templates/Main.php.tpl"/>
    <install name="php/Pyrus/Developer/PackageFile/Commands/templates/packagexmlsetup.php.tpl" as="Pyrus/Developer/PackageFile/Commands/templates/packagexmlsetup.php.tpl"/>
-   <install name="php/Pyrus/Developer/PackageFile/Commands/templates/stub.php.tpl" as="Pyrus/Developer/PackageFile/Commands/templates/stub.php.tpl"/>
    <install name="php/Pyrus/Developer/PackageFile/PEAR2SVN.php" as="Pyrus/Developer/PackageFile/PEAR2SVN.php"/>
    <install name="php/Pyrus/Developer/PackageFile/PEAR2SVN/Filter.php" as="Pyrus/Developer/PackageFile/PEAR2SVN/Filter.php"/>
    <install name="php/Pyrus/Developer/PackageFile/PECL.php" as="Pyrus/Developer/PackageFile/PECL.php"/>
@@ -189,7 +196,11 @@ Bug Fixes/Refactoring:
    <install name="php/Pyrus/Developer/PackageFile/v2.php" as="Pyrus/Developer/PackageFile/v2.php"/>
    <install name="php/Pyrus/Developer/Runphpt/Exception.php" as="Pyrus/Developer/Runphpt/Exception.php"/>
    <install name="php/Pyrus/Developer/Runphpt/Runner.php" as="Pyrus/Developer/Runphpt/Runner.php"/>
-   <install name="test/pyrus.net/Pyrus_Developer/Pyrus/Developer/PackageFile/Commands/Pyrus/Developer/PackageFile/Commands/PEAR2SkeletonTestCase.php" as="Pyrus_Developer/Pyrus/Developer/PackageFile/Commands/Pyrus/Developer/PackageFile/Commands/PEAR2SkeletonTestCase.php"/>
+   <install name="php/Pyrus/Developer/Utils/ExtrafilesGenerator.php" as="Pyrus/Developer/Utils/ExtrafilesGenerator.php"/>
+   <install name="php/Pyrus/Developer/Utils/PackageFileManager.php" as="Pyrus/Developer/Utils/PackageFileManager.php"/>
+   <install name="test/pyrus.net/Pyrus_Developer/bootstrap.php" as="Pyrus_Developer/bootstrap.php"/>
+   <install name="test/pyrus.net/Pyrus_Developer/phpunit.xml" as="Pyrus_Developer/phpunit.xml"/>
+   <install name="test/pyrus.net/Pyrus_Developer/Pyrus/Developer/PackageFile/Commands/Pyrus/Developer/PackageFile/Commands/PEAR2SkeletonTest.php" as="Pyrus_Developer/Pyrus/Developer/PackageFile/Commands/Pyrus/Developer/PackageFile/Commands/PEAR2SkeletonTest.php"/>
    <install name="www/pyrus.net/Pyrus_Developer/CoverageAnalyzer/CoverageAnalyzer/cover.css" as="Pyrus_Developer/CoverageAnalyzer/CoverageAnalyzer/cover.css"/>
    <install name="www/pyrus.net/Pyrus_Developer/CoverageAnalyzer/CoverageAnalyzer/index.php" as="Pyrus_Developer/CoverageAnalyzer/CoverageAnalyzer/index.php"/>
    <install name="www/pyrus.net/Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Controller.tpl.php" as="Pyrus_Developer/CoverageAnalyzer/templates/CoverageAnalyzer/templates/Controller.tpl.php"/>
