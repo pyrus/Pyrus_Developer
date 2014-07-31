@@ -107,7 +107,7 @@ class MakePEAR2
 
                 $makeNewPackageFile = false;
             } catch (XMLWriterException $e) {
-                //On exception, we'd be regenaring the package.xml file.
+                //On exception, we'd be regenerating the package.xml file.
             }
         }
 
