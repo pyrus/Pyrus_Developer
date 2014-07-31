@@ -682,7 +682,9 @@ dorender:
      */
     public static function parsePackageName($package, $channel)
     {
-        $ret = array();
+        $ret = array(
+            '__CATEGORY__' => 'default'
+        );
         $package = explode('_', $package);
         if ($channel == 'pear2.php.net') {
             if ($package[0] != 'PEAR2') {
@@ -699,6 +701,9 @@ dorender:
 
             $ret['__REPO__'] = 'http://github.com/pear2/' .
                 implode('_', $package);
+            if (count($package) > 2) {
+                $ret['__CATEGORY__'] = $package[1];
+            }
         } else {
             $ret['__REPO__']           = 'http://' . $channel . '/' .
                 implode('_', $package);
@@ -710,6 +715,7 @@ dorender:
         $ret['__MAIN_PATH__']      = implode('/', $package);
         $ret['__MAIN_CLASS__']     = array_pop($package);
         $ret['__MAIN_NAMESPACE__'] = implode('\\', $package);
+
         ksort($ret);
         return $ret;
     }
