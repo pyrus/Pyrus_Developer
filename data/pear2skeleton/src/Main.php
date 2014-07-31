@@ -4,7 +4,7 @@
  *
  * PHP version 5.3
  *
- * @category  Yourcategory
+ * @category  __CATEGORY__
  * @package   __PACKAGE__
  * @author    Your Name <handle@php.net>
  * @copyright __YEAR__ Your Name
@@ -16,7 +16,7 @@
 /**
  * Main class for __PACKAGE__
  *
- * @category  Yourcategory
+ * @category  __CATEGORY__
  * @package   __PACKAGE__
  * @author    Your Name <handle@php.net>
  * @copyright __YEAR__ Your Name
